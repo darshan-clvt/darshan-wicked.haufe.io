@@ -609,6 +609,7 @@ Vue.component('wicked-routes', {
                     <button v-if="index > 0" v-on:click="deleteRoute(index)" :id="internalId + '.' + index" class="btn btn-danger pull-right" type="button"><span class="glyphicon glyphicon-remove"></span></button>
 
                     <div class="panel-body">
+                        <wicked-input v-model="route.displayName" label="Route Display Name:"/>
                         <wicked-input v-model="route.name" :readonly=true v-if="route_plugin_status" label="Route Name:"/>
                         <wicked-string-array v-model="route.paths" :allow-empty=false label="Paths:" hint="A list of paths that match this Route. For example: <code>/my-path</code>. At least one of <code>hosts</code>, <code>paths</code> or <code>methods</code> must be set." />
                         <wicked-checkbox v-model="route.strip_path" label="<b>Strip Uri</b>. Check this box if you don't want to pass the uri to the backend URL as well. Normally you wouldn't want that." />

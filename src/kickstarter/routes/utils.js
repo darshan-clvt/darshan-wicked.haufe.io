@@ -1219,4 +1219,41 @@ utils.getPluginList = function() {
     return sample_plugins;
 }
 
+function getApiBundles(app) {
+    const configDir = getConfigDir(app);
+    const bundlesDir = path.join(configDir, 'api-bundles');
+    const bundlesFile = path.join(bundlesDir, 'bundles.json');
+    return bundlesFile;
+}
+
+
+utils.saveApiBundles= function(app,bundles) {
+    fs.writeFileSync(getApiBundles(app), JSON.stringify(bundles, null, 2), 'utf8');
+}
+
+utils.loadApiBundles = function(app) {
+    return JSON.parse(fs.readFileSync(getApiBundles(app), 'utf8'));
+}
+
+utils.getApiRoutes= function (app, apiIds) {
+    let paths = {}
+    apiIds.forEach(apiId => {
+        const apiDir = getApiDir(app, apiId);
+        const configFileName = path.join(apiDir, 'config.json');
+        let apiConfig = JSON.parse(fs.readFileSync(configFileName, 'utf8'));
+        apiConfig.api.routes.forEach(routeElem=>{
+                let apiId = apiConfig.api.name
+                if(apiId in paths) {
+                   let path =  paths[apiId]
+                   console.log(path)
+                   path.push(routeElem.displayName)
+                   paths[apiId] = path
+                } else {
+                   paths[apiId] = [routeElem.displayName]
+                }
+
+        })
+    })
+    return paths
+};
 module.exports = utils;

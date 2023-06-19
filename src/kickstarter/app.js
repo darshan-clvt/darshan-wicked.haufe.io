@@ -37,6 +37,7 @@ const ssl = require('./routes/ssl');
 const shutdown = require('./routes/shutdown');
 const authservers = require('./routes/authservers');
 const pools = require('./routes/pools');
+const apiBundle = require('./routes/apiBundle')
 
 // API functions
 const api = require('./routes/api');
@@ -91,6 +92,7 @@ app.use('/pools', pools);
 app.use('/shutdown', shutdown);
 
 app.use('/api', api);
+app.use('/bundles',apiBundle);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

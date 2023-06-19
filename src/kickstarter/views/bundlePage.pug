@@ -1,0 +1,22 @@
+extends layout
+
+block scripts
+    -var isVuePage = true
+
+block content
+    .jumbotron
+        .container
+            h1 API Bundle Configuration
+
+    .container
+        div(id="vueBase")
+           wicked-table(:bundles="bundles" :apimap="apiMap")
+
+block afterScripts
+    script(type="text/javascript").
+        const injectedData = {
+            bundles: !{JSON.stringify(apiBundles)},
+            apiMap : !{JSON.stringify(apisMap)}
+        };
+
+    script(src='/js/bundle.js')
