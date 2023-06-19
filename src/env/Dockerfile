@@ -6,7 +6,9 @@ FROM ${BASE_IMAGE_UBUNTU}
 
 RUN groupadd -r wicked --gid=888 && useradd -r -g wicked --uid=888 wicked \
     && set -x \
-    && sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list \
+    && sed -i -e 's/deb.debian.org/archive.debian.org/g' \
+           -e 's|security.debian.org|archive.debian.org/|g' \
+           -e '/stretch-updates/d' /etc/apt/sources.list \
     && apt-get update && apt-get install -y --no-install-recommends ca-certificates wget gosu dumb-init jq \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /usr/src/portal-env /usr/src/app && chown -R wicked:wicked /usr/src \
