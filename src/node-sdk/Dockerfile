@@ -12,5 +12,5 @@ COPY package.json /usr/src/app
 COPY . /usr/src/app
 
 RUN npm install
-RUN tsc
+#RUN tsc
 RUN export PACKAGE_FILE=$(npm pack) && cp ${PACKAGE_FILE} /wicked-sdk.tgz
