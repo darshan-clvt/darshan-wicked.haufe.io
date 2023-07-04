@@ -12,6 +12,18 @@ const wicked = require('wicked-sdk');
 
 const utils = function () { };
 
+const ADD_SUBSCRIPTION = 'add subscription'
+const UPDATE_SUBSCRIPTION = 'update subscription'
+const SUBSCRIPTION_REQUESTED = 'subscription requested'
+const SUBSCRIPTION = 'subscription'
+const PENDING_APPROVAL = 'approval sought'
+const ADD_APPROVAL = 'add approval'
+const APPROVAL = 'approval'
+const SUBSCRIPTION_APPROVED = 'subscription approved'
+const DELETE_SUBSCRIPTION = 'delete subscription'
+const SUBSCRIPTION_DELETED = 'subscription deleted'
+const ROLE_ADMIN ='Admin'
+
 utils.setOAuth2Credentials = function (clientId, clientSecret, callbackUrl) {
     utils.CLIENT_ID = clientId;
     utils.CLIENT_SECRET = clientSecret;
@@ -706,6 +718,59 @@ utils.sanitizeHtml = (s) => {
         return '';
     return s.replace(/\&/g, '&amp;').replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace(/\"/g, '&quot;').replace(/\'/g, '&#x27;').replace(/\//g, '&#x2F;');
 };
+
+
+/**
+ * This will make subsequent calls to various functions for renaming the display entities
+ * @param {*} auditLog ---> This variable holds the auditLog event information 
+ */
+utils.processDisplayNames = function(auditLog) {
+    if (auditLog.entity) {
+      switch (auditLog.entity) {
+        case SUBSCRIPTION:
+          processSubscriptionEntity(auditLog);
+          break;
+        case APPROVAL:
+          processApprovalEntity(auditLog);
+          break;
+      }
+    }
+};
+
+/**
+ * 
+ * @param {*} auditLog -- This takes care of renaming subscription related auditLog information 
+ */
+function processSubscriptionEntity(auditLog) {
+    if (auditLog.activity) {
+      switch (auditLog.activity) {
+        case ADD_SUBSCRIPTION:
+          auditLog.activity =  auditLog.role == ROLE_ADMIN ? SUBSCRIPTION_APPROVED : SUBSCRIPTION_REQUESTED;
+          break;
+        case UPDATE_SUBSCRIPTION:
+          auditLog.activity = SUBSCRIPTION_APPROVED;
+          break;
+        case DELETE_SUBSCRIPTION:
+          auditLog.activity = SUBSCRIPTION_DELETED
+          break;
+      }
+    }
+}
+
+/**
+ * 
+ * @param {*} auditLog -- This takes care of renaming approval related auditLog information
+ */
+  
+function processApprovalEntity(auditLog) {
+    if (auditLog.activity) {
+        switch(auditLog.activity)  {
+            case ADD_APPROVAL :
+                auditLog.activity = PENDING_APPROVAL;
+                break;
+        }
+    }
+}
 
 utils.markedOptions = { sanitize: true };
 
