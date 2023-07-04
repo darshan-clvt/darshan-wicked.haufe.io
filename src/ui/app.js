@@ -78,7 +78,7 @@ app.use(function (req, res, next) {
 });
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false , limit : "5mb"}));
 
 // This will be called as soon as the globals are present.
 // Some settings rely on things we read from the globals.json,
