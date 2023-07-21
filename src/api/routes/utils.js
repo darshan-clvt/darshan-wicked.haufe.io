@@ -10,6 +10,9 @@ const { debug, info, warn, error } = require('portal-env').Logger('portal-api:ut
 
 const utils = function () { };
 
+const SWAGGER_CONFIG_DIR = 'scripts/swagger'
+const SWAGGER_CONFIG_FILE = 'swaggerList.json'
+
 utils._app = null;
 utils.init = (app) => {
     debug('init()');
@@ -866,6 +869,81 @@ utils.checkAuthorization = (func,configuredValue) => {
         }
         return next();
     };
+};
+
+/**
+ * This method returns the file path from static directory
+ * @param {*} dirName 
+ * @param {*} fileName 
+ * @returns 
+ */
+const getStaticDirFilePath  = (dirName,fileName) => {
+    const requiredrDir = path.join(utils.getStaticDir(), dirName);
+    if (!fs.existsSync(requiredrDir)) {
+         throw new Error('The given directory does not exist: ' + requiredrDir);
+    }
+    const requiredFilePath = path.join(requiredrDir, fileName);
+    return requiredFilePath
+}
+
+let _swaggerApis = null
+
+/**
+ * Checks if api swagger is allowed to modify using config scripts
+ * @param {*} apiId 
+ * @returns 
+ */
+utils.shouldModifySwagger = (apiId) => {
+    debug('shouldModifySwagger')
+    if (utils.isMigrationMode()) {
+        throw new Error('You must not call shouldModifySwagger() in migration mode.');
+    }
+    try {
+        if (!_swaggerApis) {
+            const swaggerFile = getStaticDirFilePath(SWAGGER_CONFIG_DIR,SWAGGER_CONFIG_FILE)
+            if (!fs.existsSync(swaggerFile)) {
+                debug('Swagger script file does not exist: ' + swaggerFile);
+                return false
+            }
+            _swaggerApis = require(swaggerFile);
+        }
+        debug(_swaggerApis)
+        if(_swaggerApis[apiId]) {
+            return true
+        } else {
+            return false
+        }
+    } catch(err) {
+        debug('Error occured while reading swagger map' + err)
+        return false
+    }
+}
+
+/**
+ * loads the swagger scripts from config repo
+ * @param {*} apiId 
+ * @returns 
+ */
+utils.loadApiSwaggerScripts =  (apiId) => {
+    let swaggerScript = null
+    debug('loadApiSwaggerScripts start')
+    if (utils.isMigrationMode()) {
+        throw new Error('You must not call loadApiSwaggerScripts() in migration mode.');
+    }
+    try {
+        const scriptFile = getStaticDirFilePath(SWAGGER_CONFIG_DIR,`${apiId}-swagger.js`)
+        if (!fs.existsSync(scriptFile)) {
+            debug('Swagger script file does not exist: ' + swaggerJsFilePath);
+            return swaggerScript
+        }
+        delete require.cache[require.resolve(scriptFile)]
+        swaggerScript = require(scriptFile);
+    } catch (err) {
+        debug('Error in loadApiSwaggerScripts():');
+        debug(err);
+    }
+    debug('loadApiSwaggerScripts() end');
+    return swaggerScript;
 };
 
 module.exports = utils;
