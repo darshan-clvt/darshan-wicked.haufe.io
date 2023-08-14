@@ -28,17 +28,39 @@ approvals.get('/', verifyReadScope, function (req, res, next) {
 approvals.get('/:approvalId', verifyReadScope, function (req, res, next) {
     approvals.getApproval(req, res, next, req.apiUserId, req.params.approvalId);
 });
-//get By DateRange routes
-approvals.get('/byDates/:startDate/:endDate', verifyReadScope, function (req, res, next) {
+/**
+ * GET route for retrieving approvals by date range.
+ * @param {string} '/byDates/:startDate/:endDate' - The route URL with parameters.
+ * @param {function} verifyReadScope - Middleware to verify read scope.
+ * @param {function} validateDateParams - Middleware to validate date parameters and order.
+ * @param {function} next - The next middleware/route handler.
+ *
+ * @example
+ * // GET /api/approvals/byDates/2023-08-01T00:00:00Z/2023-08-14T23:59:59Z
+ * // Returns:
+ * // List of approvals within the specified date range.
+ */
+approvals.get('/byDates/:startDate/:endDate', verifyReadScope, validateDateParams, function (req, res, next) {
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
     approvals.getApprovalByDates(req, res, next, req.apiUserId, startDate, endDate);
 });
-//Delete By DateRange routes
-approvals.delete('/byDates/:startDate/:endDate',verifyWriteScope, function (req, res, next){
+/**
+ * DELETE route for deleting approvals by date range.
+ * @param {string} '/byDates/:startDate/:endDate' - The route URL with parameters.
+ * @param {function} verifyWriteScope - Middleware to verify write scope.
+ * @param {function} validateDateParams - Middleware to validate date parameters and order.
+ * @param {function} next - The next middleware/route handler.
+ *
+ * @example
+ * // DELETE /api/approvals/byDates/2023-08-01T00:00:00Z/2023-09-14T23:59:59Z
+ * // Returns:
+ * // Deletion of approvals within the specified date range is successful.
+ */
+approvals.delete('/byDates/:startDate/:endDate',verifyWriteScope,  validateDateParams, function (req, res, next){
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
-    approvals.deleteApprovalsByDates(req, res, next, req.apiUserId, startDate, endDate);
+    approvals.deleteApprovalsByDates(req, res, req.app, next, req.apiUserId, startDate, endDate);
 });
 
 // ===== IMPLEMENTATION =====
@@ -66,6 +88,108 @@ approvals.getApproval = function (req, res, next, loggedInUserId, approvalId) {
         return res.json(approvalInfo);
     });
 };
+/**
+ * Retrieve approvals within the specified date range.
+ * @param {Object} req - The Express request object.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware/route handler.
+ * @param {string} loggedInUserId - The ID of the logged-in user.
+ * @param {string} startDate - The start date of the date range (ISO 8601 format).
+ * @param {string} endDate - The end date of the date range (ISO 8601 format).
+ */
+approvals.getApprovalByDates = function (req, res, next, loggedInUserId, startDate, endDate) {
+    getAllApprovals(req.app, loggedInUserId, (err, approvalInfos) => {
+        if (err) {
+            return utils.failError(res, err);
+        }
+        const decodedStartDate = decodeURIComponent(startDate);
+        const decodedEndDate = decodeURIComponent(endDate);
+        if (decodedStartDate > decodedEndDate) {
+            return res.status(400).json({ message: "Start date cannot be greater than end date." });
+        }
+        const approvalInfo = approvalInfos.filter(a => a.changedDate >= decodedStartDate && a.changedDate <= decodedEndDate);
+        if (!approvalInfo) {
+            return utils.fail(res, 404, 'Not found');
+        }
+        return res.json(approvalInfo);
+    });
+};
+/**
+ * Delete approvals based on the specified date range.
+ * @param {Object} req - The Express request object.
+ * @param {Object} res - The Express response object.
+ * @param {Object} app - The Express app instance.
+ * @param {Function} next - The next middleware/route handler.
+ * @param {string} loggedInUserId - The ID of the logged-in user.
+ * @param {string} startDate - The start date of the date range (ISO 8601 format).
+ * @param {string} endDate - The end date of the date range (ISO 8601 format).
+ */
+approvals.deleteApprovalsByDates = function (req, res, app, next, loggedInUserId, startDate, endDate) {
+    getAllApprovals(req.app, loggedInUserId, (err, approvalInfos) => {
+        if (err) {
+            return utils.failError(res, err);
+        }
+        const decodedStartDate = decodeURIComponent(startDate);
+        const decodedEndDate = decodeURIComponent(endDate);
+        if (decodedStartDate > decodedEndDate) {
+            return res.status(400).json({ message: "Start date cannot be greater than end date." });
+        }
+        const approvalInfo = approvalInfos.filter(a => a.changedDate >= decodedStartDate && a.changedDate <= decodedEndDate);
+        if (approvalInfo.length === 0) {
+            return utils.fail(res, 404, 'Not found');
+        }
+        for (let approval of approvalInfo){
+            const subscriptionId = approval.subscriptionId;
+            const subscriptionData = approval;
+            let appId = approval.application.id;
+            let apiId = approval.api.id;
+            debug(appId+"this is appID")
+            debug(apiId+"this is apiID") 
+
+            dao.subscriptions.delete(appId, apiId, subscriptionId, (err) => {
+                      if (err) {
+                          return utils.fail(res, 500, 'deleteSubscription: DAO delete subscription failed',err);
+                      }
+                       webhooks.logEvent(app, {
+                        action: webhooks.ACTION_DELETE,
+                        entity: webhooks.ENTITY_SUBSCRIPTION,
+                        data: {
+                            subscriptionId: subscriptionId,
+                            applicationId: appId,
+                            apiId: apiId,
+                            userId: loggedInUserId,
+                            auth: subscriptionData.auth
+                        }
+                    });
+                  });
+              };
+              res.status(204).send('');
+    });
+};
+
+const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
+
+/**
+ * Middleware to validate date parameters and order.
+ * @param {Object} req - The Express request object.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function.
+ */
+function validateDateParams(req, res, next) {
+    const startDate = req.params.startDate;
+    const endDate = req.params.endDate;
+    
+    if (!iso8601Regex.test(startDate) || !iso8601Regex.test(endDate)) {
+        return res.status(400).json({ message: "Invalid date format. Please use ISO 8601 format." });
+    }
+
+    if (startDate > endDate) {
+        return res.status(400).json({ message: "Start date cannot be greater than end date." });
+    }
+
+    // If validations pass, move to the next middleware/route handler
+    next();
+}
 
 function getAllApprovals(app, loggedInUserId, callback) {
     debug(`getAllApprovals(${loggedInUserId})`);
@@ -76,43 +200,6 @@ function getAllApprovals(app, loggedInUserId, callback) {
         loadAllApprovals(app, userInfo, callback);
     });
 }
-approvals.getApprovalByDates = function (req, res, next, loggedInUserId, startDate, endDate) {
-    getAllApprovals(req.app, loggedInUserId, (err, approvalInfos) => {
-        if (err) {
-            return utils.failError(res, err);
-        }
-        const decodedStartDate = decodeURIComponent(startDate);
-        const decodedEndDate = decodeURIComponent(endDate);
-        const approvalInfo = approvalInfos.filter(a => a.changedDate >= decodedStartDate && a.changedDate <= decodedEndDate);
-        if (!approvalInfo) {
-            return utils.fail(res, 404, 'Not found');
-        }
-        return res.json(approvalInfo);
-    });
-};
-
-approvals.deleteApprovalsByDates = function (req, res, next, loggedInUserId, startDate, endDate) {
-    getAllApprovals(req.app, loggedInUserId, (err, approvalInfos) => {
-        if (err) {
-            return utils.failError(res, err);
-        }
-        const decodedStartDate = decodeURIComponent(startDate);
-        const decodedEndDate = decodeURIComponent(endDate);
-
-        const approvalInfo = approvalInfos.filter(a => a.changedDate >= decodedStartDate && a.changedDate <= decodedEndDate);
-        if (approvalInfo.length === 0) {
-            return utils.fail(res, 404, 'Not found');
-        }
-        for (let approval of approvalInfo){
-            dao.subscriptions.delete(approval.application.id, approval.api.id, approval.subscriptionId, (err) => {
-                      if (err) {
-                          return utils.fail(res, 500, 'deleteSubscription: DAO delete subscription failed',err);
-                      }
-                       res.status(204).send('');
-                  });
-              };
-    });
-};
 
 function checkRights(app, loggedInUserId, callback) {
     if (!loggedInUserId) {
