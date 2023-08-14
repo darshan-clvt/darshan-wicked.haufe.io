@@ -1035,6 +1035,68 @@ paths:
         '404':
           description: Not found
 
+  '/approvals/byDates/{startDate}/{endDate}':
+    get:
+      security:
+      - accessCode: ['read_approvals']
+      - implicit: ['read_approvals']
+      - password: ['read_approvals']
+      tags:
+        - misc
+      description: Gets all pending approvals (admin)
+      parameters:
+        - name: startDate
+          in: path
+          type: string
+          required: true
+          description: The Start Date of the approval record to retrieve
+          x-parameter-encoding: plain
+        - name: endDate
+          in: path
+          type: string
+          required: true
+          description: The End Date of the approval record to retrieve
+          x-parameter-encoding: plain
+      responses:
+        '200':
+          description: Successful request
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/approvalType'
+        '403':
+          description: Not allowed
+        '404':
+          description: Not found
+    delete:
+      security:
+      - accessCode: ['write_subscriptions']
+      - implicit: ['write_subscriptions']
+      - password: ['write_subscriptions']
+      tags:
+        - misc
+      description: Delete all pending approvals (admin)
+      parameters:
+        - name: startDate
+          in: path
+          type: string
+          required: true
+          description: The Start Date of the approval records to delete
+          x-parameter-encoding: plain
+        - name: endDate
+          in: path
+          type: string
+          required: true
+          description: The End Date of the approval records to delete
+          x-parameter-encoding: plain
+      responses:
+        '204':
+          description: 'Successfully deleted, No content'
+        '403':
+          description: 'Forbiden, Not allowed'
+        '404':
+          description: 'Not Found'
+
 
   '/verifications':
     post:
