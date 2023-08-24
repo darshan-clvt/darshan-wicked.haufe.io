@@ -1035,7 +1035,7 @@ paths:
         '404':
           description: Not found
 
-  '/approvals/byDates/{startDate}/{endDate}':
+  '/approvals/byDateRange/{startDate}/{endDate}':
     get:
       security:
       - accessCode: ['read_approvals']

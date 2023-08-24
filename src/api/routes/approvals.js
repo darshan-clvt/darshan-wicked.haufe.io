@@ -30,7 +30,7 @@ approvals.get('/:approvalId', verifyReadScope, function (req, res, next) {
 });
 /**
  * GET route for retrieving approvals by date range.
- * @param {string} '/byDates/:startDate/:endDate' - The route URL with parameters.
+ * @param {string} '/byDateRange/:startDate/:endDate' - The route URL with parameters.
  * @param {function} verifyReadScope - Middleware to verify read scope.
  * @param {function} validateDateParams - Middleware to validate date parameters and order.
  * @param {function} next - The next middleware/route handler.
@@ -40,14 +40,14 @@ approvals.get('/:approvalId', verifyReadScope, function (req, res, next) {
  * // Returns:
  * // List of approvals within the specified date range.
  */
-approvals.get('/byDates/:startDate/:endDate', verifyReadScope, validateDateParams, function (req, res, next) {
+approvals.get('/byDateRange/:startDate/:endDate', verifyReadScope, validateDateParams, function (req, res, next) {
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
     approvals.getApprovalByDates(req, res, next, req.apiUserId, startDate, endDate);
 });  
 /**
  * DELETE route for deleting approvals by date range.
- * @param {string} '/byDates/:startDate/:endDate' - The route URL with parameters.
+ * @param {string} '/byDateRange/:startDate/:endDate' - The route URL with parameters.
  * @param {function} verifyWriteScope - Middleware to verify write scope.
  * @param {function} validateDateParams - Middleware to validate date parameters and order.
  * @param {function} next - The next middleware/route handler.
@@ -57,7 +57,7 @@ approvals.get('/byDates/:startDate/:endDate', verifyReadScope, validateDateParam
  * // Returns:
  * // Deletion of approvals within the specified date range is successful.
  */
-approvals.delete('/byDates/:startDate/:endDate',verifyWriteScope,  validateDateParams, function (req, res, next){
+approvals.delete('/byDateRange/:startDate/:endDate',verifyWriteScope,  validateDateParams, function (req, res, next){
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
     approvals.deleteApprovalsByDates(req, res, req.app, next, req.apiUserId, startDate, endDate);
@@ -121,14 +121,13 @@ approvals.deleteApprovalsByDates = function (req, res, app, next, loggedInUserId
         if (err) {
             return utils.failError(res, err);
         }
-        var approvalData = approvalInfo;
+        let approvalData = approvalInfo;
         for (let approval of approvalData) {
             const subscriptionId = approval.subscriptionId;
             const subscriptionData = approval;
             let appId = approval.application.id;
             let apiId = approval.api.id;
-            debug(appId + " this is appID");
-            debug(apiId + " this is apiID");
+            debug(appId + " this is appID" + apiId + " this is apiID");
 
             dao.subscriptions.delete(appId, apiId, subscriptionId, (err) => {
                 if (err) {
