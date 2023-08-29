@@ -177,7 +177,7 @@ app.initialize = function (done) {
         // Check if the 'Cookie' header is present in the request
         if (req.headers.cookie) {
             // Check if 'portal-auth.cookie.sid' exists in the 'Cookie' header
-            if (req.headers.cookie.includes('portal-auth.cookie.sid')) {
+            if (req.headers.cookie.includes('portal.cookie.sid')) {
                 // Get the API key value from the environment variable
                 const apiKey = app.portalGlobals.network.clarivateapikey;  
                 // Add the 'X-ApiKey' header to the request headers
