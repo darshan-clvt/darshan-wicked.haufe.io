@@ -173,7 +173,7 @@ app.initialize = function (done) {
     app.use('/apis', apis);
     app.use('/applications', applications);
     // -- CLARIVATE HOOK
-    const addApiKeyHeader = (req, res, next) => {
+    const apiKeyAuthorizationFromCookie = (req, res, next) => {
         // Check if the 'Cookie' header is present in the request
         if (req.headers.cookie) {
             // Check if 'portal-auth.cookie.sid' exists in the 'Cookie' header
@@ -193,7 +193,7 @@ app.initialize = function (done) {
             res.status(403).send("Forbidden");
         }
     };
-    app.use('/clarivate',  addApiKeyHeader, proxy(app.portalGlobals.network.clarivateUrl,{
+    app.use('/clarivate',  apiKeyAuthorizationFromCookie, proxy(app.portalGlobals.network.clarivateUrl,{
         proxyReqPathResolver: (req) => {
             return '/clarivate'+req.url;
         }
