@@ -173,27 +173,22 @@ app.initialize = function (done) {
     app.use('/apis', apis);
     app.use('/applications', applications);
     // -- CLARIVATE HOOK
-    const apiKeyAuthorizationFromCookie = (req, res, next) => {
-        // Check if the 'Cookie' header is present in the request
-        if (req.headers.cookie) {
-            // Check if 'portal-auth.cookie.sid' exists in the 'Cookie' header
-            if (req.headers.cookie.includes('portal.cookie.sid')) {
-                // Get the API key value from the environment variable
-                const apiKey = app.portalGlobals.network.clarivateapikey;  
-                // Add the 'X-ApiKey' header to the request headers
-                req.headers['X-ApiKey'] = apiKey;
-                // Continue processing the request by calling the 'next' function
-                next();
-            } else {
-                // If 'portal-auth.cookie.sid' is not present, send a 403 Forbidden error
-                res.status(403).send("Forbidden");
-            }
-        } else {
-            // If 'Cookie' header is missing, send a 403 Forbidden error
-            res.status(403).send("Forbidden");
+    const checkLoggedInUserId = (req, res, next) => {
+         // Check if the user is not logged in
+         if (!utils.getLoggedInUserId(req)) {
+            // If not logged in, send a 403 Forbidden error
+            return res.status(403).send("Forbidden");
         }
+    
+        // Get the API key value from the environment variable
+        const apiKey = app.portalGlobals.network.clarivateapikey;
+    
+        // Add the 'X-ApiKey' header to the request headers
+        req.headers['X-ApiKey'] = apiKey;
+        // Continue processing the request by calling the 'next' function
+        return next();
     };
-    app.use('/clarivate',  apiKeyAuthorizationFromCookie, proxy(app.portalGlobals.network.clarivateUrl,{
+    app.use('/clarivate',  checkLoggedInUserId, proxy(app.portalGlobals.network.clarivateUrl,{
         proxyReqPathResolver: (req) => {
             return '/clarivate'+req.url;
         }
