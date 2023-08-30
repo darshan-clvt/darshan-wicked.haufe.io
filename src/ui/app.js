@@ -179,7 +179,6 @@ app.initialize = function (done) {
             // If not logged in, send a 403 Forbidden error
             return res.status(403).send("Forbidden");
         }
-    
         // Get the API key value from the environment variable
         const apiKey = app.portalGlobals.network.clarivateapikey;
     
