@@ -173,21 +173,7 @@ app.initialize = function (done) {
     app.use('/apis', apis);
     app.use('/applications', applications);
     // -- CLARIVATE HOOK
-    const checkLoggedInUserId = (req, res, next) => {
-         // Check if the user is not logged in
-         if (!utils.getLoggedInUserId(req)) {
-            // If not logged in, send a 403 Forbidden error
-            return res.status(403).send("Forbidden");
-        }
-        // Get the API key value from the environment variable
-        const apiKey = app.portalGlobals.network.clarivateapikey;
-    
-        // Add the 'X-ApiKey' header to the request headers
-        req.headers['X-ApiKey'] = apiKey;
-        // Continue processing the request by calling the 'next' function
-        return next();
-    };
-    app.use('/clarivate',  checkLoggedInUserId, proxy(app.portalGlobals.network.clarivateUrl,{
+    app.use('/clarivate', proxy(app.portalGlobals.network.clarivateUrl,{
         proxyReqPathResolver: (req) => {
             return '/clarivate'+req.url;
         }
