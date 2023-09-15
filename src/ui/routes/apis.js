@@ -294,6 +294,17 @@ router.get('/:api', function (req, res, next) {
                 debug(thisApp);
             }
 
+            var isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
+            var subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
+
+            for (let i = 0; i < apps.length; i++) {
+                if(isAppSubscribed === true && i !== subscribedIndex) {
+                    apps[i].disbaleSubscriptionBtn = true;
+                } else {
+                    apps[i].disbaleSubscriptionBtn = false;
+                }
+            }
+
             let authMethods = utils.loadAuthServersEndpoints(req.app, apiInfo);
             // Check for protected Auth Methods
             let hasProtectedMethods = false;
@@ -311,7 +322,25 @@ router.get('/:api', function (req, res, next) {
             apiInfo.hasProtectedAuthMethods = hasProtectedMethods;
             apiInfo.hasSwaggerApplication = hasSwaggerApplication;
             // See also views/models/api.json for how this looks
-            if (!utils.acceptJson(req)) {
+            if (apiInfo.id === 'cortellies-api-collection'){
+                if (!utils.acceptJson(req)) {
+                    res.render('cortellisApi', {
+                        authUser: req.user,
+                        glob: req.app.portalGlobals,
+                        route: '/apis/' + apiId,
+                        title: apiInfo.name,
+                        apiInfo: apiInfo,
+                        apiDesc: marked(apiDesc, markedOptions),
+                        applications: apps,
+                        apiPlans: plans,
+                        apiUris: apiUris,
+                        apiSubscriptions: apiSubscriptions,
+                        genericSwaggerUrl: genericSwaggerUrl,
+                        partnerOnly: partnerOnly
+                    });
+                }
+            }
+            else if (!utils.acceptJson(req)) {
                 res.render('api', {
                     authUser: req.user,
                     glob: req.app.portalGlobals,
@@ -326,7 +355,8 @@ router.get('/:api', function (req, res, next) {
                     genericSwaggerUrl: genericSwaggerUrl,
                     partnerOnly: partnerOnly
                 });
-            } else {
+            }
+             else {
                 delete apiInfo.authMethods;
                 res.json({
                     title: apiInfo.name,
