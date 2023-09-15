@@ -1,5 +1,6 @@
 extends layout
 
+
 mixin checkBox(source, value)
   - var inputId = source
   - var inputValue = value
@@ -28,36 +29,35 @@ mixin apiCategories(apiTags, params)
             onclick='checkCategoryFilter()').btn.btn-primary Filter
             | &nbsp;
             a(class="btn btn-primary clear-button" href="/apis" style='float: left; margin: 10px;' role="button") Clear
-
-
+            
 mixin apiDef(anApi)
     .col-md-4
       .panel.panel-default
         .panel-body.wicked-api-body
-          if glob.views.apis.showApiIcon
-            img(src='/images/api-icon.png')
-          if anApi.auth == 'oauth2'
-            a(href='/help/apis' target='_blank')
-              img(src='/images/oauth2-icon-32.png' align='right' title='Secured with OAuth2 Access')
-          else if anApi.auth == 'none'
-          else
-            a(href='/help/apis' target='_blank')
-              img(src='/images/key-icon-32.png' align='right' title='Secured with API Key Access')
-          a(href=`/apis/${anApi.id}`)
-            h4= anApi.name
-          if anApi.deprecated
-            p(style='color:red;') <b>Deprecated</b>
-          p!= anApi.desc
-          if anApi.name === 'cortellies-api-collection'
-            p
-              a(class="btn btn-default" href=`/apiss/${anApi.id}` role="button") Information &raquo;
-          else 
+            if glob.views.apis.showApiIcon
+              img(src='/images/api-icon.png')
+            if anApi.auth == 'oauth2'
+              a(href='/help/apis' target='_blank')
+                img(src='/images/oauth2-icon-32.png' align='right' title='Secured with OAuth2 Access')
+            else if anApi.auth == 'none'
+            else
+              a(href='/help/apis' target='_blank')
+                img(src='/images/key-icon-32.png' align='right' title='Secured with API Key Access')
+            a(href=`/apiss/${anApi.id}`)
+              h4= anApi.name
+            if anApi.deprecated
+              p(style='color:red;') <b>Deprecated</b>
+            p!= anApi.desc
+            //- if anApi.name === 'cortellies-api-collection'
+            //-   p
+            //-     a(class="btn btn-default" href=`/apiss/${anApi.id}` role="button") Information &raquo;
+            //- else 
             p
               a(class="btn btn-default" href=`/apis/${anApi.id}` role="button") Information &raquo;
-          if anApi.bundle
-            p
-              a(href='/help/bundles')
-                span.label.label-info= anApi.bundle
+            if anApi.bundle
+              p
+                a(href='/help/bundles')
+                  span.label.label-info= anApi.bundle
 
 block scripts
   script(type='text/javascript').
@@ -72,16 +72,16 @@ block content
       .container.wicked-title-container
         h1= title
 
-        p= glob.views.apis.titleTagline
+        p= glob.views.applications.titleTagline
 
-    .container.wicked-container
+    .container
       if desc
         p!= desc
       p &nbsp;
       div(class="row")
         - var length = apilist.length
         - var apiClass = "col-md-12"
-        if (apiTags.length > 0)
+         if (apiTags.length > 0)
           div(class="col-md-3")
             +apiCategories(apiTags, params)
           - apiClass = "col-md-9"
