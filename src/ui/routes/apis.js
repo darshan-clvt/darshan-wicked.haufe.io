@@ -8,6 +8,7 @@ const utils = require('./utils');
 const marked = require('marked');
 const markedOptions = utils.markedOptions;
 const async = require('async');
+const axios = require('axios');
 const cors = require('cors');
 const wicked = require('wicked-sdk');
 
@@ -294,8 +295,8 @@ router.get('/:api', function (req, res, next) {
                 debug(thisApp);
             }
 
-            var isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
-            var subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
+            let isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
+            let subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
 
             for (let i = 0; i < apps.length; i++) {
                 if(isAppSubscribed === true && i !== subscribedIndex) {
@@ -322,24 +323,59 @@ router.get('/:api', function (req, res, next) {
             apiInfo.hasProtectedAuthMethods = hasProtectedMethods;
             apiInfo.hasSwaggerApplication = hasSwaggerApplication;
             // See also views/models/api.json for how this looks
+            const customId = JSON.stringify(userInfo.customId)
+            const trueid = customId.split(":")
+            const test1Url = trueid.length > 1 ? trueid[1] : null;
             if (apiInfo.id === 'cortellies-api-collection'){
-                if (!utils.acceptJson(req)) {
-                    res.render('cortellisApi', {
-                        authUser: req.user,
-                        glob: req.app.portalGlobals,
-                        route: '/apis/' + apiId,
-                        title: apiInfo.name,
-                        apiInfo: apiInfo,
-                        apiDesc: marked(apiDesc, markedOptions),
-                        applications: apps,
-                        apiPlans: plans,
-                        apiUris: apiUris,
-                        apiSubscriptions: apiSubscriptions,
-                        genericSwaggerUrl: genericSwaggerUrl,
-                        partnerOnly: partnerOnly
-                    });
+                let responseData;
+                async.parallel({
+                    getTruid: (callback) => {
+                      const apiUrl = `https://api.dev-snapshot.clarivate.com/clarivate/entitlements/${test1Url}`;
+                      const headers = {
+                        'Content-Type': 'application/json',
+                        'X-ApiKey': '434654dee1cfa135a279b5b1220f2d3bf18d20c5'
+                      };
+                
+                      axios.get(apiUrl, { headers })
+                        .then(response => {
+                          responseData = response.data.skus; 
+                          debug('Skus Array:', JSON.stringify(responseData));
+                          callback(null, responseData);
+                        })
+                        .catch(error => {
+                          debug('An error occurred:', error);
+                          const responseData = []; // Assign an empty array in case of an error
+                          callback(error, responseData);
+                        });
+                    }
+                  }, (err, results) => {
+                    if (err) {
+                      debug('An error occurred:', err);
+                      // Handle the error appropriately, e.g., return an error response
+                    } else {
+                      debug('Results:', results);
+                
+                      if (!utils.acceptJson(req)) {
+                        res.render('cortellisApi', {
+                          authUser: req.user,
+                          glob: req.app.portalGlobals,
+                          route: '/apis/' + apiId,
+                          title: apiInfo.name,
+                          apiInfo: apiInfo,
+                          apiDesc: marked(apiDesc, markedOptions),
+                          applications: apps,
+                          apiPlans: plans,
+                          apiUris: apiUris,
+                          skusData: responseData,
+                          userInfo: userInfo,
+                          apiSubscriptions: apiSubscriptions,
+                          genericSwaggerUrl: genericSwaggerUrl,
+                          partnerOnly: partnerOnly
+                        });
+                      }
+                    }
+                  });
                 }
-            }
             else if (!utils.acceptJson(req)) {
                 res.render('api', {
                     authUser: req.user,

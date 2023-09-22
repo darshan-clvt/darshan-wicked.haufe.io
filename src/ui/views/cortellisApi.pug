@@ -10,22 +10,6 @@ block scripts
                 return confirm("Please confirm once more that you really want to delete all current subscriptions.");
             return false;
         }
-        // Get all the links with class 'active'
-        const activeLinks = document.querySelectorAll('a.active');
-        // Add a click event listener to each active link
-        activeLinks.forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent the default link behavior
-
-                // Remove the 'active' class from all active links
-                activeLinks.forEach(activeLink => {
-                    activeLink.classList.remove('active');
-                });
-
-                // Add the 'active' class to the clicked link
-                this.classList.add('active');
-            });
-        });
 
 block bodyScripts
     script(type='text/javascript').
@@ -72,6 +56,24 @@ block bodyScripts
 
                   }
                 }
+            let searchParam = window.location.href.split('?')[1];
+            let currentSelectedTab = searchParam.split('=')[1];
+            console.log(currentSelectedTab, 'currentSelectedTab');
+            if(currentSelectedTab) {
+                if(currentSelectedTab === 'investigationalDrug') {
+                    document.getElementById('investigationalDrugLink').style.color = '#6817ff';
+
+                } else if (currentSelectedTab === 'biomarkers') {
+                document.getElementById('biomarkersLink').style.color = '#6817ff';
+
+
+                } else if(currentSelectedTab === 'targets') {
+
+                    document.getElementById('targetsLink').style.color = '#6817ff';
+
+                }
+            }
+            
         });
 
 
@@ -105,27 +107,15 @@ block content
             .panel.panel-default
 
                 .panel-body
-                    //- if apiUris.length > 1
-                    //-     label API URLs:
-                    //- else
-                    //-     label API URL:
-                    //- br
                     .flex-container
                         // Add the Subscribed APIs side heading here
                         h3 Subscribed APIs
                         // Add the side box for "Investigational Drugs Profile" and "Biomarker" beside the heading
                         .side-box
-                            h4 Investigational Drugs, Biomarker, profile
+                            p= JSON.stringify(skusData).replace(/[\[\]"]/g, '')
                             // Add content for both Investigational Drugs Profile and Biomarker here
 
             .panel.panel-default
-                
-                    //- if apiUris.length > 1
-                    //-     label API URLs:
-                    //- else
-                    //-     label API URL:
-                    //- br
-                    
                     div.cortellis-navbar.navbar-collapse.collapse
                         ul.nav.navbar-nav.cortellies-navbar
                             li
@@ -135,27 +125,27 @@ block content
                             li
                                 a(href='?section=targets', id='targetsLink') Targets
                     div.panel-body.unique-panel-body(id='investigationalDrugPanel')
-                        h2(class='unique-h2-class')= glob.cortellies.InvestigationalDrugs.Heading
+                        h2(class='unique-h2-class')= glob.cortellisUi.cortellies.InvestigationalDrugs.Heading
                         br
-                        each section, index in glob.cortellies.InvestigationalDrugs.Sections
+                        each section, index in glob.cortellisUi.cortellies.InvestigationalDrugs.Sections
                             h4(class=`subheading`)= section.Subheading
                             ul(class=`content-list`)
                                 each detail in section.details
                                     li(class=`content-item`)= detail
 
                     div.panel-body.unique-panel-body(id='biomarkersPanel')
-                        h2(class='unique-h2-class')= glob.cortellies.biomarks.Heading
+                        h2(class='unique-h2-class')= glob.cortellisUi.cortellies.biomarks.Heading
                         br
-                        each section, index in glob.cortellies.biomarks.Sections
+                        each section, index in glob.cortellisUi.cortellies.biomarks.Sections
                             h4(class=`subheading`)= section.Subheading
                             ul(class=`content-list`)
                                 each detail in section.details
                                     li(class=`content-item`)= detail
                     
                     div.panel-body.unique-panel-body(id='targetsPanel')
-                        h2(class='unique-h2-class')= glob.cortellies.targets.Heading
+                        h2(class='unique-h2-class')= glob.cortellisUi.cortellies.targets.Heading
                         br
-                        each section, index in glob.cortellies.targets.Sections
+                        each section, index in glob.cortellisUi.cortellies.targets.Sections
                             h4(class=`subheading`)= section.Subheading
                             ul(class=`content-list`)
                                 each detail in section.details

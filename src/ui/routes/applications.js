@@ -499,7 +499,11 @@ router.post('/:appId/subscribe/:apiId', function (req, res, next) {
         if (201 != apiResponse.statusCode)
             return utils.handleError(res, apiResponse, apiBody, next);
         if (!utils.acceptJson(req))
-            res.redirect('/apis/' + apiId);
+            if (apiId === "cortellies-api-collection") {
+                res.redirect('/apis/' + apiId);
+            } else {
+                res.redirect('/apis/' + apiId);
+            }
         else
             res.status(201).json(utils.getJson(apiBody));
     });
@@ -518,7 +522,11 @@ router.post('/:appId/unsubscribe/:apiId', function (req, res, next) {
                 return utils.handleError(res, apiResponse, apiBody, next);
             // Yay!
             if (!utils.acceptJson(req))
-                res.redirect('/apis/' + apiId);
+                if (apiId === "cortellies-api-collection") {
+                    res.redirect('/apis/' + apiId);
+                } else {
+                    res.redirect('/apis/' + apiId);
+                }
             else
                 res.status(204).json({});
         });
