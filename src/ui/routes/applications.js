@@ -498,12 +498,8 @@ router.post('/:appId/subscribe/:apiId', function (req, res, next) {
             return next(err);
         if (201 != apiResponse.statusCode)
             return utils.handleError(res, apiResponse, apiBody, next);
-        if (!utils.acceptJson(req))
-            if (apiId === "cortellies-api-collection") {
-                res.redirect('/apis/' + apiId);
-            } else {
-                res.redirect('/apis/' + apiId);
-            }
+        if (!utils.acceptJson(req)) 
+            res.redirect('/apis/' + apiId);
         else
             res.status(201).json(utils.getJson(apiBody));
     });
