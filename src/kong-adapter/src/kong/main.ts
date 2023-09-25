@@ -7,6 +7,7 @@ import * as wicked from 'wicked-sdk';
 import * as utils from './utils';
 import { sync } from './sync';
 import { WickedEvent, WickedWebhookListener, WickedGlobals, Callback } from 'wicked-sdk';
+const axios = require('axios')
 
 const MAX_ASYNC_CALLS = 10;
 
@@ -192,6 +193,17 @@ function dispatchWebhookAction(webhookData, onlyDelete, callback) {
             error('SYNC ACTION FAILED!');
             error(err);
             return callback(err);
+        }
+        let globals = wicked.getGlobals()
+        let apiId = webhookData.data.apiId
+        let appId = webhookData.data.applicationId
+        if (entity === SUBSCRIPTION && action === ACTION_UPDATE && globals.features.enableAPIKeyCustomHeaders && (apiId in globals.customHeaderApisList)) {
+            debug('invoking ch script of api')
+            let chAPiJs = utils.getCustomHeaderModules(apiId)
+            if(chAPiJs) {
+              chAPiJs.processData(appId,apiId,globals,wicked,axios)
+            }
+            debug('invoking ch script end')
         }
         debug(`dispatchWebhookAction successfully returned for action ${action} ${entity}`);
         callback(null);

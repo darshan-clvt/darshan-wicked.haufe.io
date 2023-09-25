@@ -1043,3 +1043,28 @@ export function kongGetServiceRouteIds(serviceId: string, callback: Callback<{}>
         return callback(null,routeNameIdDict)
     })
 }
+
+/**
+ * 
+ * @param apiId -- api id value 
+ * @returns the loaded api custom header event module
+ */
+export function getCustomHeaderModules(apiId: string) {
+    let staticPath = process.env.PORTAL_API_STATIC_CONFIG;
+    let chScript = null
+    try {
+        if(staticPath) {
+            let apiCHFolder = path.join(staticPath,'scripts/custom_header')  
+            let apiChFile = path.join(apiCHFolder,`${apiId}.js`)
+            if (!fs.existsSync(apiChFile)) {
+                debug('custom header script file does not exist: ' + apiChFile);
+            }
+            delete require.cache[require.resolve(apiChFile)]
+            chScript = require(apiChFile);
+        } 
+    }catch (err) {
+        debug('Error in getCustomHeaderModules():');
+        debug(err);
+    }
+    return chScript
+}
