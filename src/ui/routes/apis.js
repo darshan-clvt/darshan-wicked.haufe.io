@@ -326,12 +326,13 @@ router.get('/:api', function (req, res, next) {
             const customId = JSON.stringify(userInfo.customId)
             const trueid = customId.split(":")
             const trueId = trueid.length > 1 ? trueid[1] : null;
-            const apiKey = req.app.portalGlobals.network.entitlements;
+            const apiKey = req.app.portalGlobals.network.clarivateapikey;
+            const kongProxyURl = req.app.portalGlobals.network.kongProxyUrl;
             if (apiInfo.id === 'cortellies-api-collection'){
                 let responseData;
                 async.parallel({
                     getTruid: (callback) => {
-                      const apiUrl = `https://api.dev-snapshot.clarivate.com/clarivate/entitlements/${trueId}`;
+                      const apiUrl = `https://${kongProxyURl}//clarivate/entitlements/${trueId}`;
                       const headers = {
                         'Content-Type': 'application/json',
                         'X-ApiKey': `${apiKey}`
