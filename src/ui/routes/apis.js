@@ -323,13 +323,24 @@ router.get('/:api', function (req, res, next) {
             apiInfo.hasProtectedAuthMethods = hasProtectedMethods;
             apiInfo.hasSwaggerApplication = hasSwaggerApplication;
             // See also views/models/api.json for how this looks
-            const customId = JSON.stringify(userInfo.customId)
-            const trueid = customId.split(":")
-            const trueId = trueid.length > 1 ? trueid[1] : null;
-            const apiKey = req.app.portalGlobals.network.clarivateapikey;
-            const kongProxyURl = req.app.portalGlobals.network.kongProxyUrl;
+            
             if (apiInfo.id === 'cortellies-api-collection'){
                 let responseData;
+                let isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
+                let subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
+
+                for (let i = 0; i < apps.length; i++) {
+                    if(isAppSubscribed === true && i !== subscribedIndex) {
+                        apps[i].disbaleSubscriptionBtn = true;
+                    } else {
+                        apps[i].disbaleSubscriptionBtn = false;
+                    }
+                }
+                const customId = JSON.stringify(userInfo.customId)
+                const trueid = customId.split(":")
+                const trueId = trueid.length > 1 ? trueid[1] : null;
+                const apiKey = req.app.portalGlobals.network.clarivateapikey;
+                const kongProxyURl = req.app.portalGlobals.network.kongProxyUrl;
                 async.parallel({
                     getTruid: (callback) => {
                       const apiUrl = `https://${kongProxyURl}//clarivate/entitlements/${trueId}`;
