@@ -1068,3 +1068,25 @@ export function getCustomHeaderModules(apiId: string) {
     }
     return chScript
 }
+
+
+export function getGlobals() {
+    let staticPath = process.env.PORTAL_API_STATIC_CONFIG;
+    let globalsJson = null
+    try {
+        if(staticPath) {
+            let globalsFile = path.join(staticPath,'globals.json')  
+            if (!fs.existsSync(globalsFile)) {
+                debug('custom header script file does not exist: ' + globalsFile);
+            } else {
+                 globalsJson = JSON.parse(fs.readFileSync(globalsFile))
+            }
+
+        } 
+    }catch (err) {
+        debug('Error in getCustomHeaderModules():');
+        debug(err);
+    }
+
+    return globalsJson
+}
