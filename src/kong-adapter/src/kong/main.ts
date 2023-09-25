@@ -10,6 +10,12 @@ import { WickedEvent, WickedWebhookListener, WickedGlobals, Callback } from 'wic
 
 const MAX_ASYNC_CALLS = 10;
 
+const APPLICATION = 'application'
+const SUBSCRIPTION = 'subscription'
+const ACTION_ADD ='add'
+const ACTION_DELETE = 'delete'
+const ACTION_UPDATE = 'update'
+
 // ====== PUBLIC INTERFACE ======
 
 export const kongMain = {
@@ -163,13 +169,13 @@ function dispatchWebhookAction(webhookData, onlyDelete, callback) {
     const entity = webhookData.entity;
     info(`Process action ${action} for entity ${entity}`);
     let syncAction = null;
-    if (entity === 'application' && (action === 'add' || action === 'update') && !onlyDelete)
+    if (entity === APPLICATION && (action === ACTION_ADD || action === ACTION_UPDATE) && !onlyDelete)
         syncAction = callback => syncAppConsumers(webhookData.data.applicationId, callback);
-    else if (entity === 'application' && action === 'delete')
+    else if (entity === APPLICATION && action === ACTION_DELETE)
         syncAction = callback => deleteAppConsumers(webhookData.data.applicationId, webhookData.data.subscriptions, callback);
-    else if (entity === 'subscription' && (action === 'add' || action === 'update') && !onlyDelete)
+    else if (entity === SUBSCRIPTION && (action === ACTION_ADD || action === ACTION_UPDATE) && !onlyDelete)
         syncAction = callback => syncAppConsumers(webhookData.data.applicationId, callback);
-    else if (entity === 'subscription' && action === 'delete')
+    else if (entity === SUBSCRIPTION && action === ACTION_DELETE)
         syncAction = callback => deleteAppSubscriptionConsumer(webhookData.data, callback);
     else
         debug(`Discarding event ${action} ${entity}.`)
