@@ -295,16 +295,6 @@ router.get('/:api', function (req, res, next) {
                 debug(thisApp);
             }
 
-            let isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
-            let subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
-
-            for (let i = 0; i < apps.length; i++) {
-                if(isAppSubscribed === true && i !== subscribedIndex) {
-                    apps[i].disbaleSubscriptionBtn = true;
-                } else {
-                    apps[i].disbaleSubscriptionBtn = false;
-                }
-            }
 
             let authMethods = utils.loadAuthServersEndpoints(req.app, apiInfo);
             // Check for protected Auth Methods
