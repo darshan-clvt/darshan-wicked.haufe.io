@@ -520,7 +520,7 @@ router.post('/:appId/unsubscribe/:apiId', function (req, res, next) {
                 return next(err);
             if (204 != apiResponse.statusCode)
                 return utils.handleError(res, apiResponse, apiBody, next);
-            // Yay!
+            // Yay2!
             if (!utils.acceptJson(req))
                 res.redirect('/apis/' + apiId);
             else
