@@ -325,15 +325,16 @@ router.get('/:api', function (req, res, next) {
             // See also views/models/api.json for how this looks
             const customId = JSON.stringify(userInfo.customId)
             const trueid = customId.split(":")
-            const test1Url = trueid.length > 1 ? trueid[1] : null;
+            const trueId = trueid.length > 1 ? trueid[1] : null;
+            const apiKey = req.app.portalGlobals.network.entitlements;
             if (apiInfo.id === 'cortellies-api-collection'){
                 let responseData;
                 async.parallel({
                     getTruid: (callback) => {
-                      const apiUrl = `https://api.dev-snapshot.clarivate.com/clarivate/entitlements/${test1Url}`;
+                      const apiUrl = `https://api.dev-snapshot.clarivate.com/clarivate/entitlements/${trueId}`;
                       const headers = {
                         'Content-Type': 'application/json',
-                        'X-ApiKey': '434654dee1cfa135a279b5b1220f2d3bf18d20c5'
+                        'X-ApiKey': `${apiKey}`
                       };
                 
                       axios.get(apiUrl, { headers })

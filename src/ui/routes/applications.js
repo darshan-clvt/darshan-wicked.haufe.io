@@ -522,11 +522,7 @@ router.post('/:appId/unsubscribe/:apiId', function (req, res, next) {
                 return utils.handleError(res, apiResponse, apiBody, next);
             // Yay!
             if (!utils.acceptJson(req))
-                if (apiId === "cortellies-api-collection") {
-                    res.redirect('/apis/' + apiId);
-                } else {
-                    res.redirect('/apis/' + apiId);
-                }
+                res.redirect('/apis/' + apiId);
             else
                 res.status(204).json({});
         });
