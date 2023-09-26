@@ -302,10 +302,13 @@ utils.loadGlobals = function () {
     }
     if (!_globalSettings) {
         const globalsFile = path.join(utils.getStaticDir(), 'globals.json');
+        const cortelliesFile = path.join(utils.getStaticDir(), 'content','cortelliesUi','cortellisInfo.json');
         _globalSettings = JSON.parse(fs.readFileSync(globalsFile, 'utf8'));
+        let _cortellisUi = JSON.parse(fs.readFileSync(cortelliesFile, 'utf8'));
         utils.replaceEnvVars(_globalSettings);
         _globalSettings.configDate = getConfigDate();
         _globalSettings.lastCommit = getLastCommit();
+        _globalSettings.cortellisUi = _cortellisUi;
         // Return the used NODE_ENV, this is useful for debugging and error handling
         // when checking the configuration.
         _globalSettings.environment = process.env.NODE_ENV;
