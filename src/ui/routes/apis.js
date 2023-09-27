@@ -328,9 +328,10 @@ router.get('/:api', function (req, res, next) {
                 }
                 const customId = JSON.stringify(userInfo.customId)
                 const trueid = customId.split(":")
-                const trueId = trueid.length > 1 ? trueid[1] : null;
+                const sanitizedId = trueid.length > 1 ? trueid[1] : null;
+                const trueId = sanitizedId.replace(/\"$/, '');
                 const apiKey = req.app.portalGlobals.network.clarivateapikey;
-                const kongProxyURl = req.app.portalGlobals.network.kongProxyUrl;
+                const kongProxyURl = req.app.portalGlobals.network.apiHost;
                 async.parallel({
                     getTruid: (callback) => {
                       const apiUrl = `https://${kongProxyURl}//clarivate/entitlements/${trueId}`;
@@ -340,16 +341,17 @@ router.get('/:api', function (req, res, next) {
                       };
                 
                       axios.get(apiUrl, { headers })
-                        .then(response => {
+                      .then(response => {
+                        if (response.status === 200) {
                           responseData = response.data.skus; 
-                          debug('Skus Array:', JSON.stringify(responseData));
-                          callback(null, responseData);
-                        })
-                        .catch(error => {
-                          debug('An error occurred:', error);
-                          const responseData = []; // Assign an empty array in case of an error
-                          callback(error, responseData);
-                        });
+                        }
+                        callback(null, responseData);
+                      })
+                      .catch(error => {
+                        const errorMessage = `User is not part of Cortellis`;
+                        responseData = errorMessage
+                        callback(null, responseData);
+                      });
                     }
                   }, (err, results) => {
                     if (err) {

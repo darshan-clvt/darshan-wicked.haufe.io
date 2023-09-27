@@ -112,8 +112,7 @@ block content
                         h3 Subscribed APIs
                         // Add the side box for "Investigational Drugs Profile" and "Biomarker" beside the heading
                         .side-box
-                            p= JSON.stringify(skusData).replace(/[\[\]"]/g, '')
-                            // Add content for both Investigational Drugs Profile and Biomarker here
+                             p= JSON.stringify(skusData).replace(/["\[\]]/g, '')
 
             .panel.panel-default
                     div.cortellis-navbar.navbar-collapse.collapse
