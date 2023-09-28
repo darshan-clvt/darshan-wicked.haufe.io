@@ -8,6 +8,7 @@ const utils = require('./utils');
 const marked = require('marked');
 const markedOptions = utils.markedOptions;
 const async = require('async');
+const axios = require('axios');
 const cors = require('cors');
 const wicked = require('wicked-sdk');
 
@@ -294,6 +295,7 @@ router.get('/:api', function (req, res, next) {
                 debug(thisApp);
             }
 
+
             let authMethods = utils.loadAuthServersEndpoints(req.app, apiInfo);
             // Check for protected Auth Methods
             let hasProtectedMethods = false;
@@ -311,7 +313,75 @@ router.get('/:api', function (req, res, next) {
             apiInfo.hasProtectedAuthMethods = hasProtectedMethods;
             apiInfo.hasSwaggerApplication = hasSwaggerApplication;
             // See also views/models/api.json for how this looks
-            if (!utils.acceptJson(req)) {
+            
+            if (apiInfo.id === 'cortellies-api-collection'){
+                let responseData;
+                let isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
+                let subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
+
+                for (let i = 0; i < apps.length; i++) {
+                    if(isAppSubscribed === true && i !== subscribedIndex) {
+                        apps[i].disbaleSubscriptionBtn = true;
+                    } else {
+                        apps[i].disbaleSubscriptionBtn = false;
+                    }
+                }
+                const customId = JSON.stringify(userInfo.customId)
+                const trueid = customId.split(":")
+                const sanitizedId = trueid.length > 1 ? trueid[1] : null;
+                const trueId = sanitizedId.replace(/\"$/, '');
+                const apiKey = req.app.portalGlobals.network.clarivateapikey;
+                const kongProxyURl = req.app.portalGlobals.network.apiHost;
+                async.parallel({
+                    getTruid: (callback) => {
+                      const apiUrl = `https://${kongProxyURl}//clarivate/entitlements/${trueId}`;
+                      const headers = {
+                        'Content-Type': 'application/json',
+                        'X-ApiKey': `${apiKey}`
+                      };
+                
+                      axios.get(apiUrl, { headers })
+                      .then(response => {
+                        if (response.status === 200) {
+                          responseData = response.data.skus; 
+                        }
+                        callback(null, responseData);
+                      })
+                      .catch(error => {
+                        const errorMessage = `User is not part of Cortellis`;
+                        responseData = errorMessage
+                        callback(null, responseData);
+                      });
+                    }
+                  }, (err, results) => {
+                    if (err) {
+                      debug('An error occurred:', err);
+                      // Handle the error appropriately, e.g., return an error response
+                    } else {
+                      debug('Results:', results);
+                
+                      if (!utils.acceptJson(req)) {
+                        res.render('cortellisApi', {
+                          authUser: req.user,
+                          glob: req.app.portalGlobals,
+                          route: '/apis/' + apiId,
+                          title: apiInfo.name,
+                          apiInfo: apiInfo,
+                          apiDesc: marked(apiDesc, markedOptions),
+                          applications: apps,
+                          apiPlans: plans,
+                          apiUris: apiUris,
+                          skusData: responseData,
+                          userInfo: userInfo,
+                          apiSubscriptions: apiSubscriptions,
+                          genericSwaggerUrl: genericSwaggerUrl,
+                          partnerOnly: partnerOnly
+                        });
+                      }
+                    }
+                  });
+                }
+            else if (!utils.acceptJson(req)) {
                 res.render('api', {
                     authUser: req.user,
                     glob: req.app.portalGlobals,
@@ -326,7 +396,8 @@ router.get('/:api', function (req, res, next) {
                     genericSwaggerUrl: genericSwaggerUrl,
                     partnerOnly: partnerOnly
                 });
-            } else {
+            }
+             else {
                 delete apiInfo.authMethods;
                 res.json({
                     title: apiInfo.name,

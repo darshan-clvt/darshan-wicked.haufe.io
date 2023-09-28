@@ -498,7 +498,7 @@ router.post('/:appId/subscribe/:apiId', function (req, res, next) {
             return next(err);
         if (201 != apiResponse.statusCode)
             return utils.handleError(res, apiResponse, apiBody, next);
-        if (!utils.acceptJson(req))
+        if (!utils.acceptJson(req)) 
             res.redirect('/apis/' + apiId);
         else
             res.status(201).json(utils.getJson(apiBody));
@@ -516,7 +516,7 @@ router.post('/:appId/unsubscribe/:apiId', function (req, res, next) {
                 return next(err);
             if (204 != apiResponse.statusCode)
                 return utils.handleError(res, apiResponse, apiBody, next);
-            // Yay!
+            // Yay2!
             if (!utils.acceptJson(req))
                 res.redirect('/apis/' + apiId);
             else
