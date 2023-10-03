@@ -348,7 +348,7 @@ router.get('/:api', function (req, res, next) {
                         callback(null, responseData);
                       })
                       .catch(error => {
-                        const errorMessage = `User is not part of Cortellis`;
+                        const errorMessage = `No Skus available`;
                         responseData = errorMessage
                         callback(null, responseData);
                       });

@@ -104,6 +104,9 @@ html
                     else if glob.layouts.menu.contentLinkVisibleToGuest || authUser
                         li
                             a(href="/content/toc") Content
+                    if authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
+                        li
+                            a(href="/content/cortellis-admin-ui/view") Admin tool
                 ul(class=`nav navbar-nav navbar-${glob.layouts.menu.classForLoginSignupPosition}`)
                     if !authUser
                         if route == '/login'
