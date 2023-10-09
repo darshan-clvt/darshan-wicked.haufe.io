@@ -82,11 +82,22 @@ block content
             +apiCategories(apiTags, params)
           - apiClass = "col-md-9"
         div(class=apiClass)
+          if authUser && (authUser.admin === true && authUser.superadmin === false)
+            - var filteredApiList = apilist.filter(api => api.id !== 'portal-api')
+            each api, i in filteredApiList
+              if (i % 3 == 0)
+                div(class="row")
+                  +apiDef(filteredApiList[i])
+                  if (i+1) < filteredApiList.length
+                    +apiDef(filteredApiList[i+1])
+                  if (i+2) < filteredApiList.length
+                    +apiDef(filteredApiList[i+2])
+          else 
             each api, i in apilist
-                if (i % 3 == 0)
-                  div(class="row")
-                    +apiDef(apilist[i])
-                    if (i+1) < length
-                      +apiDef(apilist[i+1])
-                    if (i+2) < length
-                      +apiDef(apilist[i+2])
+              if (i % 3 == 0)
+                div(class="row")
+                  +apiDef(apilist[i])
+                  if (i+1) < length
+                    +apiDef(apilist[i+1])
+                  if (i+2) < length
+                    +apiDef(apilist[i+2])
