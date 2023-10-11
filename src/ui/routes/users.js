@@ -36,7 +36,6 @@ router.get('/:userId', function (req, res, next) {
 });
 
 function getSkus(truid, req, res, next, callback) {
-    debug(`getUser(), loggedInUserId: ${loggedInUserId}, userId: ${userId}`);
 
     const apiKey = req.app.portalGlobals.network.clarivateapikey;
     const kongProxyURl = req.app.portalGlobals.network.apiHost;
