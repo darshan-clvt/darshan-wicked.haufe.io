@@ -15,12 +15,82 @@ router.get('/me', function (req, res, next) {
     return getUser(loggedInUserId, userId, req, res, next);
 });
 
+router.get('/skus', async function (req, res, next) {
+    const loggedInUserId = utils.getLoggedInUserId(req);
+    const userId = loggedInUserId;
+
+    getTruid(loggedInUserId, userId, req, res, next, (err, responseData) => {
+        if (err) {
+            return res.status(500).json(responseData);
+        }
+        
+        // Send the response data
+        res.status(200).json(responseData);
+    });
+});
+
 router.get('/:userId', function (req, res, next) {
     debug("get('/:userId')");
     const loggedInUserId = utils.getLoggedInUserId(req);
     const userId = req.params.userId;
     return getUser(loggedInUserId, userId, req, res, next);
 });
+
+function getTruid(loggedInUserId, userId, req, res, next, callback) {
+    debug(`getUser(), loggedInUserId: ${loggedInUserId}, userId: ${userId}`);
+
+    if (!loggedInUserId) {
+        const err = new Error('You cannot view user profiles when not logged in.');
+        err.status = 403;
+        return callback(err, null);
+    }
+
+    
+    const apiKey = req.app.portalGlobals.network.clarivateapikey;
+    const kongProxyURl = req.app.portalGlobals.network.apiHost;
+    let responseData;
+    async.parallel({
+        getUser: (cb) => utils.getFromAsync(req, res, `/users/${userId}`, 200, cb),
+        getUserdata: (cb) => utils.getFromAsync(req, res, '/users', 200, cb)
+    }, (err, results) => {
+        if (err) {
+            console.error('Error fetching user data:', err);
+            return callback({ error: 'An error occurred while fetching user data.', details: err.message }, null);
+        }
+
+        const usersInfo = results.getUserdata;
+        let customIdsArray = usersInfo.items.map(item => {
+            return item.customId === '' ? null : item.customId;
+          });
+          const elements_list = customIdsArray
+            .filter(item => item !== null && item !== '')  // Filter out null and empty values
+            .map(item => item.replace(/,/g, ''));
+        const apiUrls = elements_list.map(element => {
+        const valueAfterColon = element.split(':')[1]; // Extract value after ":"
+                return `https://${kongProxyURl}//clarivate/entitlements/${valueAfterColon}`;
+                });
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-ApiKey': `${apiKey}`
+        };
+        axios.get(apiUrls, { headers })
+            .then(response => {
+                if (response.status === 200) {
+                    responseData = response.data.skus;
+                } 
+                // Invoke the callback with the response data
+                callback(null, responseData);
+            })
+            .catch(error => {
+                            // Include the error message in the response data
+                const errorMessage = `No Skus Data`;
+                responseData = errorMessage
+                
+                // Invoke the callback with the response data containing the error message
+                callback(null, responseData);
+            });
+    });
+}
 
 function getUser(loggedInUserId, userId, req, res, next) {
     debug("getUser(), loggedInUserId: " + loggedInUserId + ", userId: " + userId);
