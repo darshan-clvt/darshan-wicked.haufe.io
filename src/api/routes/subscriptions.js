@@ -351,7 +351,6 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     apikey: apiKey,
                     clientId: clientId,
                     clientSecret: clientSecret,
-                    customId: userInfo.customId,
                     auth: selectedApi.auth,
                     approved: !needsApproval,
                     customId : customIdData,
