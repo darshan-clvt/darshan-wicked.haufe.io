@@ -367,7 +367,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         plans: { href: '/plans' }
                     }
                 };
-
+                
                 dao.subscriptions.create(newSubscription, loggedInUserId, (err, persistedSubscription) => {
                     if (err) {
                         return utils.fail(res, 500, 'addSubscription: DAO create subscription failed', err);
