@@ -336,11 +336,6 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         allowedScopesMode = 'all';
                     }
                 }
-                let customIdData;
-                if (subsCreateInfo.api === "cortellies-api-collection"){
-                    customIdData = userInfo.customId;
-                        
-                }
 
                 const newSubscription = {
                     id: utils.createRandomId(),
@@ -353,7 +348,6 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     clientSecret: clientSecret,
                     auth: selectedApi.auth,
                     approved: !needsApproval,
-                    customId : customIdData,
                     trusted: isTrusted,
                     allowedScopes: allowedScopes,
                     allowedScopesMode: allowedScopesMode,
@@ -366,7 +360,9 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         plans: { href: '/plans' }
                     }
                 };
-                
+                if (subsCreateInfo.api === "cortellies-api-collection"){
+                    newSubscription.customId = userInfo.customId;
+                }
                 dao.subscriptions.create(newSubscription, loggedInUserId, (err, persistedSubscription) => {
                     if (err) {
                         return utils.fail(res, 500, 'addSubscription: DAO create subscription failed', err);
