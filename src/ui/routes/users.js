@@ -18,7 +18,7 @@ router.get('/me', function (req, res, next) {
 router.get('/skus/:truid', async function (req, res, next) {
     let userTruid = req.params.truid
 
-    getSkus(userTruid, userId, req, res, next, (err, responseData) => {
+    getSkus(userTruid, req, res, next, (err, responseData) => {
         if (err) {
             return res.status(500).json(responseData);
         }
@@ -41,13 +41,13 @@ function getSkus(truid, req, res, next, callback) {
     const kongProxyURl = req.app.portalGlobals.network.apiHost;
     let responseData;
        
-        const apiUrls = `https://${kongProxyURl}//clarivate/entitlements/${truid}`;
+        const entitlementsUrl = `https://${kongProxyURl}//clarivate/entitlements/${truid}`;
       
         const headers = {
             'Content-Type': 'application/json',
             'X-ApiKey': `${apiKey}`
         };
-        axios.get(apiUrls, { headers })
+        axios.get(entitlementsUrl, { headers })
             .then(response => {
                 if (response.status === 200) {
                     responseData = response.data.skus;
