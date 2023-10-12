@@ -336,6 +336,11 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         allowedScopesMode = 'all';
                     }
                 }
+                let customIdData;
+                if (subsCreateInfo.api === "cortellies-api-collection"){
+                    customIdData = userInfo.customId;
+                        
+                }
 
                 const newSubscription = {
                     id: utils.createRandomId(),
@@ -349,6 +354,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     customId: userInfo.customId,
                     auth: selectedApi.auth,
                     approved: !needsApproval,
+                    customId : customIdData,
                     trusted: isTrusted,
                     allowedScopes: allowedScopes,
                     allowedScopesMode: allowedScopesMode,
