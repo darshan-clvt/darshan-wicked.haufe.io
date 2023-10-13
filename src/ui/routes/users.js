@@ -5,6 +5,7 @@ const { debug, info, warn, error } = require('portal-env').Logger('portal:users'
 const passwordValidator = require('portal-env').PasswordValidator;
 const wicked = require('wicked-sdk');
 const router = express.Router();
+const axios = require('axios');
 const async = require('async');
 const utils = require('./utils');
 
