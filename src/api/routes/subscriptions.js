@@ -360,7 +360,9 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         plans: { href: '/plans' }
                     }
                 };
-
+                if (subsCreateInfo.api === "cortellies-api-collection"){
+                    newSubscription.customId = userInfo.customId;
+                }
                 dao.subscriptions.create(newSubscription, loggedInUserId, (err, persistedSubscription) => {
                     if (err) {
                         return utils.fail(res, 500, 'addSubscription: DAO create subscription failed', err);

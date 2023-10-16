@@ -5,6 +5,7 @@ const { debug, info, warn, error } = require('portal-env').Logger('portal:users'
 const passwordValidator = require('portal-env').PasswordValidator;
 const wicked = require('wicked-sdk');
 const router = express.Router();
+const axios = require('axios');
 const async = require('async');
 const utils = require('./utils');
 
@@ -15,12 +16,55 @@ router.get('/me', function (req, res, next) {
     return getUser(loggedInUserId, userId, req, res, next);
 });
 
+router.get('/skus/:truid', async function (req, res, next) {
+    let userTruid = req.params.truid
+
+    getSkus(userTruid, req, res, next, (err, responseData) => {
+        if (err) {
+            return res.status(500).json(responseData);
+        }
+        
+        // Send the response data
+        res.status(200).json(responseData);
+    });
+});
+
 router.get('/:userId', function (req, res, next) {
     debug("get('/:userId')");
     const loggedInUserId = utils.getLoggedInUserId(req);
     const userId = req.params.userId;
     return getUser(loggedInUserId, userId, req, res, next);
 });
+
+function getSkus(truid, req, res, next, callback) {
+
+    const apiKey = req.app.portalGlobals.network.clarivateapikey;
+    const kongProxyURl = req.app.portalGlobals.network.apiHost;
+    let responseData;
+       
+        const entitlementsUrl = `https://${kongProxyURl}//clarivate/entitlements/${truid}`;
+      
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-ApiKey': `${apiKey}`
+        };
+        axios.get(entitlementsUrl, { headers })
+            .then(response => {
+                if (response.status === 200) {
+                    responseData = response.data.skus;
+                } 
+                // Invoke the callback with the response data
+                callback(null, responseData);
+            })
+            .catch(error => {
+                            // Include the error message in the response data
+                const errorMessage = `No Skus Data!`;
+                responseData = errorMessage
+                
+                // Invoke the callback with the response data containing the error message
+                callback(null, responseData);
+            });
+    };
 
 function getUser(loggedInUserId, userId, req, res, next) {
     debug("getUser(), loggedInUserId: " + loggedInUserId + ", userId: " + userId);
