@@ -7,7 +7,7 @@ const qs = require('querystring');
 import * as utils from './utils';
 import { KongCollection, KongConsumer, KongPlugin, Callback, ErrorCallback, KongApiConfig } from 'wicked-sdk';
 import { KongApiConfigCollection, UpdateApiItem, DeleteApiItem, AddApiItem, AddPluginItem, UpdatePluginItem, DeletePluginItem, ConsumerInfo, AddConsumerItem, UpdateConsumerItem, DeleteConsumerItem, ConsumerApiPluginAddItem, ConsumerApiPluginPatchItem, ConsumerApiPluginDeleteItem, ConsumerPlugin } from './types';
-
+const { portal } = require('./portal');
 // The maximum number of async I/O calls we fire off against
 // the Kong instance for one single call.
 const MAX_PARALLEL_CALLS = 10;
@@ -600,12 +600,28 @@ function addKongConsumerApiPlugin(portalConsumer: ConsumerInfo, consumerId: stri
     portalApiPlugin.consumer = { id: consumerId };
     // Uargh
     const apiName = extractApiName(portalConsumer.consumer.username);
+    if(portal.checkIfBundleApi(apiName)) {
+        processBundlePluginConfigs(apiName,portalApiPlugin,callback)
+    } 
     utils.kongPostApiPlugin(apiName, portalApiPlugin, callback);
 }
 
 function deleteKongConsumerApiPlugin(kongConsumer: ConsumerInfo, kongApiPlugin: KongPlugin, callback): void {
     debug('deleteKongConsumerApiPlugin()');
     // This comes from Kong (the api_id)
+    if(kongApiPlugin.name === 'rate-limiting') {
+        let apiName = extractApiName(kongConsumer.consumer.username)
+        if(portal.checkIfBundleApi(apiName)) {
+            let ratelimitingPlugins = kongConsumer.apiPlugins.filter(p => p.name === 'rate-limiting')
+            ratelimitingPlugins.forEach((pluginItem) => {
+                utils.kongDeletePlugin(pluginItem.id, function(err,data) {
+                        if(err) {
+                          callback(err)
+                        }
+                });
+            })
+        }
+    }
     utils.kongDeletePlugin(kongApiPlugin.id, callback);
 }
 
@@ -794,4 +810,31 @@ function wipeConsumerBatch(consumerUrl: string, callback: ErrorCallback): void {
             wipeConsumerBatch(consumerUrl, callback);
         });
     });
+}
+
+function processBundlePluginConfigs(apiName,portalApiPlugin,callback) {
+    debug('processBundlePluginConfigs()')
+    let pluginName = portalApiPlugin.name
+    switch(pluginName) {
+       case "rate-limiting" : 
+           processBundleRatelimitingPlugin(apiName,portalApiPlugin,callback);
+           break;
+    }
+}
+
+function processBundleRatelimitingPlugin(apiName,portalApiPlugin,callback) {
+    portalApiPlugin.config.policy='local'
+    let bundleApiList = portal.getBundleApiNames(apiName)
+    for(let i=0;i<bundleApiList.length;i++) {
+       let name = bundleApiList[i]
+       if(name == apiName) {
+           continue;
+       }
+       utils.kongPostApiPlugin(name, portalApiPlugin, function(err,result) {
+           debug(`${apiName} plugin is processing----${portalApiPlugin}`)
+           if(err) {
+               return callback(err)
+           }
+       });
+   }
 }

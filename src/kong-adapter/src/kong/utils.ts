@@ -4,7 +4,7 @@ const request = require('request');
 const { debug, info, warn, error } = require('portal-env').Logger('kong-adapter:utils');
 const crypto = require('crypto');
 import * as wicked from 'wicked-sdk';
-
+const { portal } = require('./portal');
 const fs = require('fs');
 const path = require('path');
 const qs = require('querystring');
@@ -968,7 +968,12 @@ export function kongGetApiPluginsByConsumer(apiId: string, consumerId: string, c
             if (!plugins.data)
                 return callback(new Error(`Retrieving plugins for consumer ${consumerId} and service ${apiId} did not return data.`));
             console.log(plugins.data);
-            const filteredPlugins = plugins.data.filter(p => p.service && p.service.id === serviceId);
+            let filteredPlugins = null
+            if(portal.checkIfBundleApi(apiId)) {
+                filteredPlugins = plugins.data
+            } else {
+                filteredPlugins = plugins.data.filter(p => p.service && p.service.id === serviceId);
+            }
             return callback(null, { data: filteredPlugins, next: null });
         });
     });
