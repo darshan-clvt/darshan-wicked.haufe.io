@@ -136,7 +136,7 @@ export const portal = {
         return getAllAppConsumers(callback);
     },
     getBundleApiNames : function(apiName) {
-        let result = []
+        let result : string[][] = []
         debug('checking if api is part of bundle and getting all bundle apis list')
         if(apiName in bundleMap) {
             let bundleList = bundleMap[apiName]
@@ -144,7 +144,7 @@ export const portal = {
                 result.push(bundleMap[bundleItem])
             })
         }
-        result = result.flatMap(elem => elem)
+        result = [...result]
         debug(result)
         return result;
     },

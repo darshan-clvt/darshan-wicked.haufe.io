@@ -12,6 +12,7 @@ const { portal } = require('./portal');
 // the Kong instance for one single call.
 const MAX_PARALLEL_CALLS = 10;
 const KONG_BATCH_SIZE = 100; // Used when wiping the consumers
+const RATE_LIMITING = 'rate-limiting'
 
 export const kong = {
     getKongApis: function (callback: Callback<KongApiConfigCollection>): void {
@@ -609,14 +610,14 @@ function addKongConsumerApiPlugin(portalConsumer: ConsumerInfo, consumerId: stri
 function deleteKongConsumerApiPlugin(kongConsumer: ConsumerInfo, kongApiPlugin: KongPlugin, callback): void {
     debug('deleteKongConsumerApiPlugin()');
     // This comes from Kong (the api_id)
-    if(kongApiPlugin.name === 'rate-limiting') {
+    if(kongApiPlugin.name === RATE_LIMITING) {
         let apiName = extractApiName(kongConsumer.consumer.username)
         if(portal.checkIfBundleApi(apiName)) {
             let ratelimitingPlugins = kongConsumer.apiPlugins.filter(p => p.name === 'rate-limiting')
             ratelimitingPlugins.forEach((pluginItem) => {
                 utils.kongDeletePlugin(pluginItem.id, function(err,data) {
                         if(err) {
-                          callback(err)
+                          return callback(err)
                         }
                 });
             })
@@ -823,7 +824,6 @@ function processBundlePluginConfigs(apiName,portalApiPlugin,callback) {
 }
 
 function processBundleRatelimitingPlugin(apiName,portalApiPlugin,callback) {
-    portalApiPlugin.config.policy='local'
     let bundleApiList = portal.getBundleApiNames(apiName)
     for(let i=0;i<bundleApiList.length;i++) {
        let name = bundleApiList[i]
