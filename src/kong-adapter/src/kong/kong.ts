@@ -615,7 +615,7 @@ function deleteKongConsumerApiPlugin(kongConsumer: ConsumerInfo, kongApiPlugin: 
         if(portal.checkIfBundleApi(apiName)) {
             let ratelimitingPlugins = kongConsumer.apiPlugins.filter(p => p.name === 'rate-limiting')
             ratelimitingPlugins.forEach((pluginItem) => {
-                utils.kongDeletePlugin(pluginItem.id, function(err,data) {
+                utils.kongDeletePlugin(pluginItem.id, function(err) {
                         if(err) {
                           return callback(err)
                         }
