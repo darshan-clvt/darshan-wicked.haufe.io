@@ -617,7 +617,7 @@ function deleteKongConsumerApiPlugin(kongConsumer: ConsumerInfo, kongApiPlugin: 
             ratelimitingPlugins.forEach((pluginItem) => {
                 utils.kongDeletePlugin(pluginItem.id, function(err) {
                         if(err) {
-                          return callback(err)
+                          debug('error in deleteing the bundle rate limiting plugin')
                         }
                 });
             })
@@ -833,7 +833,7 @@ function processBundleRatelimitingPlugin(apiName,portalApiPlugin,callback) {
        utils.kongPostApiPlugin(name, portalApiPlugin, function(err,result) {
            debug(`${apiName} plugin is processing----${portalApiPlugin}`)
            if(err) {
-               return callback(err)
+               debug('error in adding the rate limiting plugin for bunlde service')
            }
        });
    }

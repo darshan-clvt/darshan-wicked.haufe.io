@@ -144,9 +144,8 @@ export const portal = {
                 result.push(bundleMap[bundleItem])
             })
         }
-        result = [...result]
         debug(result)
-        return result;
+        return result.flat();
     },
     checkIfBundleApi : function(apiName) {
         return (apiName in bundleMap) ?  true : false 
