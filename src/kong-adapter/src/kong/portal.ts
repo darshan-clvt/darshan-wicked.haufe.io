@@ -145,7 +145,7 @@ export const portal = {
             })
         }
         debug(result)
-        return result.flat();
+        return [].concat(...result);
     },
     checkIfBundleApi : function(apiName) {
         return (apiName in bundleMap) ?  true : false 
