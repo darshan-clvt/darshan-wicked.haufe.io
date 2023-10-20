@@ -57,6 +57,7 @@ export const portal = {
 
             try {
                 injectAuthPlugins(apiList);
+                bundleMap['process'] = false
             } catch (injectErr) {
                 return callback(injectErr);
             }
@@ -558,7 +559,7 @@ function injectKeyAuth(api: ApiDescription): ApiDescription {
     // API_BUNDLE: Is this API part of a bundle? If so, use the bundle name as the group name
     let groupName = api.bundle ? api.bundle : api.id;
     // we need alookup bundle badly 
-    if(api.bundle && bundleMap['process']) {  
+    if(api.bundle && bundleMap['process'] == true) {  
         let nameApi = api.config.api.name
         //maintain a map of api list and bundles
         if(nameApi in bundleMap) {
