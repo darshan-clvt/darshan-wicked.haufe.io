@@ -680,6 +680,18 @@ utils.dateFormat = (date, fstr, utc) => {
     });
 };
 
+utils.checkIfScopeUrls = function(allowedUrls,requestUrl) {
+    let allow = true;
+    if(requestUrl) {
+        if (allowedUrls.some(url => requestUrl.includes(url))) {
+            allow = true;
+        } else {
+            allow = false;
+        }
+    }
+    return allow;
+};
+
 utils.isEmptyGridFilter = (filter) => {
     let isEmpty = true;
     for (let key in filter) {

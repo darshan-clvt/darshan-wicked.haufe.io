@@ -174,8 +174,10 @@ app.initialize = function (done) {
     app.use('/applications', applications);
     // -- CLARIVATE HOOK
     const checkLoggedInUserId = (req, res, next) => {
+        let allowedUrls = app.portalGlobals.excludePathList;
+        let requestUrl = req.url ;
         // Check if the user is not logged in
-        if (!utils.getLoggedInUserId(req)) {
+        if (!utils.getLoggedInUserId(req) && !utils.checkIfScopeUrls(allowedUrls,requestUrl)) {
            // If not logged in, send a 403 Forbidden error
            return res.status(403).send("Forbidden");
        }
