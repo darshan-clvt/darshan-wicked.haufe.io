@@ -186,7 +186,7 @@ utils.loadAuthServersEndpoints = function (app, apiInfo) {
 utils.checkIfScopeUrls = function(allowedUrls,requestUrl) {
     let allow = true;
     if(requestUrl) {
-        if (allowedUrls.some(url => url.includes(requestUrl))) {
+        if (allowedUrls.some(url => requestUrl.includes(url))) {
             allow = true;
         } else {
             allow = false;
