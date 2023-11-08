@@ -316,7 +316,10 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
                 utils.processDisplayNames(auditLog)
             }
             utils.processDisplayNames(auditLog)
-        }
+            if (req.query.activity === "add subscription"){
+                auditlogResponse.items = auditlogResponse.items.filter(auditLog => auditLog.activity !== "subscription approved");
+             }
+          }
             res.json({
                 title: 'Audit Log',
                 auditlog: auditlogResponse
