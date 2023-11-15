@@ -10,7 +10,7 @@ const tmp = require('tmp');
 const fs = require('fs');
 const util = require('util');
 const utils = require('./utils');
-const process = require('process')
+
 
 router.get('/approvals', function (req, res, next) {
     debug('get("/approvals")');
@@ -234,7 +234,6 @@ function getFilteredApiKeyId(req, res, next, callback) {
                 subscriptions: null
             });
         } else {
-            debug(`i am going inside else `)
             req.query.id = body.custom_id;
             const subsUri = utils.makePagingUri(req, '/subscriptions?embed=1&', filterFields);
             utils.getFromAsync(req, res, subsUri, 200, (err, subsResponse) => {
