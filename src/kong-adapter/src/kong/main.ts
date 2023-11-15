@@ -7,8 +7,15 @@ import * as wicked from 'wicked-sdk';
 import * as utils from './utils';
 import { sync } from './sync';
 import { WickedEvent, WickedWebhookListener, WickedGlobals, Callback } from 'wicked-sdk';
+const axios = require('axios')
 
 const MAX_ASYNC_CALLS = 10;
+
+const APPLICATION = 'application'
+const SUBSCRIPTION = 'subscription'
+const ACTION_ADD ='add'
+const ACTION_DELETE = 'delete'
+const ACTION_UPDATE = 'update'
 
 // ====== PUBLIC INTERFACE ======
 
@@ -163,13 +170,13 @@ function dispatchWebhookAction(webhookData, onlyDelete, callback) {
     const entity = webhookData.entity;
     info(`Process action ${action} for entity ${entity}`);
     let syncAction = null;
-    if (entity === 'application' && (action === 'add' || action === 'update') && !onlyDelete)
+    if (entity === APPLICATION && (action === ACTION_ADD || action === ACTION_UPDATE) && !onlyDelete)
         syncAction = callback => syncAppConsumers(webhookData.data.applicationId, callback);
-    else if (entity === 'application' && action === 'delete')
+    else if (entity === APPLICATION && action === ACTION_DELETE)
         syncAction = callback => deleteAppConsumers(webhookData.data.applicationId, webhookData.data.subscriptions, callback);
-    else if (entity === 'subscription' && (action === 'add' || action === 'update') && !onlyDelete)
+    else if (entity === SUBSCRIPTION && (action === ACTION_ADD || action === ACTION_UPDATE) && !onlyDelete)
         syncAction = callback => syncAppConsumers(webhookData.data.applicationId, callback);
-    else if (entity === 'subscription' && action === 'delete')
+    else if (entity === SUBSCRIPTION && action === ACTION_DELETE)
         syncAction = callback => deleteAppSubscriptionConsumer(webhookData.data, callback);
     else
         debug(`Discarding event ${action} ${entity}.`)
@@ -186,6 +193,17 @@ function dispatchWebhookAction(webhookData, onlyDelete, callback) {
             error('SYNC ACTION FAILED!');
             error(err);
             return callback(err);
+        }
+        let globals = utils.getGlobals()
+        let apiId = webhookData.data.apiId
+        let appId = webhookData.data.applicationId
+        if (entity === SUBSCRIPTION && action === ACTION_UPDATE && globals && globals.features.enableAPIKeyCustomHeaders && (apiId in globals.customHeaderApisList)) {
+            debug('invoking ch script of api')
+            let chAPiJs = utils.getCustomHeaderModules(apiId)
+            if(chAPiJs) {
+              chAPiJs.processData(appId,apiId,globals,wicked,axios)
+            }
+            debug('invoking ch script end')
         }
         debug(`dispatchWebhookAction successfully returned for action ${action} ${entity}`);
         callback(null);
