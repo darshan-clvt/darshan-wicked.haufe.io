@@ -190,6 +190,74 @@ function mustBeAdminOrApproverMiddleware(req, res, next) {
     return next();
 }
 
+function getBaseUri(req) {
+    let baseUrl = "http://localhost:8001";
+    if (req.app.portalGlobals.network.kongAdminUrl) {
+        baseUrl = req.app.portalGlobals.network.kongAdminUrl;
+    }
+    return baseUrl;
+}
+
+function getAdmin(req, res, uri, callback) {
+    let baseUrl = getBaseUri(req);
+    request.get(
+        {
+            url: baseUrl + uri
+        },
+        callback);
+}
+
+function getSubscriptions(req, res, next) {
+    const filterFields = ['application', 'application_name', 'plan', 'api', 'owner', 'user'];
+    const subsUri = utils.makePagingUri(req, '/subscriptions?embed=1&', filterFields);
+    utils.getFromAsync(req, res, subsUri, 200, function (err, subsResponse) {
+        if (err)
+            return next(err);
+        if (!utils.acceptJson(req)) {
+            res.render('admin_subscriptions', {
+                authUser: req.user,
+                glob: req.app.portalGlobals,
+                title: 'All Subscriptions',
+            });
+            return;
+        }
+        if (utils.acceptJson(req)) {
+            res.json({
+                title: 'All Subscriptions',
+                subscriptions: subsResponse
+            });
+        }
+    });
+}
+
+function getFilteredApiKeyId(req, res, next, callback) {
+    const apikey = req.query.apikey.trim();
+    const filterFields = ['application_name', 'plan', 'api', 'owner', 'user', 'id'];
+    getAdmin(req, res, `/key-auths/${apikey}/consumer`, (err, Apikey) => {
+        if (err) {
+            return next(err);
+        }
+        let body = utils.getJson(Apikey.body);
+        if (body && body.message === "Not found") {
+            res.json({
+                title: 'All Subscriptions',
+                subscriptions: null
+            });
+        } else {
+            req.query.id = body.custom_id;
+            const subsUri = utils.makePagingUri(req, '/subscriptions?embed=1&', filterFields);
+            utils.getFromAsync(req, res, subsUri, 200, (err, subsResponse) => {
+                // Add consumerid field to the response
+                subsResponse.items[0].apikey = apikey;
+                res.json({
+                    title: 'All Subscriptions',
+                    subscriptions: subsResponse
+                });
+            });
+        }
+    });
+}
+
 router.get('/users', mustBeAdminMiddleware, function (req, res, next) {
     debug("get('/users')");
     if (!utils.acceptJson(req)) {
@@ -218,11 +286,11 @@ router.get('/users', mustBeAdminMiddleware, function (req, res, next) {
 router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
     debug("get('/auditlog')");
     const filterFields = ['activity', 'user', 'email', 'plan', 'api', 'role', 'application', 'startdate', 'enddate'];
+
     // Check if the "activity" query parameter is set and has a mapping
     if (req.query.activity in activityMap) {
         req.query.activity = activityMap[req.query.activity];
     }
-
     const auditlogUri = utils.makePagingUri(req, '/auditlog?embed=1&', filterFields);
     console.log("auditlog" + auditlogUri);
     if (!utils.acceptJson(req)) {
@@ -241,6 +309,8 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
             for (let auditLog of auditlogResponse.items) {
                 if (auditLog.user) {
                     auditLog.user = utils.sanitizeHtml(auditLog.user);
+                }
+                utils.processDisplayNames(auditLog)
             }
             utils.processDisplayNames(auditLog)
           }
@@ -260,7 +330,7 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
                 title: 'Audit Log',
                 auditlog: auditlogResponse
             });
-        }
+        
     });
 });
 
@@ -304,27 +374,11 @@ router.get('/auditlog_csv', mustBeAdminOrApproverMiddleware, function (req, res,
 
 router.get('/subscriptions', mustBeAdminOrApproverMiddleware, function (req, res, next) {
     debug("get('/subscriptions')");
-    const filterFields = ['application', 'application_name', 'plan', 'api', 'owner', 'user'];
-    const subsUri = utils.makePagingUri(req, '/subscriptions?embed=1&', filterFields);
-    utils.getFromAsync(req, res, subsUri, 200, function (err, subsResponse) {
-        if (err)
-            return next(err);
-        if (!utils.acceptJson(req)) {
-            res.render('admin_subscriptions', {
-                authUser: req.user,
-                glob: req.app.portalGlobals,
-                title: 'All Subscriptions',
-            });
-            
-            return;
-        }
-        if (utils.acceptJson(req)) {
-            res.json({
-                title: 'All Subscriptions',
-                subscriptions: subsResponse
-            });
-        }
-    });
+    if (req.query.apikey) {
+        getFilteredApiKeyId(req, res, next);
+    } else {
+        getSubscriptions(req, res, next);
+    }
 });
 
 router.get('/subscriptions_csv', mustBeAdminOrApproverMiddleware, function (req, res, next) {

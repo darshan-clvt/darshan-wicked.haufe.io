@@ -78,7 +78,7 @@ app.use(function (req, res, next) {
 });
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false , limit : "5mb"}));
 
 // This will be called as soon as the globals are present.
 // Some settings rely on things we read from the globals.json,
@@ -174,14 +174,16 @@ app.initialize = function (done) {
     app.use('/applications', applications);
     // -- CLARIVATE HOOK
     const checkLoggedInUserId = (req, res, next) => {
+        let allowedUrls = app.portalGlobals.excludePathList;
+        let requestUrl = req.url ;
         // Check if the user is not logged in
-        if (!utils.getLoggedInUserId(req)) {
+        if (!utils.getLoggedInUserId(req) && !utils.checkIfScopeUrls(allowedUrls,requestUrl)) {
            // If not logged in, send a 403 Forbidden error
            return res.status(403).send("Forbidden");
        }
        // Get the API key value from the environment variable
        const apiKey = app.portalGlobals.network.clarivateapikey;
-
+ 
        // Add the 'X-ApiKey' header to the request headers
        req.headers['X-ApiKey'] = apiKey;
        // Continue processing the request by calling the 'next' function
