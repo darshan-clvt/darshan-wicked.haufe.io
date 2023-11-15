@@ -281,19 +281,6 @@ router.get('/users', mustBeAdminMiddleware, function (req, res, next) {
 router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
     debug("get('/auditlog')");
     const filterFields = ['activity', 'user', 'email', 'plan', 'api', 'role', 'application', 'startdate', 'enddate'];
-    // Define a mapping of activity values
-    const activityMap = {
-    "subscription approved": "update subscription",
-    "subscription requested": "add subscription",
-    "approval sought": "add approval",
-    "subscription deleted": "delete subscription"
-    };
-
-    // Check if the "activity" query parameter is set and has a mapping
-    if (req.query.activity in activityMap) {
-        req.query.activity = activityMap[req.query.activity];
-    }
-
     const auditlogUri = utils.makePagingUri(req, '/auditlog?embed=1&', filterFields);
     console.log("auditlog" + auditlogUri);
     if (!utils.acceptJson(req)) {
@@ -314,9 +301,6 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
                     auditLog.user = utils.sanitizeHtml(auditLog.user);
             }
             utils.processDisplayNames(auditLog)
-            if (req.query.activity === "add subscription"){
-                auditlogResponse.items = auditlogResponse.items.filter(auditLog => auditLog.activity !== "subscription approved");
-             }
           }
             res.json({
                 title: 'Audit Log',
