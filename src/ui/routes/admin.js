@@ -10,7 +10,7 @@ const fs = require('fs');
 const util = require('util');
 const utils = require('./utils');
 
-// Define a mapping of activity values
+// Define a mapping of activity valuess
 const activityMap = {
     "subscription approved": "update subscription",
     "subscription requested": "add subscription",
