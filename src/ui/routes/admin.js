@@ -330,7 +330,7 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
                 title: 'Audit Log',
                 auditlog: auditlogResponse
             });
-        }
+        
     });
 });
 
@@ -374,27 +374,11 @@ router.get('/auditlog_csv', mustBeAdminOrApproverMiddleware, function (req, res,
 
 router.get('/subscriptions', mustBeAdminOrApproverMiddleware, function (req, res, next) {
     debug("get('/subscriptions')");
-    const filterFields = ['application', 'application_name', 'plan', 'api', 'owner', 'user'];
-    const subsUri = utils.makePagingUri(req, '/subscriptions?embed=1&', filterFields);
-    utils.getFromAsync(req, res, subsUri, 200, function (err, subsResponse) {
-        if (err)
-            return next(err);
-        if (!utils.acceptJson(req)) {
-            res.render('admin_subscriptions', {
-                authUser: req.user,
-                glob: req.app.portalGlobals,
-                title: 'All Subscriptions',
-            });
-            
-            return;
-        }
-        if (utils.acceptJson(req)) {
-            res.json({
-                title: 'All Subscriptions',
-                subscriptions: subsResponse
-            });
-        }
-    });
+    if (req.query.apikey) {
+        getFilteredApiKeyId(req, res, next);
+    } else {
+        getSubscriptions(req, res, next);
+    }
 });
 
 router.get('/subscriptions_csv', mustBeAdminOrApproverMiddleware, function (req, res, next) {
