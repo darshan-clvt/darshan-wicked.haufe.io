@@ -9,7 +9,9 @@ import { ConsumerInfo, ApplicationData, ApiDescriptionCollection, ApiDescription
 
 const MAX_PARALLEL_CALLS = 10;
 const REFRESH_API_INTERVAL = 3 * 60 * 1000; // 3 minutes
-
+const bundleMap = {
+    'process' : true
+};
 // ======== INTERFACE FUNCTIONS =======
 
 export const portal = {
@@ -55,6 +57,7 @@ export const portal = {
 
             try {
                 injectAuthPlugins(apiList);
+                bundleMap['process'] = false
             } catch (injectErr) {
                 return callback(injectErr);
             }
@@ -133,6 +136,21 @@ export const portal = {
         debug('getAllPortalConsumers()');
         return getAllAppConsumers(callback);
     },
+    getBundleApiNames : function(apiName) {
+        let result : string[][] = []
+        debug('checking if api is part of bundle and getting all bundle apis list')
+        if(apiName in bundleMap) {
+            let bundleList = bundleMap[apiName]
+            bundleList.forEach((bundleItem) => {
+                result.push(bundleMap[bundleItem])
+            })
+        }
+        debug(result)
+        return [].concat(...result);
+    },
+    checkIfBundleApi : function(apiName) {
+        return (apiName in bundleMap) ?  true : false 
+    }
 
 };
 
@@ -540,6 +558,22 @@ function injectKeyAuth(api: ApiDescription): ApiDescription {
     });
     // API_BUNDLE: Is this API part of a bundle? If so, use the bundle name as the group name
     let groupName = api.bundle ? api.bundle : api.id;
+    // we need alookup bundle badly 
+    if(api.bundle && bundleMap['process'] == true) {  
+        let nameApi = api.config.api.name
+        //maintain a map of api list and bundles
+        if(nameApi in bundleMap) {
+            bundleMap[nameApi].push(api.bundle)
+        } else {
+            bundleMap[nameApi] = [api.bundle]
+        }
+        //similarly maintain the list of apis for a bundle
+        if(api.bundle in bundleMap) {
+            bundleMap[api.bundle].push(nameApi)
+        } else {
+            bundleMap[api.bundle] = [nameApi]
+        }
+    }
     debug(`injectKeyAuth: Using ACL group name ${groupName}`);
     plugins.push({
         name: 'acl',

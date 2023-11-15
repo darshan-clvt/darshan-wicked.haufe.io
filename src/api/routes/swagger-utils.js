@@ -82,6 +82,11 @@ swaggerUtils.injectOpenAPIAuth = function (swaggerJson, globalSettings, apiInfo,
             url: `${globalSettings.network.schema}://${host}${p}`
         });
     }
+
+    if(apiInfo && swaggerJson && apiInfo.id) {
+       postProcessSwagger(swaggerJson,apiInfo.id)
+    }
+    
     return swaggerJson;
 };
 
@@ -318,6 +323,24 @@ function lookupAuthMethod(globalSettings, apiId, authMethodRef) {
     return authMethod;
 }
 
-
+/**
+ * This method loads the swagger scripts from config repo and post process swagger
+ * @param {*} swaggerJson 
+ * @param {*} apiId 
+ */
+function postProcessSwagger(swaggerJson,apiId)  {
+    debug('postProcessSwagger start')
+    try {
+        if(apiId && utils.shouldModifySwagger(apiId)) {
+            const swaggerScript = utils.loadApiSwaggerScripts(apiId)
+            swaggerScript.modifySwagger(swaggerJson)
+        }
+    }
+    catch(err) {
+        debug('error during swagger exec')
+        debug(err)
+    }
+    debug('postProcessSwagger end')
+}
 
 module.exports = swaggerUtils;
