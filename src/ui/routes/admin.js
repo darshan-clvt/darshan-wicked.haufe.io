@@ -312,6 +312,7 @@ router.get('/subscriptions', mustBeAdminOrApproverMiddleware, function (req, res
                 glob: req.app.portalGlobals,
                 title: 'All Subscriptions',
             });
+            
             return;
         }
         if (utils.acceptJson(req)) {
