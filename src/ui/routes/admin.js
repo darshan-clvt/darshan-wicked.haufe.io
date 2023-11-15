@@ -9,7 +9,14 @@ const tmp = require('tmp');
 const fs = require('fs');
 const util = require('util');
 const utils = require('./utils');
-const process = require('process')
+
+// Define a mapping of activity values
+const activityMap = {
+    "subscription approved": "update subscription",
+    "subscription requested": "add subscription",
+    "approval sought": "add approval",
+    "subscription deleted": "delete subscription"
+    };
 
 router.get('/approvals', function (req, res, next) {
     debug('get("/approvals")');
@@ -207,14 +214,6 @@ router.get('/users', mustBeAdminMiddleware, function (req, res, next) {
 router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
     debug("get('/auditlog')");
     const filterFields = ['activity', 'user', 'email', 'plan', 'api', 'role', 'application', 'startdate', 'enddate'];
-    // Define a mapping of activity values
-    const activityMap = {
-    "subscription approved": "update subscription",
-    "subscription requested": "add subscription",
-    "approval sought": "add approval",
-    "subscription deleted": "delete subscription"
-    };
-
     // Check if the "activity" query parameter is set and has a mapping
     if (req.query.activity in activityMap) {
         req.query.activity = activityMap[req.query.activity];
@@ -241,7 +240,8 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
             }
             utils.processDisplayNames(auditLog)
           }
-          if (req.query.activity === "add subscription") {
+          const ADD_SUBSCRIPTION_ACTIVITY = 'add subscription';
+          if (req.query.activity === ADD_SUBSCRIPTION_ACTIVITY) {
             const auditlogResponseItems = auditlogResponse.items;
             const filteredItems = [];
 
