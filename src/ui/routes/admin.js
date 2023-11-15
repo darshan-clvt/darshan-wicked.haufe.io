@@ -4,13 +4,11 @@ const express = require('express');
 const router = express.Router();
 const request = require('request');
 const async = require('async');
-const wicked = require('wicked-sdk');
 const mustache = require('mustache');
 const { debug, info, warn, error } = require('portal-env').Logger('portal:admin');
 const tmp = require('tmp');
 const fs = require('fs');
 const util = require('util');
-const url = require('url');
 const utils = require('./utils');
 const process = require('process')
 
