@@ -2,15 +2,12 @@
 
 const express = require('express');
 const router = express.Router();
-const request = require('request');
 const async = require('async');
-const wicked = require('wicked-sdk');
 const mustache = require('mustache');
 const { debug, info, warn, error } = require('portal-env').Logger('portal:admin');
 const tmp = require('tmp');
 const fs = require('fs');
 const util = require('util');
-const url = require('url');
 const utils = require('./utils');
 const process = require('process')
 
@@ -182,77 +179,6 @@ function mustBeAdminOrApproverMiddleware(req, res, next) {
     return next();
 }
 
-function getBaseUri(req) {
-    let baseUrl = "http://localhost:8001";
-    if (req.app.portalGlobals.network.kongAdminUrl) {
-        baseUrl = req.app.portalGlobals.network.kongAdminUrl;
-    }
-    return baseUrl;
-}
-
-function getAdmin(req, res, uri, callback) {
-    let baseUrl = getBaseUri(req);
-    request.get(
-        {
-            url: baseUrl + uri
-        },
-        callback);
-}
-
-function getSubscriptions(req, res, next) {
-    const filterFields = ['application', 'application_name', 'plan', 'api', 'owner', 'user'];
-    const subsUri = utils.makePagingUri(req, '/subscriptions?embed=1&', filterFields);
-    utils.getFromAsync(req, res, subsUri, 200, function (err, subsResponse) {
-        if (err)
-            return next(err);
-        if (!utils.acceptJson(req)) {
-            res.render('admin_subscriptions', {
-                authUser: req.user,
-                glob: req.app.portalGlobals,
-                title: 'All Subscriptions',
-            });
-            return;
-        }
-        if (utils.acceptJson(req)) {
-            res.json({
-                title: 'All Subscriptions',
-                subscriptions: subsResponse
-            });
-        }
-    });
-}
-
-function getFilteredApiKeyId(req, res, next, callback) {
-    const apikey = req.query.apikey.trim();
-    const filterFields = ['application_name', 'plan', 'api', 'owner', 'user', 'id'];
-    getAdmin(req, res, `/key-auths/${apikey}/consumer`, (err, Apikey) => {
-        if (err) {
-            return next(err);
-        }
-        let body = utils.getJson(Apikey.body);
-        if (body && body.message === "Not found") {
-            res.json({
-                title: 'All Subscriptions',
-                subscriptions: null
-            });
-        } else {
-            debug(`i am going inside else `)
-            req.query.id = body.custom_id;
-            const subsUri = utils.makePagingUri(req, '/subscriptions?embed=1&', filterFields);
-            utils.getFromAsync(req, res, subsUri, 200, (err, subsResponse) => {
-                // Add consumerid field to the response
-                subsResponse.items[0].apikey = apikey;
-                res.json({
-                    title: 'All Subscriptions',
-                    subscriptions: subsResponse
-                });
-            });
-        }
-    });
-}
-
-
-
 router.get('/users', mustBeAdminMiddleware, function (req, res, next) {
     debug("get('/users')");
     if (!utils.acceptJson(req)) {
@@ -316,10 +242,19 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
                 utils.processDisplayNames(auditLog)
             }
             utils.processDisplayNames(auditLog)
-            if (req.query.activity === "add subscription"){
-                auditlogResponse.items = auditlogResponse.items.filter(auditLog => auditLog.activity !== "subscription approved");
-             }
           }
+          if (req.query.activity === "add subscription") {
+            const auditlogResponseItems = auditlogResponse.items;
+            const filteredItems = [];
+
+            for (let i = 0; i < auditlogResponseItems.length; i++) {
+            const item = auditlogResponseItems[i];
+            if (item.activity !== "subscription approved" && item.role !== "admin") {
+                filteredItems.push(item);
+            }
+            }
+            auditlogResponse.items = filteredItems;
+            }
             res.json({
                 title: 'Audit Log',
                 auditlog: auditlogResponse
