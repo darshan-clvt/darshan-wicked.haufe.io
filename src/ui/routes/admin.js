@@ -17,6 +17,10 @@ const activityMap = {
     "approval sought": "add approval",
     "subscription deleted": "delete subscription"
     };
+    
+const ADD_SUBSCRIPTION_ACTIVITY = 'add subscription';
+const SUBSCRIPTION_APPROVED = 'subscription approved';
+const USER_ROLE = 'admin';
 
 router.get('/approvals', function (req, res, next) {
     debug('get("/approvals")');
@@ -242,14 +246,13 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
             }
             utils.processDisplayNames(auditLog)
           }
-          const ADD_SUBSCRIPTION_ACTIVITY = 'add subscription';
           if (req.query.activity === ADD_SUBSCRIPTION_ACTIVITY) {
             const auditlogResponseItems = auditlogResponse.items;
             const filteredItems = [];
 
             for (let i = 0; i < auditlogResponseItems.length; i++) {
             const item = auditlogResponseItems[i];
-            if (item.activity !== "subscription approved" && item.role !== "admin") {
+            if (item.activity !== SUBSCRIPTION_APPROVED && item.role !== USER_ROLE) {
                 filteredItems.push(item);
             }
             }
