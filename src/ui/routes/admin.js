@@ -312,8 +312,6 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
                 }
                 utils.processDisplayNames(auditLog)
             }
-            utils.processDisplayNames(auditLog)
-          }
           if (req.query.activity === ADD_SUBSCRIPTION_ACTIVITY) {
             const auditlogResponseItems = auditlogResponse.items;
             const filteredItems = [];
@@ -330,7 +328,7 @@ router.get('/auditlog', mustBeAdminMiddleware, function (req, res, next) {
                 title: 'Audit Log',
                 auditlog: auditlogResponse
             });
-        
+        }
     });
 });
 
