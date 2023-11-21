@@ -343,7 +343,8 @@ router.get('/:api', function (req, res, next) {
                       axios.get(apiUrl, { headers })
                       .then(response => {
                         if (response.status === 200) {
-                          responseData = response.data.skus; 
+                            const values = Object.values(response.data.entitlementProducts);
+                            responseData = values; 
                         }
                         callback(null, responseData);
                       })
