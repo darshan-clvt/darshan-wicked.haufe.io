@@ -105,14 +105,33 @@ block content
 
         if authUser || !apiInfo.requiredGroup                
             .panel.panel-default
-
+                .panel-heading
+                    +panelTitle('Your Subscriptions')
                 .panel-body
                     .flex-container
-                        // Add the Subscribed APIs side heading here
-                        h3 Subscribed APIs
-                        // Add the side box for "Investigational Drugs Profile" and "Biomarker" beside the heading
-                        .side-box
-                             p= JSON.stringify(skusData).replace(/["\[\]]/g, '')
+                        p
+                        | Please 
+                        |&nbsp;
+                        div(role='dialog')
+                        .box
+                           a.button(href='#popup')  click here &nbsp;
+                        .overlay(id='popup')
+                            .popupui
+                                .panel.panel-default
+                                    .panel-heading
+                                        +panelTitle('Your Subscriptions')
+                                        a.close(href='#') &times;
+                                    .panel-body 
+                                        if typeof skusData === 'string'
+                                            p= skusData
+                                        else if Array.isArray(skusData) && skusData.length > 0
+                                          .popupbox
+                                            each sku in skusData
+                                              p= sku 
+                                        else
+                                            p= "No data available"
+
+                        | to view the list of APIs you have contractual access to.
 
             .panel.panel-default
                     div.cortellis-navbar.navbar-collapse.collapse

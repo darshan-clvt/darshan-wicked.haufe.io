@@ -51,7 +51,7 @@ function getSkus(truid, req, res, next, callback) {
         axios.get(entitlementsUrl, { headers })
             .then(response => {
                 if (response.status === 200) {
-                    responseData = response.data.skus;
+                    responseData = { values:response.data.endDate, skus: response.data.skus };
                 } 
                 // Invoke the callback with the response data
                 callback(null, responseData);
