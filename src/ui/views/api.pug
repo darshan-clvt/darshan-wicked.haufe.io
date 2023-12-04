@@ -13,9 +13,22 @@ block scripts
 
 block bodyScripts
     script(type='text/javascript').
-        // Enable Popovers
-        $(document).ready(function(){
-            $('[data-toggle="popover"]').popover(); 
+        $(window).on('load', function () {
+        // Log the window location to the console
+        var apiEndpoints = [
+            "cortellis-np-drugs-api",
+            "cortellis-np-companies-api",
+            "cortellis-np-sources-api"
+        ];
+
+            // Check if the window location includes "apis/cortellies-api-collection"
+            for (var i = 0; i < apiEndpoints.length; i++) {
+                if (window.location.href.includes("apis/" + apiEndpoints[i])) {
+                    // Hide the elements with the specified IDs
+                    $(".custom-hide").hide();
+                    break; // exit the loop if a match is found
+                }
+            }
         });
 
 block content
@@ -147,10 +160,10 @@ block content
                         a(href=`/login?redirect=/apis/${apiInfo.id}`).btn.btn-default Log in &raquo;
 
         else if apiInfo.auth != "none" && !partnerOnly
-            .panel.panel-default
-                .panel-heading
+            .panel.panel-default.custom-hide
+                .panel-heading.custom-hide
                     +panelTitle('Applications', '/help/api')
-                .panel-body
+                .panel-body.custom-hide
 
                     -var redirectAuth = apiInfo.auth == "oauth2" && apiInfo.settings && (apiInfo.settings.enable_implicit_grant || apiInfo.settings.enable_authorization_code)
                     -var directAuth = apiInfo.auth == "oauth2" && apiInfo.settings && (apiInfo.settings.enable_client_credentials || apiInfo.settings.enable_password_grant)
@@ -260,7 +273,7 @@ block content
                     a(href="/applications?register=true").btn.btn-default Register Application &raquo;
 
             if authUser.admin
-                .panel.panel-success
+                .panel.panel-success.custom-hide
                     .panel-heading
                         +panelTitle('All Subscriptions (Admin only)', null, '#admin_subscriptions')
                     #admin_subscriptions.collapse.panel-collapse
@@ -277,7 +290,7 @@ block content
 
                                 br
 
-                                .panel.panel-danger
+                                .panel.panel-danger.custom-hide
                                     .panel-heading
                                         +panelTitle('Super Danger Zone', null, '#admin_superdanger')
                                     #admin_superdanger.collapse.panel-collapse

@@ -17,9 +17,28 @@ block bodyScripts
         $(document).ready(function(){
             $('[data-toggle="popover"]').popover(); 
         });
+        $('.view-menu').hide();
+        $('#investigationalDrugLink').mouseenter(function() {
+            $('.view-menu').show();
+        });
+
+        $('.view-menu').mouseleave(function() {
+            $(this).hide();
+        });
     script.
         document.addEventListener('DOMContentLoaded', function () {
-        // Function to get a query parameter from the URL
+            document.addEventListener('DOMContentLoaded', function () {
+
+              $('.api-link').on('click', function() {
+                var selectedApiValue = $(this).data('api-value');
+                var iframeSrc = `/apis/${selectedApiValue}`;
+                $('#investigationalDrugPanel1 iframe').attr('src', iframeSrc);  
+                $('#investigationalDrugPanel1, #investigationalDrugPanel2').toggle();
+                console.log('Single click event triggered!');
+                console.log('Selected API Value:', selectedApiValue);
+        
+            });
+        });
             function getQueryParameter(param) {
                 var urlParams = new URLSearchParams(window.location.search);
                 return urlParams.get(param);
@@ -35,14 +54,14 @@ block bodyScripts
 
             // Show the content panel based on the query parameter
             if (section === "investigationalDrug") {
-                document.getElementById('investigationalDrugPanel').style.display = 'block';
+                document.getElementById('investigationalDrugPanel2').style.display = 'block';
             } else if (section === "biomarkers") {
                 document.getElementById('biomarkersPanel').style.display = 'block';
             } else if (section === "targets") {
                 document.getElementById('targetsPanel').style.display = 'block';
             }else {
                 // Default behavior: Show the investigationalDrugPanel when no "section" is specified
-                document.getElementById('investigationalDrugPanel').style.display = 'block';
+                document.getElementById('investigationalDrugPanel2').style.display = 'block';
             }
 
             var subsriptionBtn = document.getElementById('application-subs-list').getElementsByTagName("button");
@@ -136,13 +155,26 @@ block content
             .panel.panel-default
                     div.cortellis-navbar.navbar-collapse.collapse
                         ul.nav.navbar-nav.cortellies-navbar
-                            li
-                                a(href='?section=investigationalDrug', id='investigationalDrugLink', class='active') Investigational Drug
+                            li(class='dropdown')
+                                a(href='?section=investigationalDrug' id='investigationalDrugLink')
+                                    | InvestigationalDrug
+                                ul(class='view-menu')
+                                
+                                    - var apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi)
+                                    - var apiData = JSON.parse(apiDataString)
+                                    each apiObject in apiData
+                                        li
+                                        - var apiKey = Object.keys(apiObject)[0];
+                                        a(href='javascript:void(0);', class='api-link', data-api-value=apiObject[apiKey])
+                                            | #{apiKey}
                             li
                                 a(href='?section=biomarkers', id='biomarkersLink') Biomarkers
                             li
                                 a(href='?section=targets', id='targetsLink') Targets
-                    div.panel-body.unique-panel-body(id='investigationalDrugPanel')
+                    div.panel-body.unique-panel-body(id='investigationalDrugPanel1')
+                        br
+                        iframe(src='', width='100%', height='600px' )
+                    div.panel-body.unique-panel-body(id='investigationalDrugPanel2')
                         h2(class='unique-h2-class')= glob.cortellisUi.cortellies.InvestigationalDrugs.Heading
                         br
                         each section, index in glob.cortellisUi.cortellies.InvestigationalDrugs.Sections
