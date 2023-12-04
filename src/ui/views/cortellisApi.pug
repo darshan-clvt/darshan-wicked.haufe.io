@@ -27,8 +27,6 @@ block bodyScripts
         });
     script.
         document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('DOMContentLoaded', function () {
-
               $('.api-link').on('click', function() {
                 var selectedApiValue = $(this).data('api-value');
                 var iframeSrc = `/apis/${selectedApiValue}`;
