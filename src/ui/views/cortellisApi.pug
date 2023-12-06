@@ -17,82 +17,42 @@ block bodyScripts
         $(document).ready(function(){
             $('[data-toggle="popover"]').popover(); 
         });
-        $('.view-menu').hide();
-        $('#investigationalDrugLink').mouseenter(function() {
-            $('.view-menu').show();
-        });
-
-        $('.view-menu').mouseleave(function() {
-            $(this).hide();
-        });
+        //Extacting the Paragraph values and Check for disabling subscribe button!
+        var pValue = $('#skusId').text().trim();
+        if (pValue === '') {
+            // Hide all buttons when pValue is empty
+            let allButtons = document.getElementById('application-subs-list').getElementsByTagName("button");
+            for (let i = 0; i < allButtons.length; i++) {
+                allButtons[i].disabled = true;
+            }
+        } else {
+            // Iterate over buttons and disable specific ones
+            let subscriptionButtons = document.getElementById('application-subs-list').getElementsByTagName("button");
+            for (let i = 0; i < subscriptionButtons.length; i++) {
+                if (subscriptionButtons[i].id == "subscribeButton" && subscriptionButtons[i].value == 'true') {
+                    subscriptionButtons[i].disabled = true;
+                }
+            }
+        }
     script.
         document.addEventListener('DOMContentLoaded', function () {
+              // Get the first element with the 'api-link' class
+              var firstApiLink = $('.api-link:first');                
+              // Extract the API value from the data attribute
+              var selectedApiValue = firstApiLink.data('api-value');                
+               // Set the iframe source and show the panel
+              var iframeSrc = `/apis/${selectedApiValue}`;
+              $('#investigationalDrugPanel1 iframe').attr('src', iframeSrc);
+              $('#investigationalDrugPanel1').show();                                
+              
+              // Handle click events on '.api-link'
               $('.api-link').on('click', function() {
                 var selectedApiValue = $(this).data('api-value');
                 var iframeSrc = `/apis/${selectedApiValue}`;
                 $('#investigationalDrugPanel1 iframe').attr('src', iframeSrc);  
-                $('#investigationalDrugPanel1, #investigationalDrugPanel2').toggle();
-                console.log('Single click event triggered!');
-                console.log('Selected API Value:', selectedApiValue);
-        
+                $('#investigationalDrugPanel1').show();
             });
         });
-            function getQueryParameter(param) {
-                var urlParams = new URLSearchParams(window.location.search);
-                return urlParams.get(param);
-            }
-
-            // Get the value of the "section" query parameter from the URL
-            var section = getQueryParameter("section");
-
-            // Hide all content panels
-            document.querySelectorAll('.panel-body.unique-panel-body').forEach(function (panel) {
-                panel.style.display = 'none';
-            });
-
-            // Show the content panel based on the query parameter
-            if (section === "investigationalDrug") {
-                document.getElementById('investigationalDrugPanel2').style.display = 'block';
-            } else if (section === "biomarkers") {
-                document.getElementById('biomarkersPanel').style.display = 'block';
-            } else if (section === "targets") {
-                document.getElementById('targetsPanel').style.display = 'block';
-            }else {
-                // Default behavior: Show the investigationalDrugPanel when no "section" is specified
-                document.getElementById('investigationalDrugPanel2').style.display = 'block';
-            }
-
-            var subsriptionBtn = document.getElementById('application-subs-list').getElementsByTagName("button");
-                for(var i = 0; i < subsriptionBtn.length; i++){
-                    console.log(subsriptionBtn[i].id, 'element ID');
-                    //dont touch it
-                    if(subsriptionBtn[i].id == "subscribeButton") {
-                        if (subsriptionBtn[i].value == 'true') {
-                        subsriptionBtn[i].disabled = true
-                    }
-
-                  }
-                }
-            let searchParam = window.location.href.split('?')[1];
-            let currentSelectedTab = searchParam.split('=')[1];
-            console.log(currentSelectedTab, 'currentSelectedTab');
-            if(currentSelectedTab) {
-                if(currentSelectedTab === 'investigationalDrug') {
-                    document.getElementById('investigationalDrugLink').style.color = '#6817ff';
-
-                } else if (currentSelectedTab === 'biomarkers') {
-                document.getElementById('biomarkersLink').style.color = '#6817ff';
-
-
-                } else if(currentSelectedTab === 'targets') {
-
-                    document.getElementById('targetsLink').style.color = '#6817ff';
-
-                }
-            }
-            
-        });
-
 
 
 block content
@@ -143,138 +103,14 @@ block content
                                             p= skusData
                                         else if Array.isArray(skusData) && skusData.length > 0
                                           .popupbox
+                                            - skusData.sort();
                                             each sku in skusData
-                                              p= sku 
+                                              p#skusId= sku 
                                         else
                                             p= "No data available"
 
                         | to view the list of APIs you have contractual access to.
 
-            .panel.panel-default
-                    div.cortellis-navbar.navbar-collapse.collapse
-                        ul.nav.navbar-nav.cortellies-navbar
-                            li(class='dropdown')
-                                a(href='?section=investigationalDrug' id='investigationalDrugLink')
-                                    | InvestigationalDrug
-                                ul(class='view-menu')
-                                
-                                    - var apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi)
-                                    - var apiData = JSON.parse(apiDataString)
-                                    each apiObject in apiData
-                                        li
-                                        - var apiKey = Object.keys(apiObject)[0];
-                                        a(href='javascript:void(0);', class='api-link', data-api-value=apiObject[apiKey])
-                                            | #{apiKey}
-                            li
-                                a(href='?section=biomarkers', id='biomarkersLink') Biomarkers
-                            li
-                                a(href='?section=targets', id='targetsLink') Targets
-                    div.panel-body.unique-panel-body(id='investigationalDrugPanel1')
-                        br
-                        iframe(src='', width='100%', height='600px' )
-                    div.panel-body.unique-panel-body(id='investigationalDrugPanel2')
-                        h2(class='unique-h2-class')= glob.cortellisUi.cortellies.InvestigationalDrugs.Heading
-                        br
-                        each section, index in glob.cortellisUi.cortellies.InvestigationalDrugs.Sections
-                            h4(class=`subheading`)= section.Subheading
-                            ul(class=`content-list`)
-                                each detail in section.details
-                                    li(class=`content-item`)= detail
-
-                    div.panel-body.unique-panel-body(id='biomarkersPanel')
-                        h2(class='unique-h2-class')= glob.cortellisUi.cortellies.biomarks.Heading
-                        br
-                        each section, index in glob.cortellisUi.cortellies.biomarks.Sections
-                            h4(class=`subheading`)= section.Subheading
-                            ul(class=`content-list`)
-                                each detail in section.details
-                                    li(class=`content-item`)= detail
-                    
-                    div.panel-body.unique-panel-body(id='targetsPanel')
-                        h2(class='unique-h2-class')= glob.cortellisUi.cortellies.targets.Heading
-                        br
-                        each section, index in glob.cortellisUi.cortellies.targets.Sections
-                            h4(class=`subheading`)= section.Subheading
-                            ul(class=`content-list`)
-                                each detail in section.details
-                                    li(class=`content-item`)= detail
-
-                            
-
-                    each apiUri, i in apiUris
-                        div
-                            //- p
-                            //-     input(readonly type='string' value=apiUri style='font-family: monospace;').form-control
-                    if apiInfo.authMethods && apiInfo.authMethods.length > 0 && apiInfo.auth == 'oauth2'
-                        br
-                        if (apiInfo.authMethods.length == 1)
-                            label Authentication Method:
-                        else
-                            label Authentication Methods:
-                            p Any of the following Authentication Methods can be used to retrieve an access token for the API.
-
-                        -var onlyClientCredentials = apiInfo.settings && apiInfo.settings.enable_client_credentials && !(apiInfo.settings.enable_password_grant || apiInfo.settings.enable_implicit_grant || apiInfo.settings.enable_authorization_code)
-                        if onlyClientCredentials
-                            p.
-                                <b>Note:</b> This API only supports the <a href="/help/oauth2_client_credentials" target="_blank">Client Credentials</a> flow.
-                                This means that you will log in only using your application's client ID and client secret, without actually authenticating a
-                                user. In effect, any <code>/token</code> end point of the below Authentication Method(s) can be used for that.
-                            br
-                   
-                        for authMethod in apiInfo.authMethods
-                            .panel.panel-success
-                                .panel-heading
-                                    +panelTitle(authMethod.friendlyShort + ' (' + authMethod.name + ')', null, '#auth_' + authMethod.name)
-                                div(id=`auth_${authMethod.name}`).collapse.panel-collapse
-                                    .panel-body
-                                        p #{authMethod.friendlyLong}
-                                        if authMethod.config.authorizeEndpoint && !onlyClientCredentials
-                                            input(readonly type='string' value=authMethod.config.authorizeEndpoint style='font-family: monospace;').form-control
-                                            p.small Authorization Endpoint
-                                        if authMethod.config.tokenEndpoint
-                                            input(readonly type='string' value=authMethod.config.tokenEndpoint style='font-family: monospace;').form-control
-                                            p.small Token Endpoint
-                                        if authMethod.config.profileEndpoint && !onlyClientCredentials
-                                            input(readonly type='string' value=authMethod.config.profileEndpoint style='font-family: monospace;').form-control
-                                            p.small Profile Endpoint
-
-                    if apiInfo.hasProtectedAuthMethods
-                        .panel.panel-success
-                            .panel-heading
-                                +panelTitle('Other Auth Methods', null, '#auth_other')
-                            div(id='auth_other').collapse.panel-collapse
-                                .panel-body
-                                    p.
-                                        This API also has other authentication methods. Please contact the API Portal administrator to get additional information
-                                        on the endpoint URLs, in case you need them.
-                    
-                    if apiInfo.auth == "oauth2"
-                        label Authorization Flows (OAuth2):
-
-                        p This API supports the following OAuth2 authorization flows:
-
-                        ul
-                            if apiInfo.settings && apiInfo.settings.enable_client_credentials
-                                li <a href="/help/oauth2_client_credentials" target="_blank">Client Credentials</a>
-                            if apiInfo.settings && apiInfo.settings.enable_password_grant
-                                li <a href="/help/oauth2_password_grant" target="_blank">Resource Owner Password Grant</a>
-                            if apiInfo.settings && apiInfo.settings.enable_authorization_code
-                                li <a href="/help/oauth2_authorization_code" target="_blank">Autorization Code Grant</a> (three legged)
-                            if apiInfo.settings && apiInfo.settings.enable_implicit_grant
-                                li <a href="/help/oauth2_implicit_grant" target="_blank">Implicit Grant</a> (three legged)
-
-                    if apiInfo.auth == "none"
-                        p This API does not require authorization. Review the documentation below for more information.
-                    
-                    if apiInfo.bundle
-                        label API Bundle
-
-                        p.
-                            This API is part of the API Bundle "#{apiInfo.bundle}". Read more on API Bundles on the <a href="/help/bundles">API Bundle help page</a>.
-                            Tokens created for any of the bundled APIs can be reused with <a href="/apis">any other API</a> of the same API bundle.
-
-        
-        
         if !authUser && apiInfo.auth != "none"
             .panel.panel-danger
                 .panel-heading
@@ -440,3 +276,94 @@ block content
                                                     strong This is only possible for APIs already marked as <code>deprecated</code>.
                             else
                                 p <i>There are no subscriptions to this API.</i>
+            .panel.panel-default
+                div.cortellis-navbar.navbar-collapse.collapse
+                    ul.nav.navbar-nav.cortellies-navbar
+                        - var apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi)
+                        - var apiData = JSON.parse(apiDataString)
+                            each apiObject in apiData
+                                li
+                                    - var apiKey = Object.keys(apiObject)[0];
+                                    a(href='javascript:void(0);', class='api-link', data-api-value=apiObject[apiKey])
+                                        | #{apiKey}
+                                        ul(class='view-menu')
+                                            each subApiObject in apiObject[apiKey]
+                                                li
+                                                    - var subApiKey = Object.keys(subApiObject)[0];
+                                                    a(href='javascript:void(0);', class='api-link', data-api-value=subApiObject[subApiKey])
+                                                        | #{subApiKey}
+                div.panel-body.unique-panel-body(id='investigationalDrugPanel1')
+                    br
+                    iframe(src='', width='100%', height='600px' )
+
+                each apiUri, i in apiUris
+                    div
+                        //- p
+                        //-     input(readonly type='string' value=apiUri style='font-family: monospace;').form-control
+                if apiInfo.authMethods && apiInfo.authMethods.length > 0 && apiInfo.auth == 'oauth2'
+                    br
+                    if (apiInfo.authMethods.length == 1)
+                        label Authentication Method:
+                    else
+                        label Authentication Methods:
+                        p Any of the following Authentication Methods can be used to retrieve an access token for the API.
+
+                    -var onlyClientCredentials = apiInfo.settings && apiInfo.settings.enable_client_credentials && !(apiInfo.settings.enable_password_grant || apiInfo.settings.enable_implicit_grant || apiInfo.settings.enable_authorization_code)
+                    if onlyClientCredentials
+                        p.
+                            <b>Note:</b> This API only supports the <a href="/help/oauth2_client_credentials" target="_blank">Client Credentials</a> flow.
+                            This means that you will log in only using your application's client ID and client secret, without actually authenticating a
+                            user. In effect, any <code>/token</code> end point of the below Authentication Method(s) can be used for that.
+                        br
+                
+                    for authMethod in apiInfo.authMethods
+                        .panel.panel-success
+                            .panel-heading
+                                +panelTitle(authMethod.friendlyShort + ' (' + authMethod.name + ')', null, '#auth_' + authMethod.name)
+                            div(id=`auth_${authMethod.name}`).collapse.panel-collapse
+                                .panel-body
+                                    p #{authMethod.friendlyLong}
+                                    if authMethod.config.authorizeEndpoint && !onlyClientCredentials
+                                        input(readonly type='string' value=authMethod.config.authorizeEndpoint style='font-family: monospace;').form-control
+                                        p.small Authorization Endpoint
+                                    if authMethod.config.tokenEndpoint
+                                        input(readonly type='string' value=authMethod.config.tokenEndpoint style='font-family: monospace;').form-control
+                                        p.small Token Endpoint
+                                    if authMethod.config.profileEndpoint && !onlyClientCredentials
+                                        input(readonly type='string' value=authMethod.config.profileEndpoint style='font-family: monospace;').form-control
+                                        p.small Profile Endpoint
+
+                if apiInfo.hasProtectedAuthMethods
+                    .panel.panel-success
+                        .panel-heading
+                            +panelTitle('Other Auth Methods', null, '#auth_other')
+                        div(id='auth_other').collapse.panel-collapse
+                            .panel-body
+                                p.
+                                    This API also has other authentication methods. Please contact the API Portal administrator to get additional information
+                                    on the endpoint URLs, in case you need them.
+            
+                if apiInfo.auth == "oauth2"
+                    label Authorization Flows (OAuth2):
+
+                    p This API supports the following OAuth2 authorization flows:
+
+                    ul
+                        if apiInfo.settings && apiInfo.settings.enable_client_credentials
+                            li <a href="/help/oauth2_client_credentials" target="_blank">Client Credentials</a>
+                        if apiInfo.settings && apiInfo.settings.enable_password_grant
+                            li <a href="/help/oauth2_password_grant" target="_blank">Resource Owner Password Grant</a>
+                        if apiInfo.settings && apiInfo.settings.enable_authorization_code
+                            li <a href="/help/oauth2_authorization_code" target="_blank">Autorization Code Grant</a> (three legged)
+                        if apiInfo.settings && apiInfo.settings.enable_implicit_grant
+                            li <a href="/help/oauth2_implicit_grant" target="_blank">Implicit Grant</a> (three legged)
+
+                if apiInfo.auth == "none"
+                    p This API does not require authorization. Review the documentation below for more information.
+                
+                if apiInfo.bundle
+                    label API Bundle
+
+                    p.
+                        This API is part of the API Bundle "#{apiInfo.bundle}". Read more on API Bundles on the <a href="/help/bundles">API Bundle help page</a>.
+                        Tokens created for any of the bundled APIs can be reused with <a href="/apis">any other API</a> of the same API bundle.
