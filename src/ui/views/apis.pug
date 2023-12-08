@@ -44,7 +44,7 @@ mixin apiDef(anApi)
             a(href='/help/apis' target='_blank')
               img(src='/images/key-icon-32.png' align='right' title='Secured with API Key Access')
           a(href=`/apis/${anApi.id}`)
-            h4#yourId= anApi.name
+            h4= anApi.name
           if anApi.deprecated
             p(style='color:red;') <b>Deprecated</b>
           p!= anApi.desc
