@@ -125,7 +125,7 @@ block content
         else if apiInfo.auth != "none" && !partnerOnly
             .panel.panel-default
                 .panel-heading
-                    +panelTitle('Application cortellis', '/help/api')
+                    +panelTitle('Your Applications', '/help/api')
                 .panel-body
 
                     -var redirectAuth = apiInfo.auth == "oauth2" && apiInfo.settings && (apiInfo.settings.enable_implicit_grant || apiInfo.settings.enable_authorization_code)
@@ -292,9 +292,8 @@ block content
                                                     - var subApiKey = Object.keys(subApiObject)[0];
                                                     a(href='javascript:void(0);', class='api-link', data-api-value=subApiObject[subApiKey])
                                                         | #{subApiKey}
-                div.panel-body.unique-panel-body(id='investigationalDrugPanel1')
-                    br
-                    iframe(src='', width='100%', height='600px' )
+            .unique-panel-body(id='investigationalDrugPanel1')
+                iframe(src='', width='100%', height='600px', scrolling="no" )
 
                 each apiUri, i in apiUris
                     div
@@ -360,10 +359,3 @@ block content
 
                 if apiInfo.auth == "none"
                     p This API does not require authorization. Review the documentation below for more information.
-                
-                if apiInfo.bundle
-                    label API Bundle
-
-                    p.
-                        This API is part of the API Bundle "#{apiInfo.bundle}". Read more on API Bundles on the <a href="/help/bundles">API Bundle help page</a>.
-                        Tokens created for any of the bundled APIs can be reused with <a href="/apis">any other API</a> of the same API bundle.

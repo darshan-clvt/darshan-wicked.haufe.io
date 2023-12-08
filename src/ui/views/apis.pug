@@ -44,13 +44,13 @@ mixin apiDef(anApi)
             a(href='/help/apis' target='_blank')
               img(src='/images/key-icon-32.png' align='right' title='Secured with API Key Access')
           a(href=`/apis/${anApi.id}`)
-            h4= anApi.name
+            h4#yourId= anApi.name
           if anApi.deprecated
             p(style='color:red;') <b>Deprecated</b>
           p!= anApi.desc
             p
               a(class="btn btn-default" href=`/apis/${anApi.id}` role="button") Information &raquo;
-          if anApi.bundle
+          if anApi.bundle && anApi.id !== 'cortellis-api-collection'
             p
               a(href='/help/bundles')
                 span.label.label-info= anApi.bundle
@@ -92,6 +92,17 @@ block content
                     +apiDef(filteredApiList[i+1])
                   if (i+2) < filteredApiList.length
                     +apiDef(filteredApiList[i+2])
+          else if authUser && (authUser.admin !== true && authUser.authenticated_scope.includes('wicked:api-cortellis-user'))
+              - const excludedApiIds = ["cortellis-np-drugs-api", "cortellis-np-companies-api", "cortellis-np-sources-api"];
+              - const filteredApiList = apilist.filter(api => !excludedApiIds.includes(api.id));
+              each api, i in filteredApiList
+                if i % 3 === 0
+                  div(class="row")
+                    +apiDef(filteredApiList[i])
+                    if i + 1 < filteredApiList.length
+                      +apiDef(filteredApiList[i + 1])
+                    if i + 2 < filteredApiList.length
+                      +apiDef(filteredApiList[i + 2])
           else 
             each api, i in apilist
               if (i % 3 == 0)
