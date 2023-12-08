@@ -161,24 +161,26 @@ html
                        
 
     block content
-
-    hr
-    .container
-        footer
-            table(width='100%')
-                tr
-                    td(style='text-align:left; color: #999999;')!= glob.footer
-                    td(style='text-align:right; color:#999999;')
-                        if glob.layouts.footer.showBuiltBy
-                            | Built by <a href='http://www.haufe-lexware.com' target='_blank'>Haufe-Lexware</a>, powered by <a href='https://www.konghq.com' target='_blank'>Kong</a>.
-                tr
-                    if (authUser && authUser.admin)
-                        td(colspan=2 style='text-align:right; color: #cccccc; font-size: 10pt;') Portal Build: #{glob.buildDate} -- <a href='/admin/health'>Config Build: #{glob.configDate}</a>
-                    else if glob.layouts.footer.showBuilds
-                        td(colspan=2 style='text-align:right; color: #cccccc; font-size: 10pt;') Portal Build: #{glob.buildDate} -- Config Build: #{glob.configDate}
-                if !glob.isProduction
+    if apiInfo && (apiInfo.id === "cortellis-np-drugs-api" || apiInfo.id === "cortellis-np-companies-api" || apiInfo.id === "cortellis-np-sources-api")
+    
+    else
+        hr
+        .container
+            footer
+                table(width='100%')
                     tr
-                        td(colspan=2 style='text-align:center; color: #ff0000; font-size:18pt;') PORTAL IS RUNNING IN DEVELOPMENT MODE
+                        td(style='text-align:left; color: #999999;')!= glob.footer
+                        td(style='text-align:right; color:#999999;')
+                            if glob.layouts.footer.showBuiltBy
+                                | Built by <a href='http://www.haufe-lexware.com' target='_blank'>Haufe-Lexware</a>, powered by <a href='https://www.konghq.com' target='_blank'>Kong</a>.
+                    tr
+                        if (authUser && authUser.admin)
+                            td(colspan=2 style='text-align:right; color: #cccccc; font-size: 10pt;') Portal Build: #{glob.buildDate} -- <a href='/admin/health'>Config Build: #{glob.configDate}</a>
+                        else if glob.layouts.footer.showBuilds
+                            td(colspan=2 style='text-align:right; color: #cccccc; font-size: 10pt;') Portal Build: #{glob.buildDate} -- Config Build: #{glob.configDate}
+                    if !glob.isProduction
+                        tr
+                            td(colspan=2 style='text-align:center; color: #ff0000; font-size:18pt;') PORTAL IS RUNNING IN DEVELOPMENT MODE
 
     script(src='/assets/jquery/jquery.min.js')
     script(src='/assets/jquery-ui/jquery-ui.min.js')
