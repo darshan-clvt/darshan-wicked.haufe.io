@@ -250,6 +250,7 @@ router.get('/auditlog_csv', mustBeAdminOrApproverMiddleware, function (req, res,
             outStream.write('Api;Application;Plan;Date (UTC);Activity;User;Email;Role\n');
             for (let i = 0; i < auditResponse.items.length; ++i) {
                 const item = auditResponse.items[i];
+                utils.processDisplayNames(item);
                 const api = item.api ? item.api : ``;
                 const application = item.application ? item.application : ``;
                 const plan = item.plan ? item.plan : ``;
