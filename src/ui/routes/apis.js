@@ -314,7 +314,7 @@ router.get('/:api', function (req, res, next) {
             apiInfo.hasSwaggerApplication = hasSwaggerApplication;
             // See also views/models/api.json for how this looks
             
-            if (apiInfo.id === 'cortellies-api-collection'){
+            if (apiInfo.id === 'cortellies-api-collection' || apiInfo.id === "cortellis-api-collection"){
                 let responseData;
                 let isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
                 let subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
@@ -343,7 +343,8 @@ router.get('/:api', function (req, res, next) {
                       axios.get(apiUrl, { headers })
                       .then(response => {
                         if (response.status === 200) {
-                          responseData = response.data.skus; 
+                            const values = Object.values(response.data.entitlementProducts);
+                            responseData = values; 
                         }
                         callback(null, responseData);
                       })

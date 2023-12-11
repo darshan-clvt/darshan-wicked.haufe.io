@@ -183,6 +183,18 @@ utils.loadAuthServersEndpoints = function (app, apiInfo) {
     return apiAuthMethods;
 };
 
+utils.checkIfScopeUrls = function(allowedUrls,requestUrl) {
+    let allow = true;
+    if(requestUrl) {
+        if (allowedUrls.some(url => requestUrl.includes(url))) {
+            allow = true;
+        } else {
+            allow = false;
+        }
+    }
+    return allow;
+};
+
 
 function makeHeaders(req, userId) {
     const headers = {

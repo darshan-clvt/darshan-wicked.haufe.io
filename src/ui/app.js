@@ -183,7 +183,7 @@ app.initialize = function (done) {
        }
        // Get the API key value from the environment variable
        const apiKey = app.portalGlobals.network.clarivateapikey;
-
+ 
        // Add the 'X-ApiKey' header to the request headers
        req.headers['X-ApiKey'] = apiKey;
        // Continue processing the request by calling the 'next' function
