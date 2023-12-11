@@ -53,7 +53,13 @@ block bodyScripts
                 $('#investigationalDrugPanel1').show();
             });
         });
-
+            //it increase the hieght of iframe based scrolling height of body which it loads
+            const iframe = document.getElementById('myIframe');
+            function adjustIframeHeight() {
+            const contentHeight = iframe.contentWindow.document.body.scrollHeight;
+            iframe.style.height = contentHeight + 'px';
+            }
+            iframe.onload = adjustIframeHeight;
 
 block content
     .jumbotron.wicked-api-title
@@ -293,7 +299,7 @@ block content
                                                     a(href='javascript:void(0);', class='api-link', data-api-value=subApiObject[subApiKey])
                                                         | #{subApiKey}
             .unique-panel-body(id='investigationalDrugPanel1')
-                iframe(src='', width='100%', height='1450px', scrolling="no" )
+                iframe(src='', width='100%',height='auto', scrolling="no", id='myIframe')
 
                 each apiUri, i in apiUris
                     div
