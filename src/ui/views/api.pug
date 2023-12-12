@@ -131,11 +131,12 @@ block content
                         p This API does not require authorization. Review the documentation below for more information.
                     
                     if apiInfo.bundle
-                        label API Bundle
+                        .custom-hide
+                            label API Bundle
 
-                        p.
-                            This API is part of the API Bundle "#{apiInfo.bundle}". Read more on API Bundles on the <a href="/help/bundles">API Bundle help page</a>.
-                            Tokens created for any of the bundled APIs can be reused with <a href="/apis">any other API</a> of the same API bundle.
+                            p.
+                                This API is part of the API Bundle "#{apiInfo.bundle}". Read more on API Bundles on the <a href="/help/bundles">API Bundle help page</a>.
+                                Tokens created for any of the bundled APIs can be reused with <a href="/apis">any other API</a> of the same API bundle.
 
         .panel.panel-default
             .panel-heading
