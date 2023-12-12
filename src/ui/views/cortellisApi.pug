@@ -49,8 +49,14 @@ block bodyScripts
               $('.api-link').on('click', function() {
                 var selectedApiValue = $(this).data('api-value');
                 var iframeSrc = `/apis/${selectedApiValue}`;
-                $('#investigationalDrugPanel1 iframe').attr('src', iframeSrc);  
-                $('#investigationalDrugPanel1').show();
+                if (selectedApiValue !== ``){
+                     $('#investigationalDrugPanel1 iframe').attr('src', iframeSrc);  
+                    $('#investigationalDrugPanel1').show();
+                }
+                else {
+                    $('#investigationalDrugPanel1').hide();
+                }
+
             });
         });
             //it increase the hieght of iframe based scrolling height of body which it loads
