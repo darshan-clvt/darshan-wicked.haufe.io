@@ -8,16 +8,6 @@ import app from '../app';
 const { debug, info, warn, error } = require('portal-env').Logger('kong-adapter:kong-adapter');
 const http = require('http');
 const async = require('async');
-const fs = require('fs');
-
-// On Demand Resync Changes : Start
-let watcherReady = false;
-let watcherDebouceTimeout;
-let watcherChanges = [];
-const watcherDebouceTime = 10000; // 5 seconds
-const staticConfigFolder =  process.env.PORTAL_API_STATIC_CONFIG
-// On Demand Resync Changes : End
-
 
 import * as wicked from 'wicked-sdk';
 
@@ -90,42 +80,10 @@ async.series([
         info("Kong Adapter initialization done.");
         app.initialized = true;
 
-        // enable file watcher after first initialization
-        watcherReady = true ;
+        // Resync APIs every five minutes.
+        setInterval(() => { kongMain.resyncApis(); }, 5 * 60 * 1000);
     });
 });
-
-// On Demand Resync Changes : Start
-// Watch for changes in any file and trigger resync after a debounce of 10s
-info(`wicked-config Watcher: Watching for changes in :${staticConfigFolder}`);
-fs.watch(staticConfigFolder,{ recursive: true }, (eventType, fileName) => {
-    if(watcherReady){
-        info(`wicked-config Watcher: Detected change in :${fileName} , event: ${eventType}`);
-        watcherChanges.push(fileName);
-        info('wicked-config Watcher: Waiting for more changes to arrive..');
-        clearTimeout(watcherDebouceTime);
-        watcherDebouceTimeout = setTimeout(() => {
-            startResync();
-        }, watcherDebouceTime);
-    }
-});
-
-function startResync(){
-    debug('Kong-Adapter File Watcher: Starting Resync for changes in :');
-            for(let file of watcherChanges){
-                if(file.includes('apis.json'))
-                {
-                    // triger wicked api restart
-                }
-                debug(file);
-            }
-    watcherChanges = [];
-    kongMain.resyncApis();
-}
-// On Demand Resync Changes : End
-
-// can be a filename or a directory...
-
 
 /**
  * Normalize a port into a number, string, or false.
