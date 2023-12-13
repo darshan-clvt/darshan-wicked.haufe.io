@@ -8,12 +8,12 @@ import app from '../app';
 const { debug, info, warn, error } = require('portal-env').Logger('kong-adapter:kong-adapter');
 const http = require('http');
 const async = require('async');
-const fs = require('fs');
 
 // On Demand Resync Changes : Start
-let watcherReady = false;
-let watcherDebouceTimeout;
-let watcherChanges = [];
+const fs = require('fs');
+const path = require('path');
+var watcherDebouceTimeout;
+var watcherChanges = [];
 const watcherDebouceTime = 10000; // 5 seconds
 const staticConfigFolder =  process.env.PORTAL_API_STATIC_CONFIG
 // On Demand Resync Changes : End
@@ -91,15 +91,18 @@ async.series([
         app.initialized = true;
 
         // enable file watcher after first initialization
-        watcherReady = true ;
+        info(`wicked-config Watcher: Watching for changes in ${staticConfigFolder}`);
+        watchDirectory(staticConfigFolder);
     });
 });
 
 // On Demand Resync Changes : Start
 // Watch for changes in any file and trigger resync after a debounce of 10s
 info(`wicked-config Watcher: Watching for changes in :${staticConfigFolder}`);
-fs.watch(staticConfigFolder,{ recursive: true }, (eventType, fileName) => {
-    if(watcherReady){
+
+let watchDirectory = (directory) => {
+    // Watch the directory itself
+    fs.watch(directory, (eventType, fileName) => {
         info(`wicked-config Watcher: Detected change in :${fileName} , event: ${eventType}`);
         watcherChanges.push(fileName);
         info('wicked-config Watcher: Waiting for more changes to arrive..');
@@ -107,8 +110,22 @@ fs.watch(staticConfigFolder,{ recursive: true }, (eventType, fileName) => {
         watcherDebouceTimeout = setTimeout(() => {
             startResync();
         }, watcherDebouceTime);
-    }
-});
+    });
+    // Watch all files and subdirectories in the directory
+    fs.readdir(directory, (err, files) => {
+      if (err) {
+        console.error(`Error reading directory ${directory}: ${err}`);
+        return;
+      }
+      files.forEach(file => {
+        const fullPath = path.join(directory, file);
+        // Check if it's a directory, and if so, watch it recursively
+        if (fs.statSync(fullPath).isDirectory()) {
+          watchDirectory(fullPath);
+        }
+      });
+    });
+  }
 
 function startResync(){
     debug('Kong-Adapter File Watcher: Starting Resync for changes in :');
