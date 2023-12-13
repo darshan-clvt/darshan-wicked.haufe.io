@@ -124,9 +124,6 @@ function startResync(){
 }
 // On Demand Resync Changes : End
 
-// can be a filename or a directory...
-
-
 /**
  * Normalize a port into a number, string, or false.
  */
