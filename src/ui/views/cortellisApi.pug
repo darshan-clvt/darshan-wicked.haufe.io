@@ -49,8 +49,14 @@ block bodyScripts
               $('.api-link').on('click', function() {
                 var selectedApiValue = $(this).data('api-value');
                 var iframeSrc = `/apis/${selectedApiValue}`;
-                $('#investigationalDrugPanel1 iframe').attr('src', iframeSrc);  
-                $('#investigationalDrugPanel1').show();
+                if (selectedApiValue !== ``){
+                     $('#investigationalDrugPanel1 iframe').attr('src', iframeSrc);  
+                    $('#investigationalDrugPanel1').show();
+                }
+                else {
+                    $('#investigationalDrugPanel1').hide();
+                }
+
             });
         });
             //it increase the hieght of iframe based scrolling height of body which it loads
@@ -283,23 +289,23 @@ block content
                             else
                                 p <i>There are no subscriptions to this API.</i>
             .panel.panel-default
-                div.cortellis-navbar.navbar-collapse.collapse
+                .cortellis-navbar.navbar-collapse.collapse
                     ul.nav.navbar-nav.cortellies-navbar
                         - var apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi)
                         - var apiData = JSON.parse(apiDataString)
-                            each apiObject in apiData
-                                li
-                                    - var apiKey = Object.keys(apiObject)[0];
-                                    a(href='javascript:void(0);', class='api-link', data-api-value=apiObject[apiKey])
-                                        | #{apiKey}
-                                        ul(class='view-menu')
-                                            each subApiObject in apiObject[apiKey]
-                                                li
-                                                    - var subApiKey = Object.keys(subApiObject)[0];
-                                                    a(href='javascript:void(0);', class='api-link', data-api-value=subApiObject[subApiKey])
-                                                        | #{subApiKey}
-            .unique-panel-body(id='investigationalDrugPanel1')
-                iframe(src='', width='100%',height='auto', scrolling="no", id='myIframe')
+                        each apiObject in apiData
+                            li
+                                - var apiKey = Object.keys(apiObject)[0];
+                                a(href='javascript:void(0);', class='api-link', data-api-value=apiObject[apiKey])
+                                    | #{apiKey}
+                                    ul(class='view-menu')
+                                        each subApiObject in apiObject[apiKey]
+                                            li
+                                                - var subApiKey = Object.keys(subApiObject)[0];
+                                                a(href='javascript:void(0);', class='api-link', data-api-value=subApiObject[subApiKey])
+                                                    | #{subApiKey}
+                .unique-panel-body(id='investigationalDrugPanel1')
+                    iframe(src='', width='100%',height='auto', scrolling="no", id='myIframe' style='border: none')
 
                 each apiUri, i in apiUris
                     div
