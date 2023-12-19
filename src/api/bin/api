@@ -44,7 +44,18 @@ const osUsername = getOsUsername();
 info("Running as user '" + osUsername + "'");
 
 const environment = app.get('env');
-const staticConfigPath = envReader.resolveStaticConfig();
+
+const RESTART_DELAY = 2000;
+let staticConfigPath;
+try{
+   staticConfigPath = envReader.resolveStaticConfig();
+}catch(err){
+    error(`wicked-config directory not found !!! Restarting in ${RESTART_DELAY} ms ..`)
+    setTimeout(()=>{
+        process.exit(1); // let this process exit, till pm2 restarts it again.
+    },RESTART_DELAY);
+    return;
+}
 
 let configKey = process.env.PORTAL_CONFIG_KEY;
 if (!configKey) {
