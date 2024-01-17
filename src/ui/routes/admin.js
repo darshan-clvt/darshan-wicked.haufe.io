@@ -374,7 +374,6 @@ router.get('/auditlog_csv', mustBeAdminOrApproverMiddleware, function (req, res,
 router.get('/subscriptions', mustBeAdminOrApproverMiddleware, function (req, res, next) {
     debug("get('/subscriptions')");
     if (req.query.apikey) {
-        
         getFilteredApiKeyId(req, res, next);
     } else {
         getSubscriptions(req, res, next);

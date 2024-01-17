@@ -177,19 +177,19 @@ app.initialize = function (done) {
         let allowedUrls = app.portalGlobals.excludePathList;
         let requestUrl = req.url ;
         // Check if the user is not logged in
-        if (!utils.getLoggedInUserId(req) && !utils.checkIfScopeUrls(allowedUrls,requestUrl)) {
-           // If not logged in, send a 403 Forbidden error
-           return res.status(403).send("Forbidden");
-       }
-       // Get the API key value from the environment variable
-       const apiKey = app.portalGlobals.network.clarivateapikey;
- 
-       // Add the 'X-ApiKey' header to the request headers
-       req.headers['X-ApiKey'] = apiKey;
-       // Continue processing the request by calling the 'next' function
-       return next();
-   };
-   app.use('/clarivate',  checkLoggedInUserId, proxy(app.portalGlobals.network.clarivateUrl,{
+         if (!utils.getLoggedInUserId(req) && !utils.checkIfScopeUrls(allowedUrls,requestUrl)) {
+            // If not logged in, send a 403 Forbidden error
+            return res.status(403).send("Forbidden");
+        }
+        // Get the API key value from the environment variable
+        const apiKey = app.portalGlobals.network.clarivateapikey;
+     
+        // Add the 'X-ApiKey' header to the request headers
+        req.headers['X-ApiKey'] = apiKey;
+        // Continue processing the request by calling the 'next' function
+        return next();
+    };
+    app.use('/clarivate',  checkLoggedInUserId, proxy(app.portalGlobals.network.clarivateUrl,{
         proxyReqPathResolver: (req) => {
             return '/clarivate'+req.url;
         }
