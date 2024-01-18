@@ -933,7 +933,7 @@ utils.loadApiSwaggerScripts =  (apiId) => {
     try {
         const scriptFile = getStaticDirFilePath(SWAGGER_CONFIG_DIR,`${apiId}-swagger.js`)
         if (!fs.existsSync(scriptFile)) {
-            debug('Swagger script file does not exist: ' + swaggerJsFilePath);
+            debug('Swagger script file does not exist: ' + scriptFile);
             return swaggerScript
         }
         delete require.cache[require.resolve(scriptFile)]
