@@ -197,7 +197,7 @@ function dispatchWebhookAction(webhookData, onlyDelete, callback) {
         let globals = utils.getGlobals()
         let apiId = webhookData.data.apiId
         let appId = webhookData.data.applicationId
-        if (entity === SUBSCRIPTION && action === ACTION_UPDATE && globals && globals.features.enableAPIKeyCustomHeaders && (apiId in globals.customHeaderApisList)) {
+        if (entity === SUBSCRIPTION && (action === ACTION_UPDATE || action === ACTION_ADD) && globals && globals.features.enableAPIKeyCustomHeaders && (apiId in globals.customHeaderApisList)) {
             debug('invoking ch script of api')
             let chAPiJs = utils.getCustomHeaderModules(apiId)
             if(chAPiJs) {
