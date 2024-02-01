@@ -92,7 +92,7 @@ block content
                         This API has been deprecated by the API Portal maintainers. This means it can no longer be subscribed to.
                         Existing subscriptions are still valid.
 
-        if authUser || !apiInfo.requiredGroup                
+        if authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')           
             .panel.panel-default
                 .panel-heading
                     +panelTitle('Your Subscriptions')
@@ -123,18 +123,8 @@ block content
 
                         | to view the list of APIs you have contractual access to.
 
-        if !authUser && apiInfo.auth != "none"
-            .panel.panel-danger
-                .panel-heading
-                    h4.panel-title Not logged in
-                .panel-body
-                    p.
-                        You are currently not logged in, so we can't display your registered applications.
-                        Please log in first.
-                    p                    
-                        a(href=`/login?redirect=/apis/${apiInfo.id}`).btn.btn-default Log in &raquo;
 
-        else if apiInfo.auth != "none" && !partnerOnly
+        if apiInfo.auth != "none" && !partnerOnly && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
             .panel.panel-default
                 .panel-heading
                     +panelTitle('Your Applications', '/help/api')
@@ -233,20 +223,20 @@ block content
                                             else
                                                 td &nbsp;
                                             // Try it!
-                                            if app.hasSubscription && app.subscriptionApproved
-                                                td
-                                                    if apiInfo.auth == "key-auth"
-                                                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?apikey=${app.apiKey}&url=${app.swaggerLink}` target='_blank').btn.btn-default Try it!
-                                                    else if apiInfo.auth == "oauth2" && app.redirectUri && app.redirectUri.indexOf("swagger-ui/oauth2-redirect.html") > 0
-                                                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?client_id=${app.clientId}&client_secret=${app.clientSecret}&url=${app.swaggerLink}&application=${app.id}&redirect_uri=${app.redirectUri}` target='_blank').btn.btn-default Try it!
-                                                    else if apiInfo.auth == "oauth2" && directAuth
-                                                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?client_id=${app.clientId}&client_secret=${app.clientSecret}&url=${app.swaggerLink}&application=${app.id}` target='_blank').btn.btn-default Try it!
-                                                    else if apiInfo.auth == "oauth2" && redirectAuth && !apiInfo.hasSwaggerApplication
-                                                        a(href='/applications?register=true&swagger=true').btn.btn-default Swagger UI setup!
-                                                    else
-                                                        | ---
-                                            else
-                                                td(style='vertical-align:middle;') ---
+                                            //- if app.hasSubscription && app.subscriptionApproved
+                                            //-     td
+                                            //-         if apiInfo.auth == "key-auth"
+                                            //-             a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?apikey=${app.apiKey}&url=${app.swaggerLink}` target='_blank').btn.btn-default Try it!
+                                            //-         else if apiInfo.auth == "oauth2" && app.redirectUri && app.redirectUri.indexOf("swagger-ui/oauth2-redirect.html") > 0
+                                            //-             a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?client_id=${app.clientId}&client_secret=${app.clientSecret}&url=${app.swaggerLink}&application=${app.id}&redirect_uri=${app.redirectUri}` target='_blank').btn.btn-default Try it!
+                                            //-         else if apiInfo.auth == "oauth2" && directAuth
+                                            //-             a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?client_id=${app.clientId}&client_secret=${app.clientSecret}&url=${app.swaggerLink}&application=${app.id}` target='_blank').btn.btn-default Try it!
+                                            //-         else if apiInfo.auth == "oauth2" && redirectAuth && !apiInfo.hasSwaggerApplication
+                                            //-             a(href='/applications?register=true&swagger=true').btn.btn-default Swagger UI setup!
+                                            //-         else
+                                            //-             | ---
+                                            //- else
+                                            //-     td(style='vertical-align:middle;') ---
 
                         //degubbing skills
                        
