@@ -327,8 +327,32 @@ router.get('/:api', function (req, res, next) {
                     }
                 }
                 const customId = JSON.stringify(userInfo.customId)
-                const trueid = customId.split(":")
-                const sanitizedId = trueid.length > 1 ? trueid[1] : null;
+                let trueid, sanitizedId;
+                if (customId){
+                    trueid = customId.split(":")
+                    sanitizedId = trueid.length > 1 ? trueid[1] : null;
+                }
+                if ( customId === undefined || trueid === undefined  || sanitizedId === null ) {
+                    // Render the page directly without making the API request
+                    debug("I AM IF I AM GOING FIRST")
+                    res.render('cortellisApi', {
+                        authUser: req.user,
+                        glob: req.app.portalGlobals,
+                        route: '/apis/' + apiId,
+                        title: apiInfo.name,
+                        apiInfo: apiInfo,
+                        apiDesc: marked(apiDesc, markedOptions),
+                        applications: apps,
+                        apiPlans: plans,
+                        apiUris: apiUris,
+                        skusData: null, // Assuming skusData should be null in this case
+                        userInfo: userInfo,
+                        apiSubscriptions: apiSubscriptions,
+                        genericSwaggerUrl: genericSwaggerUrl,
+                        partnerOnly: partnerOnly
+                    });
+                }
+                else {
                 const trueId = sanitizedId.replace(/\"$/, '');
                 const apiKey = req.app.portalGlobals.network.clarivateapikey;
                 const kongProxyURl = req.app.portalGlobals.network.apiHost;
@@ -355,32 +379,28 @@ router.get('/:api', function (req, res, next) {
                       });
                     }
                   }, (err, results) => {
-                    if (err) {
-                      debug('An error occurred:', err);
-                      // Handle the error appropriately, e.g., return an error response
-                    } else {
-                      debug('Results:', results);
-                
-                      if (!utils.acceptJson(req)) {
-                        res.render('cortellisApi', {
-                          authUser: req.user,
-                          glob: req.app.portalGlobals,
-                          route: '/apis/' + apiId,
-                          title: apiInfo.name,
-                          apiInfo: apiInfo,
-                          apiDesc: marked(apiDesc, markedOptions),
-                          applications: apps,
-                          apiPlans: plans,
-                          apiUris: apiUris,
-                          skusData: responseData,
-                          userInfo: userInfo,
-                          apiSubscriptions: apiSubscriptions,
-                          genericSwaggerUrl: genericSwaggerUrl,
-                          partnerOnly: partnerOnly
+                        if (err && !utils.acceptJson(req)) {
+                        } else {
+                          debug('Results:', results);
+                          res.render('cortellisApi', {
+                            authUser: req.user,
+                            glob: req.app.portalGlobals,
+                            route: '/apis/' + apiId,
+                            title: apiInfo.name,
+                            apiInfo: apiInfo,
+                            apiDesc: marked(apiDesc, markedOptions),
+                            applications: apps,
+                            apiPlans: plans,
+                            apiUris: apiUris,
+                            skusData: responseData,
+                            userInfo: userInfo,
+                            apiSubscriptions: apiSubscriptions,
+                            genericSwaggerUrl: genericSwaggerUrl,
+                            partnerOnly: partnerOnly
                         });
-                      }
+                        }
+                      });
                     }
-                  });
                 }
             else if (!utils.acceptJson(req)) {
                 res.render('api', {
