@@ -403,21 +403,38 @@ router.get('/:api', function (req, res, next) {
                     }
                 }
             else if (!utils.acceptJson(req)) {
-                res.render('api', {
-                    authUser: req.user,
-                    glob: req.app.portalGlobals,
-                    route: '/apis/' + apiId,
-                    title: apiInfo.name,
-                    apiInfo: apiInfo,
-                    apiDesc: marked(apiDesc, markedOptions),
-                    applications: apps,
-                    apiPlans: plans,
-                    apiUris: apiUris,
-                    apiSubscriptions: apiSubscriptions,
-                    genericSwaggerUrl: genericSwaggerUrl,
-                    partnerOnly: partnerOnly
+                async.parallel({
+                    getSubscriptions: function (callback) {
+                        if (loggedInUserId && req.user || req.user.admin || req.user.superadmin) {
+                            // Don't try if we don't think the user is an admin
+                            let APIid = `cortellis-api-collection`;
+                            utils.getFromAsync(req, res, '/apis/' + APIid + '/subscriptions', 200, function(err, data) {
+                                callback(err, data.items[0].apikey);
+                            });
+                        } else {
+                            debug('User is not an admin. Skipping getSubscriptions.');
+                            callback(null, null);
+                        }
+                    }
+                },function (err, results) {
+                    res.render('api', {
+                        authUser: req.user,
+                        glob: req.app.portalGlobals,
+                        route: '/apis/' + apiId,
+                        title: apiInfo.name,
+                        apiInfo: apiInfo,
+                        apiDesc: marked(apiDesc, markedOptions),
+                        applications: apps,
+                        apiPlans: plans,
+                        cortellisApiKey: results.getSubscriptions || `none`,
+                        apiUris: apiUris,
+                        apiSubscriptions: apiSubscriptions,
+                        genericSwaggerUrl: genericSwaggerUrl,
+                        partnerOnly: partnerOnly
+                    });
                 });
             }
+            
              else {
                 delete apiInfo.authMethods;
                 res.json({
