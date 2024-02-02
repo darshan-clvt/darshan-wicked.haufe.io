@@ -92,7 +92,7 @@ block content
                         This API has been deprecated by the API Portal maintainers. This means it can no longer be subscribed to.
                         Existing subscriptions are still valid.
 
-        if authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')           
+        if authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')           
             .panel.panel-default
                 .panel-heading
                     +panelTitle('Your Subscriptions')
@@ -124,7 +124,7 @@ block content
                         | to view the list of APIs you have contractual access to.
 
 
-        if apiInfo.auth != "none" && !partnerOnly && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
+        if apiInfo.auth != "none" && !partnerOnly && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
             .panel.panel-default
                 .panel-heading
                     +panelTitle('Your Applications', '/help/api')
