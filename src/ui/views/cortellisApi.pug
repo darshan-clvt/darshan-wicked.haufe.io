@@ -168,7 +168,6 @@ block content
                                     else
                                         th n/a
                                     th Action
-                                    th Try it!
                             tbody
                                     for app in applications
                                         tr
@@ -278,6 +277,7 @@ block content
                                                     strong This is only possible for APIs already marked as <code>deprecated</code>.
                             else
                                 p <i>There are no subscriptions to this API.</i>
+        if !authUser || authUser
             .panel.panel-default
                 .cortellis-navbar.navbar-collapse.collapse
                     ul.nav.navbar-nav.cortellies-navbar
