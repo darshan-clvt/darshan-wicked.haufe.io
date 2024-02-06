@@ -183,12 +183,27 @@ router.get('/:api', function (req, res, next) {
             for (let i = 0; i < userInfo.applications.length; ++i)
                 appIds.push(userInfo.applications[i].id);
         }
-
+        let cortelliesapiSwap = [];
+        let reSwap = [];
+        let cortelliespiIdsSwap = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
+        cortelliespiIdsSwap.forEach(function (api) {
+            for (let key in api) {
+                if (api.hasOwnProperty(key)) {
+                    cortelliesapiSwap.push(api[key]);
+                }}
+        });
         // Note: callback and results are used all the time, but in the end, all's
         // good, as the variable scopes are playing nice with us. Just watch out.
         async.parallel({
             getSubs: function (callback) {
                 async.map(appIds, function (appId, callback) {
+                    for (let i = 0; i < cortelliesapiSwap.length; i++) {
+                        if (apiId === cortelliesapiSwap[i]) {
+                        reSwap.push(apiId)
+                        apiId = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
+                        break;
+                      }
+                    }
                     utils.get(req, '/applications/' + appId + '/subscriptions/' + apiId, function (err, apiResponse, apiBody) {
                         if (err)
                             return callback(err);
@@ -312,8 +327,40 @@ router.get('/:api', function (req, res, next) {
             apiInfo.authMethods = authMethods;
             apiInfo.hasProtectedAuthMethods = hasProtectedMethods;
             apiInfo.hasSwaggerApplication = hasSwaggerApplication;
+
             // See also views/models/api.json for how this looks
-            
+            let cortelliesapiIdValues = [];
+            let CortellisBundleApikey = [];
+            //check extracting apiId in json file in content
+            // let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
+            let cortelliespiIds = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
+                cortelliespiIds.forEach(function (api) {
+                    for (let key in api) {
+                        if (api.hasOwnProperty(key)) {
+                            cortelliesapiIdValues.push(api[key]);
+                        }}
+                });
+            //check for only api ids json file in content
+            let matchingValue = null;
+            for (let i = 0; i < cortelliesapiIdValues.length; i++) {
+                if (apiInfo.id.includes(cortelliesapiIdValues[i])) {
+                    matchingValue = cortelliesapiIdValues[i];
+                    break;  // exit the loop if a match is found
+                }
+            }
+            if (matchingValue !== null){
+                let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
+            let hasapikey = true;
+            if (hasapikey) {
+                // loop will only excetue for JSON FILE API IDS only 
+                apps.forEach(app => {
+                    if (app.swaggerLink && app.swaggerLink.includes(cortellisMainApi) && app.subscriptionApproved === true) {
+                        if(app.apiKey !== "none")
+                        CortellisBundleApikey.push(app.apiKey)
+                    }
+                });
+              }
+            }
             if (apiInfo.id === 'cortellies-api-collection' || apiInfo.id === "cortellis-api-collection"){
                 let responseData;
                 let isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
@@ -334,7 +381,6 @@ router.get('/:api', function (req, res, next) {
                 }
                 if ( customId === undefined || trueid === undefined  || sanitizedId === null ) {
                     // Render the page directly without making the API request
-                    debug("I AM IF I AM GOING FIRST")
                     res.render('cortellisApi', {
                         authUser: req.user,
                         glob: req.app.portalGlobals,
@@ -402,21 +448,11 @@ router.get('/:api', function (req, res, next) {
                       });
                     }
                 }
-            else if (!utils.acceptJson(req)) {
-                async.parallel({
-                    getSubscriptions: function (callback) {
-                        if (loggedInUserId && req.user || req.user.admin || req.user.superadmin) {
-                            // Don't try if we don't think the user is an admin
-                            let APIid = `cortellis-api-collection`;
-                            utils.getFromAsync(req, res, '/apis/' + APIid + '/subscriptions', 200, function(err, data) {
-                                callback(err, data.items[0].apikey);
-                            });
-                        } else {
-                            debug('User is not an admin. Skipping getSubscriptions.');
-                            callback(null, null);
-                        }
+                else if (!utils.acceptJson(req)) {
+                    if (genericSwaggerUrl.includes(req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId))
+                    {
+                        genericSwaggerUrl = genericSwaggerUrl.replace(req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId, reSwap)
                     }
-                },function (err, results) {
                     res.render('api', {
                         authUser: req.user,
                         glob: req.app.portalGlobals,
@@ -426,13 +462,12 @@ router.get('/:api', function (req, res, next) {
                         apiDesc: marked(apiDesc, markedOptions),
                         applications: apps,
                         apiPlans: plans,
-                        cortellisApiKey: results.getSubscriptions || `none`,
+                        CortellisApiKey: CortellisBundleApikey,
                         apiUris: apiUris,
                         apiSubscriptions: apiSubscriptions,
                         genericSwaggerUrl: genericSwaggerUrl,
                         partnerOnly: partnerOnly
-                    });
-                });
+                })
             }
             
              else {
