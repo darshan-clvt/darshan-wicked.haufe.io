@@ -115,7 +115,7 @@ router.get('/:api', function (req, res, next) {
     // And possibly also the Auth Server of the API:
     // /auth-servers/:serverId
 
-    const apiId = req.params.api;
+    let apiId = req.params.api;
     const loggedInUserId = utils.getLoggedInUserId(req);
 
     async.parallel({
