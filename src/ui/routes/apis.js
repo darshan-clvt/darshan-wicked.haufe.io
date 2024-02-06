@@ -429,9 +429,9 @@ router.get('/:api', function (req, res, next) {
                     }
                 }
                 else if (!utils.acceptJson(req)) {
-                    if (genericSwaggerUrl.includes(req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId))
+                    if (genericSwaggerUrl.includes(cortellisMainApi))
                     {
-                        genericSwaggerUrl = genericSwaggerUrl.replace(req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId, cortelliesOriginalApiId)
+                        genericSwaggerUrl = genericSwaggerUrl.replace(cortellisMainApi, cortelliesOriginalApiId)
                     }
                     res.render('api', {
                         authUser: req.user,
