@@ -442,7 +442,7 @@ router.get('/:api', function (req, res, next) {
                         apiDesc: marked(apiDesc, markedOptions),
                         applications: apps,
                         apiPlans: plans,
-                        CortellisApiKey: CortellisBundleApikey,
+                        CortellisApiKey: cortellisBundleApikey,
                         apiUris: apiUris,
                         apiSubscriptions: apiSubscriptions,
                         genericSwaggerUrl: genericSwaggerUrl,
