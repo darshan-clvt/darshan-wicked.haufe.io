@@ -183,13 +183,13 @@ router.get('/:api', function (req, res, next) {
             for (let i = 0; i < userInfo.applications.length; ++i)
                 appIds.push(userInfo.applications[i].id);
         }
-        let cortelliesapiSwap = [];
-        let reSwap = [];
-        let cortelliespiIdsSwap = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
-        cortelliespiIdsSwap.forEach(function (api) {
+        let cortelliesapiIdForSwap = []; //This will get apiId for Swaping the cortellis-api-collection subscriptions
+        let cortelliesOriginalApiId = []; // This will get original apiIds for Swaping with the cortellis-api-collection swagger URL
+        let cortelliesapiDocIds = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
+        cortelliesapiDocIds.forEach(function (api) {
             for (let key in api) {
                 if (api.hasOwnProperty(key)) {
-                    cortelliesapiSwap.push(api[key]);
+                    cortelliesapiIdForSwap.push(api[key]);
                 }}
         });
         // Note: callback and results are used all the time, but in the end, all's
@@ -197,9 +197,9 @@ router.get('/:api', function (req, res, next) {
         async.parallel({
             getSubs: function (callback) {
                 async.map(appIds, function (appId, callback) {
-                    for (let i = 0; i < cortelliesapiSwap.length; i++) {
-                        if (apiId === cortelliesapiSwap[i]) {
-                        reSwap.push(apiId)
+                    for (let i = 0; i < cortelliesapiIdForSwap.length; i++) {
+                        if (apiId === cortelliesapiIdForSwap[i]) {
+                        cortelliesOriginalApiId.push(apiId)
                         apiId = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
                         break;
                       }
@@ -330,18 +330,18 @@ router.get('/:api', function (req, res, next) {
 
             // See also views/models/api.json for how this looks
             let cortelliesapiIdValues = [];
-            let CortellisBundleApikey = [];
+            let cortellisBundleApikey = [];
+            let matchingValue = null;
             //check extracting apiId in json file in content
             // let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
-            let cortelliespiIds = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
-                cortelliespiIds.forEach(function (api) {
-                    for (let key in api) {
-                        if (api.hasOwnProperty(key)) {
-                            cortelliesapiIdValues.push(api[key]);
-                        }}
-                });
+            let cortelliesApiIds = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
+            cortelliesApiIds.forEach(function (api) {
+                for (let key in api) {
+                if (api.hasOwnProperty(key)) {
+                    cortelliesapiIdValues.push(api[key]);
+                }}
+            });
             //check for only api ids json file in content
-            let matchingValue = null;
             for (let i = 0; i < cortelliesapiIdValues.length; i++) {
                 if (apiInfo.id.includes(cortelliesapiIdValues[i])) {
                     matchingValue = cortelliesapiIdValues[i];
@@ -349,14 +349,14 @@ router.get('/:api', function (req, res, next) {
                 }
             }
             if (matchingValue !== null){
-                let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
+            let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
             let hasapikey = true;
             if (hasapikey) {
                 // loop will only excetue for JSON FILE API IDS only 
                 apps.forEach(app => {
                     if (app.swaggerLink && app.swaggerLink.includes(cortellisMainApi) && app.subscriptionApproved === true) {
                         if(app.apiKey !== "none")
-                        CortellisBundleApikey.push(app.apiKey)
+                        cortellisBundleApikey.push(app.apiKey)
                     }
                 });
               }
@@ -451,7 +451,7 @@ router.get('/:api', function (req, res, next) {
                 else if (!utils.acceptJson(req)) {
                     if (genericSwaggerUrl.includes(req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId))
                     {
-                        genericSwaggerUrl = genericSwaggerUrl.replace(req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId, reSwap)
+                        genericSwaggerUrl = genericSwaggerUrl.replace(req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId, cortelliesOriginalApiId)
                     }
                     res.render('api', {
                         authUser: req.user,
