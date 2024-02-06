@@ -115,7 +115,7 @@ router.get('/:api', function (req, res, next) {
     // And possibly also the Auth Server of the API:
     // /auth-servers/:serverId
 
-    const apiId = req.params.api;
+    let apiId = req.params.api;
     const loggedInUserId = utils.getLoggedInUserId(req);
 
     async.parallel({
@@ -183,12 +183,28 @@ router.get('/:api', function (req, res, next) {
             for (let i = 0; i < userInfo.applications.length; ++i)
                 appIds.push(userInfo.applications[i].id);
         }
-
+        let cortelliesapiIdForSwap = []; //This will get apiId for Swaping the cortellis-api-collection subscriptions
+        let cortelliesOriginalApiId = []; // This will get original apiIds for Swaping with the cortellis-api-collection swagger URL
+        let cortelliesapiDocIds = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
+        let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
+        cortelliesapiDocIds.forEach(function (api) {
+            for (let key in api) {
+                if (api.hasOwnProperty(key)) {
+                    cortelliesapiIdForSwap.push(api[key]);
+                }}
+        });
         // Note: callback and results are used all the time, but in the end, all's
         // good, as the variable scopes are playing nice with us. Just watch out.
         async.parallel({
             getSubs: function (callback) {
                 async.map(appIds, function (appId, callback) {
+                    for (let i = 0; i < cortelliesapiIdForSwap.length; i++) {
+                        if (apiId === cortelliesapiIdForSwap[i]) {
+                        cortelliesOriginalApiId.push(apiId)
+                        apiId = cortellisMainApi;
+                        break;
+                      }
+                    }
                     utils.get(req, '/applications/' + appId + '/subscriptions/' + apiId, function (err, apiResponse, apiBody) {
                         if (err)
                             return callback(err);
@@ -312,9 +328,20 @@ router.get('/:api', function (req, res, next) {
             apiInfo.authMethods = authMethods;
             apiInfo.hasProtectedAuthMethods = hasProtectedMethods;
             apiInfo.hasSwaggerApplication = hasSwaggerApplication;
-            // See also views/models/api.json for how this looks
-            
-            if (apiInfo.id === 'cortellies-api-collection' || apiInfo.id === "cortellis-api-collection"){
+
+            let cortellisBundleApikey = null;
+    
+          
+            if (cortelliesOriginalApiId.length > 0) {
+                // loop will only excetue for JSON FILE API IDS only 
+                apps.forEach(app => {
+                    if (app.swaggerLink && app.swaggerLink.includes(cortellisMainApi) && app.subscriptionApproved === true) {
+                        if(app.apiKey !== "none")
+                        cortellisBundleApikey = app.apiKey;
+                    }
+                });
+              }
+            if (apiInfo.id === 'cortellies-api-collection' || apiInfo.id === cortellisMainApi){
                 let responseData;
                 let isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
                 let subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
@@ -327,8 +354,31 @@ router.get('/:api', function (req, res, next) {
                     }
                 }
                 const customId = JSON.stringify(userInfo.customId)
-                const trueid = customId.split(":")
-                const sanitizedId = trueid.length > 1 ? trueid[1] : null;
+                let trueid, sanitizedId;
+                if (customId){
+                    trueid = customId.split(":")
+                    sanitizedId = trueid.length > 1 ? trueid[1] : null;
+                }
+                if ( customId === undefined || trueid === undefined  || sanitizedId === null ) {
+                    // Render the page directly without making the API request
+                    res.render('cortellisApi', {
+                        authUser: req.user,
+                        glob: req.app.portalGlobals,
+                        route: '/apis/' + apiId,
+                        title: apiInfo.name,
+                        apiInfo: apiInfo,
+                        apiDesc: marked(apiDesc, markedOptions),
+                        applications: apps,
+                        apiPlans: plans,
+                        apiUris: apiUris,
+                        skusData: null, // Assuming skusData should be null in this case
+                        userInfo: userInfo,
+                        apiSubscriptions: apiSubscriptions,
+                        genericSwaggerUrl: genericSwaggerUrl,
+                        partnerOnly: partnerOnly
+                    });
+                }
+                else {
                 const trueId = sanitizedId.replace(/\"$/, '');
                 const apiKey = req.app.portalGlobals.network.clarivateapikey;
                 const kongProxyURl = req.app.portalGlobals.network.apiHost;
@@ -355,49 +405,51 @@ router.get('/:api', function (req, res, next) {
                       });
                     }
                   }, (err, results) => {
-                    if (err) {
-                      debug('An error occurred:', err);
-                      // Handle the error appropriately, e.g., return an error response
-                    } else {
-                      debug('Results:', results);
-                
-                      if (!utils.acceptJson(req)) {
-                        res.render('cortellisApi', {
-                          authUser: req.user,
-                          glob: req.app.portalGlobals,
-                          route: '/apis/' + apiId,
-                          title: apiInfo.name,
-                          apiInfo: apiInfo,
-                          apiDesc: marked(apiDesc, markedOptions),
-                          applications: apps,
-                          apiPlans: plans,
-                          apiUris: apiUris,
-                          skusData: responseData,
-                          userInfo: userInfo,
-                          apiSubscriptions: apiSubscriptions,
-                          genericSwaggerUrl: genericSwaggerUrl,
-                          partnerOnly: partnerOnly
+                        if (err && !utils.acceptJson(req)) {
+                        } else {
+                          debug('Results:', results);
+                          res.render('cortellisApi', {
+                            authUser: req.user,
+                            glob: req.app.portalGlobals,
+                            route: '/apis/' + apiId,
+                            title: apiInfo.name,
+                            apiInfo: apiInfo,
+                            apiDesc: marked(apiDesc, markedOptions),
+                            applications: apps,
+                            apiPlans: plans,
+                            apiUris: apiUris,
+                            skusData: responseData,
+                            userInfo: userInfo,
+                            apiSubscriptions: apiSubscriptions,
+                            genericSwaggerUrl: genericSwaggerUrl,
+                            partnerOnly: partnerOnly
                         });
-                      }
+                        }
+                      });
                     }
-                  });
                 }
-            else if (!utils.acceptJson(req)) {
-                res.render('api', {
-                    authUser: req.user,
-                    glob: req.app.portalGlobals,
-                    route: '/apis/' + apiId,
-                    title: apiInfo.name,
-                    apiInfo: apiInfo,
-                    apiDesc: marked(apiDesc, markedOptions),
-                    applications: apps,
-                    apiPlans: plans,
-                    apiUris: apiUris,
-                    apiSubscriptions: apiSubscriptions,
-                    genericSwaggerUrl: genericSwaggerUrl,
-                    partnerOnly: partnerOnly
-                });
+                else if (!utils.acceptJson(req)) {
+                    if (genericSwaggerUrl.includes(cortellisMainApi))
+                    {
+                        genericSwaggerUrl = genericSwaggerUrl.replace(cortellisMainApi, cortelliesOriginalApiId)
+                    }
+                    res.render('api', {
+                        authUser: req.user,
+                        glob: req.app.portalGlobals,
+                        route: '/apis/' + apiId,
+                        title: apiInfo.name,
+                        apiInfo: apiInfo,
+                        apiDesc: marked(apiDesc, markedOptions),
+                        applications: apps,
+                        apiPlans: plans,
+                        CortellisApiKey: CortellisBundleApikey,
+                        apiUris: apiUris,
+                        apiSubscriptions: apiSubscriptions,
+                        genericSwaggerUrl: genericSwaggerUrl,
+                        partnerOnly: partnerOnly
+                })
             }
+            
              else {
                 delete apiInfo.authMethods;
                 res.json({
