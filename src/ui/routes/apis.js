@@ -186,6 +186,7 @@ router.get('/:api', function (req, res, next) {
         let cortelliesapiIdForSwap = []; //This will get apiId for Swaping the cortellis-api-collection subscriptions
         let cortelliesOriginalApiId = []; // This will get original apiIds for Swaping with the cortellis-api-collection swagger URL
         let cortelliesapiDocIds = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
+        let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
         cortelliesapiDocIds.forEach(function (api) {
             for (let key in api) {
                 if (api.hasOwnProperty(key)) {
@@ -200,7 +201,7 @@ router.get('/:api', function (req, res, next) {
                     for (let i = 0; i < cortelliesapiIdForSwap.length; i++) {
                         if (apiId === cortelliesapiIdForSwap[i]) {
                         cortelliesOriginalApiId.push(apiId)
-                        apiId = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
+                        apiId = cortellisMainApi;
                         break;
                       }
                     }
@@ -328,40 +329,19 @@ router.get('/:api', function (req, res, next) {
             apiInfo.hasProtectedAuthMethods = hasProtectedMethods;
             apiInfo.hasSwaggerApplication = hasSwaggerApplication;
 
-            // See also views/models/api.json for how this looks
-            let cortelliesapiIdValues = [];
-            let cortellisBundleApikey = [];
-            let matchingValue = null;
-            //check extracting apiId in json file in content
-            // let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
-            let cortelliesApiIds = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
-            cortelliesApiIds.forEach(function (api) {
-                for (let key in api) {
-                if (api.hasOwnProperty(key)) {
-                    cortelliesapiIdValues.push(api[key]);
-                }}
-            });
-            //check for only api ids json file in content
-            for (let i = 0; i < cortelliesapiIdValues.length; i++) {
-                if (apiInfo.id.includes(cortelliesapiIdValues[i])) {
-                    matchingValue = cortelliesapiIdValues[i];
-                    break;  // exit the loop if a match is found
-                }
-            }
-            if (matchingValue !== null){
-            let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
-            let hasapikey = true;
-            if (hasapikey) {
+            let cortellisBundleApikey = null;
+    
+          
+            if (cortelliesOriginalApiId.length > 0) {
                 // loop will only excetue for JSON FILE API IDS only 
                 apps.forEach(app => {
                     if (app.swaggerLink && app.swaggerLink.includes(cortellisMainApi) && app.subscriptionApproved === true) {
                         if(app.apiKey !== "none")
-                        cortellisBundleApikey.push(app.apiKey)
+                        cortellisBundleApikey = app.apiKey;
                     }
                 });
               }
-            }
-            if (apiInfo.id === 'cortellies-api-collection' || apiInfo.id === "cortellis-api-collection"){
+            if (apiInfo.id === 'cortellies-api-collection' || apiInfo.id === cortellisMainApi){
                 let responseData;
                 let isAppSubscribed = apps.some(ele => ele.mayUnsubscribe && ele.mayUnsubscribe === true);
                 let subscribedIndex = apps.findIndex(ele=> ele.mayUnsubscribe && ele.mayUnsubscribe === true);
