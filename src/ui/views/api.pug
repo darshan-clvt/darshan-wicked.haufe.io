@@ -158,7 +158,6 @@ block content
                                 a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
                             else if apiInfo.auth == "none" && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
                                 a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
-                   
                     else if !authUser || (apiInfo.auth == "none") && (authUser && !authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser.authenticated_scope.includes('wicked:api-cortellis-user'))
                         a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?apikey=none&url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
                     else
