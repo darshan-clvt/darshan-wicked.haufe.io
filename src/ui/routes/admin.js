@@ -347,6 +347,7 @@ router.get('/auditlog_csv', mustBeAdminOrApproverMiddleware, function (req, res,
             outStream.write('Api;Application;Plan;Date (UTC);Activity;User;Email;Role\n');
             for (let i = 0; i < auditResponse.items.length; ++i) {
                 const item = auditResponse.items[i];
+                utils.processDisplayNames(item);
                 const api = item.api ? item.api : ``;
                 const application = item.application ? item.application : ``;
                 const plan = item.plan ? item.plan : ``;
@@ -762,14 +763,14 @@ function getApiIdPlan(apiId, userId, req, res, next, callback) {
                 }
             }
             if (requiredGroupValues.length > 0){
-                finalResult = allowRefinedPlan.map(x => {
-                    if (!x.requiredGroup) {
-                        return x;
+                finalResult = allowRefinedPlan.map(apiPlan => {
+                    if (!apiPlan.requiredGroup) {
+                        return apiPlan;
                       }
                     return {
-                        ...x,
-                        is: requiredGroupValues.includes(x.requiredGroup),
-                        ...(requiredGroupValues.includes(x.requiredGroup) ? {} : { this: 'hide' })
+                        ...apiPlan,
+                        is: requiredGroupValues.includes(apiPlan.requiredGroup),
+                        ...(requiredGroupValues.includes(apiPlan.requiredGroup) ? {} : { this: 'hide' })
                       };
                 });
             }
