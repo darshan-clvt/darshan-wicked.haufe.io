@@ -11,11 +11,11 @@ block bodyScripts
                 if (popupMessage) {
                         popupMessage.style.display = 'none';
                     }
-    var storedA, storedB, storedC, storedD ;
+    var apiIdForModify, appIdForModify, apiKeyConstant, apiPlanForModify ;
     function handleExtractedValues(apiValue, applicationValue, apiKey, apiPlan, apiAllPlan, allPlanNames, allPlantoHide) {
-        storedA =  apiValue; storedB =  applicationValue; storedC =  apiKey; storedD = apiPlan;
+        apiIdForModify =  apiValue; appIdForModify =  applicationValue; apiKeyConstant =  apiKey; apiPlanForModify = apiPlan;
         //- //header 
-        let newTitle = 'Modify Subscription Plan (API: ' + storedA  + ', Application: ' + storedB + ')';
+        let newTitle = 'Modify Subscription Plan (API: ' + apiIdForModify  + ', Application: ' + appIdForModify + ')';
         let elements = document.querySelectorAll('#uniqueId');
         elements.forEach(function (element) {
             element.innerHTML = newTitle;
@@ -39,7 +39,6 @@ block bodyScripts
                       option.style.backgroundColor = '#CCCCCC';
                       option.disabled = true;
                       option.classList.add('options');
-                      option.setAttribute("data-tooltip", "fajnflanllcd");
                       if (popupMessage) {
                           popupMessage.style.display = 'block';
                       }
@@ -71,9 +70,9 @@ block bodyScripts
         var selectedPlanInput = document.getElementById('newPlan').value;
         const requestBody = {
           plan: selectedPlanInput,
-          apikey: storedC
+          apikey: apiKeyConstant
         };
-        fetch(`/clarivate/${storedB}/subscribe/${storedA}`, {
+        fetch(`/clarivate/${appIdForModify}/subscribe/${apiIdForModify}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
