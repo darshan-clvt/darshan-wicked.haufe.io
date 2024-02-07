@@ -1,0 +1,320 @@
+extends layout
+block bodyScripts
+  script(type='text/javascript').
+    function sanitizeHTML(text) {
+        return $('<div>').text(text).html();
+    }
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+      })
+    var popupMessage = document.querySelector('.popup-message');
+                if (popupMessage) {
+                        popupMessage.style.display = 'none';
+                    }
+    var storedA, storedB, storedC, storedD ;
+    function handleExtractedValues(apiValue, applicationValue, apiKey, apiPlan, apiAllPlan, allPlanNames, allPlantoHide) {
+        storedA =  apiValue; storedB =  applicationValue; storedC =  apiKey; storedD = apiPlan;
+        //- //header 
+        let newTitle = 'Modify Subscription Plan (API: ' + storedA  + ', Application: ' + storedB + ')';
+        let elements = document.querySelectorAll('#uniqueId');
+        elements.forEach(function (element) {
+            element.innerHTML = newTitle;
+        });
+        //-  //header 
+
+        //- Set the value of the input with id 'currentPlan' to the value of apiPlan
+        let currentPlanInput = document.getElementById('currentPlan');
+        if (currentPlanInput) {
+          currentPlanInput.value = apiPlan;
+        }
+        let newPlanInput = document.getElementById('newPlan');
+
+          if (newPlanInput) {
+              newPlanInput.innerHTML = "";
+              apiAllPlan.forEach(function (plan) {
+                  var option = document.createElement('option');
+                  option.value = plan.id;  
+                  option.text = plan.id;
+                  if ('this' in plan) {
+                      option.style.backgroundColor = '#CCCCCC';
+                      option.disabled = true;
+                      option.classList.add('options');
+                      option.setAttribute("data-tooltip", "fajnflanllcd");
+                      if (popupMessage) {
+                          popupMessage.style.display = 'block';
+                      }
+                  }
+                  newPlanInput.appendChild(option);
+                  if(option.disabled){
+                    for (let i = 0; i < option.attributes.length; i++) {
+                      const attribute = option.attributes[i];
+                    }
+                    $(document).ready(function () {
+                        $('#newPlan').hover(
+                          function () {
+                            $('.popup-message').css('display', 'block');
+                          },
+                          function () {
+                            $('.popup-message').css('display', 'none');
+                          }
+                        );
+                      });
+                  }
+                  
+              });
+
+              newPlanInput.disabled = apiAllPlan.length === 0;
+          }
+      }
+    
+    function modifyFunction() {
+        var selectedPlanInput = document.getElementById('newPlan').value;
+        const requestBody = {
+          plan: selectedPlanInput,
+          apikey: storedC
+        };
+        fetch(`/clarivate/${storedB}/subscribe/${storedA}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        })
+          .then(response => !response.json())
+          .then(data => {
+            let PlanInput = document.getElementById('Modifiedplan');
+            if (PlanInput) {
+              PlanInput.value = selectedPlanInput;
+            }
+          })
+          .catch((error) => {
+          });
+      }
+
+
+    function closeFunction() {
+      var currentUrl = window.location.href;
+      var newUrl = currentUrl.split('#')[0]; 
+      window.location.href = newUrl;
+    }
+
+    function cancelFunction() {
+      document.getElementById('popup').style.display = 'none';
+    }
+    
+
+
+
+    function donwloadCSVFile() {
+      var filter = $("#subscriptionsGrid").jsGrid("getFilter");
+      window.location = `/admin/subscriptions_csv?${$.param(filter)}`;
+    };
+
+    $(document).ready(function(){
+       window.onpopstate = function (event) {
+          initializeGridFromStateServerSide(grid).then(() => { grid.isGridRefreshAvailable = true }).catch(err => console.log('Error', err));
+       }
+    
+       $('#subscriptionsGrid').jsGrid({
+         width: "100%", pageSize: 10, sorting: true, paging: true, filtering: true, pageLoading:true, autoload: true,
+         controller: {
+          loadData: function (filter) {
+            var d = $.Deferred();
+        		$.ajax({
+                url: "/admin/subscriptions",
+                data: filter,
+                dataType: "json"
+              }).done(function(result) {
+                d.resolve({
+                    data: result.subscriptions.items,
+                    itemsCount: result.subscriptions.count
+                });
+              });
+              return d.promise();
+          }
+        },
+        fields: [
+                    { name: "owner", type: "text", title: "User", width: 110, editing: false,
+            itemTemplate: function(value, item) {
+              let resp = [];
+              item.owner_data.forEach(function(owner){
+                resp.push("<a href=\'/users/"+owner.users_id+"\'>"+owner.email+"</a>");
+              });
+              return resp.join(', ');
+            }
+          },
+          { name: "application_name", type: "text", title: "Application", width: 110, editing: false,
+              itemTemplate: function(value, item) {
+                return $("<a>").attr("href", item._links.application.href.toLowerCase()).text(value);
+              }
+          },   
+            { name: "application.trusted", type: "text", title: "Trusted", width: "6%",
+            itemTemplate: function (value, item) {
+              return item.application.trusted ? 'Yes' : '-';
+            }
+          }, 
+         { name: "api", type: "text", title: "API", width: 60, editing: false, 
+             itemTemplate: function(value, item) {
+                 return $("<a>").attr("href", item._links.apis.href+'/'+item.api).text(value);
+              }
+          },
+          { name: "plan", type: "text", title: "Plan",  width: 60, editing: false},
+                    { name: "changedDate", type: "text", title: "Date (UTC)",
+                itemTemplate: function (value, item) {
+                  const date = dateFormat (new Date (value), "%Y-%m-%d %H:%M:%S", true);
+                  return $("<span>").text(date);
+                }
+              },
+          { name: "apikey", type: "text", title: "API Key (Headers)", width: 160, sorting: false, filtering: true,
+            validate: {
+              validator: function(value, item) {
+                if(!value) return false;
+                if(value.length < 8 || value.length > 50) return false;
+                if(!value.match('^[a-zA-Z0-9_\-]*$')) return false;
+                return true;
+              },
+              message: function(value, item) {
+                if(!value) return "Key value is required";
+                if(value.length < 8 || value.length > 50) return "Key cannot be less than 8 or more than 50 characters long";
+                if(!value.match('^[a-zA-Z0-9_\-]*$')) return "Pattern not allowed";
+                return "";
+              }
+            }
+          },
+
+          { type: "control", width: "100", editButton: false, deleteButton: false,
+               _createFilterSwitchButton: function() {
+                return this._createOnOffSwitchButton("filtering", this.searchModeButtonClass, false);
+               },
+              itemTemplate: function (value, item) {
+                var $modifyBtn = $("<button>")
+                    .attr("type", "submit")
+                    .attr("class", "btn btn-sm btn-success")
+                    .attr("style", "margin: auto; display: block; width: 10rem; height: 4rem; border-radius: .3rem;")
+                    .text("Modify")
+                    .on("click", function () {
+                        $(".hide").show();
+                        if (window.location.href.includes('#popup') && window.location.href.includes('#')) {
+                            window.location.href = '#popup';
+                        } 
+                        else {
+                            const apiId = item.api;
+                            const userId = item.owner_data[0].users_id
+                            const planIds = [], planName = [], plansToHide = [];
+                            $.ajax({
+                                type: 'GET',
+                                url: `/admin/plansModify/${apiId}/${userId}`,
+                                dataType: 'json',
+                                success: function (apiPlans) {
+                                  window.location.href = '#popup'
+                                  apiPlans.forEach((plan) => {
+                                      if (plan && plan.id && plan.this) {
+                                          planIds.push(plan);
+                                      }
+                                      else {
+                                        planIds.push(plan);
+                                      }
+                                  });
+                                  handleExtractedValues(item.api, item.application, item.apikey, item.plan, planIds, planName, plansToHide);
+                                },
+                                error: function (xhr, status, error) {
+                                }
+                            });
+                        }
+                        
+                    })
+                    .hover(
+                        function () {
+                            // Mouse over, change background color to RGB disco
+                            $(this).css("background-position", "100%");
+                        },
+                        function () {
+                            // Mouse out, change background color back to initial position
+                            $(this).css("background-position", "0%");
+                        }
+                    );
+
+                return $("<td nowrap>").append($modifyBtn)
+                    .append("<span>&nbsp;</span>");
+            }
+
+            }
+        ]
+       });
+       var grid = $("#subscriptionsGrid").data("JSGrid");
+       grid.isGridRefreshAvailable = true;
+       
+    });
+block content
+    .jumbotron.wicked-admin-title
+        .container.wicked-title-container
+            h1 Modify Subscription Plans
+
+            p Please review the subscription plans
+
+    .container.wicked-container
+        if filter == ''
+            h3 No Subscriptions
+        else
+
+            p Please be aware that changing the plan will reset all the request count values, if applicable. Subscription will be automatically approved with existing API key.
+            br
+            div#subscriptionsGrid
+            br
+            p
+              button(class="btn btn-success" onclick="donwloadCSVFile()") Download as CSV
+            .overlay#popup
+              .modifyPlan
+                .panel.panel-default
+                  
+                  h3.panel-title.box-board#uniqueId
+                   
+                  .panel-body.box-outline
+                    p.success
+                      strong 
+                      | Please be aware that changing the plan will reset all the request count values, if applicable. Subscription will be automatically approved with the existing API key.
+                    .custom-input(style="display: flex; align-items: center;")
+                      label(for="currentPlan") Current Plan
+                      span(style="margin: 0 10px;")
+                      input(type="text" id="currentPlan" name="currentPlan" readonly class="dropdown-toggle")
+
+                    div(style="margin-top: 10px;")
+
+                    .custom-select(style="display: flex; align-items: center; justify-content: flex-start; margin-right: 0;")
+
+                      label(for="newPlan") New Plan
+                      span(style="margin: 0 20px;")
+                      select(id="newPlan" name="newPlan" style="cursor: pointer;")
+                        option.options(value="" disabled selected) Choose below plan
+                      span(style="margin: 0 20px;")
+                      span.popup-message(style="")
+                        | Some plans are disabled as user is not part of the plan group
+
+
+
+                    div(style="margin-top: 50px; border-top: 1px solid #e9e9e9; margin-bottom: 5px")
+
+                    div(style="display: flex; justify-content: flex-end;")
+                      button(type="button" id="modifyButton" class="btn btn-success" onclick=`modifyFunction(); window.location.href="#openpopup"` style="padding: 5px 10px; height: 30px;") Modify
+                      span(style="margin: 0 10px;")
+                      button(type="button" id="cancelButton" class="btn btn-danger" onclick='closeFunction();' style="padding: 5px 10px; height: 30px;") Cancel
+
+
+
+            .overlay#openpopup
+              .modifyPlan
+                .panel.panel-default
+                  h3.panel-title.box-board#uniqueId
+                  //- a.close(href='#') &times;
+                  .panel-body
+                    p(style="color: #0799fa")
+                      | Subscription plan has been succesfully modified.
+                    .custom-input(style="display: flex; align-items: center;")
+                      label(for="Modifiedplan") Current Plan
+                      span(style="margin: 0 10px;")
+                      input(type="text" id="Modifiedplan" name="Modifiedplan" readonly)
+
+                    div(style="margin-top: 10px;")
+
+                    div(style="text-align: center;")
+                      button(type="button" id="closeButtonPopup" class="btn" onclick='closeFunction();') Close
