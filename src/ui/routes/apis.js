@@ -380,11 +380,11 @@ router.get('/:api', function (req, res, next) {
                 }
                 else {
                 const trueId = sanitizedId.replace(/\"$/, '');
-                const apiKey = req.app.portalGlobals.network.clarivateapikey;
+                const apiKey = req.app.portalGlobals.network.portalEntitlementKey;
                 const kongProxyURl = req.app.portalGlobals.network.apiHost;
                 async.parallel({
                     getTruid: (callback) => {
-                      const apiUrl = `https://${kongProxyURl}//clarivate/entitlements/${trueId}`;
+                      const apiUrl = `https://${kongProxyURl}//api/key/entitlements/description/${trueId}`;
                       const headers = {
                         'Content-Type': 'application/json',
                         'X-ApiKey': `${apiKey}`
@@ -393,7 +393,12 @@ router.get('/:api', function (req, res, next) {
                       axios.get(apiUrl, { headers })
                       .then(response => {
                         if (response.status === 200) {
-                            const values = Object.values(response.data.entitlementProducts);
+                            let values = []
+                            for (const entitlement of response.data.entitlements) {
+                                for (const [,description] of Object.entries(entitlement.entitlementProducts)) {
+                                    values.push(description)
+                                }
+                            }
                             responseData = values; 
                         }
                         callback(null, responseData);
