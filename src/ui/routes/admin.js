@@ -207,14 +207,14 @@ function getAdmin(req, res, uri, callback) {
         callback);
 }
 
-function getSubscriptions(req, res, next) {
+function getSubscriptions(req, res, viewName, next) {
     const filterFields = ['application', 'application_name', 'plan', 'api', 'owner', 'user'];
     const subsUri = utils.makePagingUri(req, '/subscriptions?embed=1&', filterFields);
     utils.getFromAsync(req, res, subsUri, 200, function (err, subsResponse) {
         if (err)
             return next(err);
         if (!utils.acceptJson(req)) {
-            res.render('admin_subscriptions', {
+            res.render(viewName, {
                 authUser: req.user,
                 glob: req.app.portalGlobals,
                 title: 'All Subscriptions',
@@ -375,10 +375,15 @@ router.get('/subscriptions', mustBeAdminOrApproverMiddleware, function (req, res
     debug("get('/subscriptions')");
     if (req.query.apikey) {
         
-        getFilteredApiKeyId(req, res, next);
+        getFilteredApiKeyId(req, res, 'admin_subscriptions', next);
     } else {
-        getSubscriptions(req, res, next);
+        getSubscriptions(req, res, 'admin_subscriptions', next);
     }
+});
+
+router.get('/modifyPlans', mustBeAdminOrApproverMiddleware, function (req, res, next) {
+    debug('get("/approvals")');
+    getSubscriptions(req, res, 'manage_plans', next);
 });
 
 router.get('/subscriptions_csv', mustBeAdminOrApproverMiddleware, function (req, res, next) {
@@ -691,5 +696,92 @@ router.post('/restart', mustBeAdminMiddleware, function (req, res, next) {
         }, 1000);
     });
 });
+
+
+router.get('/plansModify/:apiId/:userId', async function (req, res, next) {
+    let apiPlans = req.params.apiId;
+    let userId = req.params.userId;
+    getApiIdPlan(apiPlans, userId, req, res, next, (err, responseData) => {
+        if (err) {
+            return res.status(500).json(responseData);
+        }
+        res.status(200).json(responseData);
+    });
+});
+
+function getApiIdPlan(apiId, userId, req, res, next, callback) {
+    async.parallel({
+        getPlans: function (innerCallback) {
+            // Assuming utils.getFromAsync has a callback parameter
+            utils.getFromAsync(req, res, '/apis/' + apiId + '/plans', 200, function (error, plans) {
+                if (error) {
+                    debug('Error fetching plans:', error);
+                    return innerCallback(error);
+                }
+                innerCallback(null, plans);
+            });
+        },
+        getUser: function(innerCallback) {
+            utils.getFromAsync(req, res, '/users/' + userId, 200, function (error, user) {
+                if (error) {
+                    debug('Error fetching user:', error);
+                    return innerCallback(error);
+                }
+                innerCallback(null, user);
+            });
+        },
+        getAllPlan: function(innerCallback) {
+            utils.getFromAsync(req, res, '/plans', 200, function (error, allPlans) {
+                if (error) {
+                    debug('Error fetching all plans:', error);
+                    return innerCallback(error);
+                }
+                innerCallback(null, allPlans);
+            });
+        }
+    }, function (error, results) {
+        if (error) {
+            debug('Error in getApiIdPlan:', error);
+            return callback(error);
+        }
+        let allPlan = results.getAllPlan.plans;
+        let userGroups = results.getUser.groups;
+        let allowRefinedPlan = results.getPlans;
+        let requiredGroupValues = [];
+        let finalResult = [];
+
+        if (userGroups.length > 0) {
+            for (let i = 0; i < allPlan.length; i++) {
+                const eachAllPlan = allPlan[i];
+                if (eachAllPlan && eachAllPlan.requiredGroup) {
+                    const eachRequiredGroup = eachAllPlan.requiredGroup;
+                    let matchingUserGroup = userGroups.find(userGroup => userGroup === eachRequiredGroup);
+        
+                    if (matchingUserGroup) {
+                        requiredGroupValues.push(matchingUserGroup); 
+                    }
+                }
+            }
+            if (requiredGroupValues.length > 0){
+                finalResult = allowRefinedPlan.map(apiPlan => {
+                    if (!apiPlan.requiredGroup) {
+                        return apiPlan;
+                      }
+                    return {
+                        ...apiPlan,
+                        is: requiredGroupValues.includes(apiPlan.requiredGroup),
+                        ...(requiredGroupValues.includes(apiPlan.requiredGroup) ? {} : { this: 'hide' })
+                      };
+                });
+            }
+        }
+        else{
+            callback(null,  undefined);
+        }
+        callback(null, finalResult);
+    });
+
+    
+}
 
 module.exports = router;
