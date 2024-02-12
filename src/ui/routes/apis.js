@@ -187,6 +187,7 @@ router.get('/:api', function (req, res, next) {
         let cortelliesOriginalApiId = []; // This will get original apiIds for Swaping with the cortellis-api-collection swagger URL
         let cortelliesapiDocIds = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
         let cortellisMainApi = req.app.portalGlobals.cortellisUi.cortelliesApi.cortelliesMainApiId;
+        let contractedSkus =  req.app.portalGlobals.cortellisUi.cortellisContractedSkus.regularSkus
         cortelliesapiDocIds.forEach(function (api) {
             for (let key in api) {
                 if (api.hasOwnProperty(key)) {
@@ -394,11 +395,14 @@ router.get('/:api', function (req, res, next) {
                       .then(response => {
                         if (response.status === 200) {
                             let values = []
-                            for (const entitlement of response.data.entitlements) {
-                                for (const [,description] of Object.entries(entitlement.entitlementProducts)) {
-                                    values.push(description)
-                                }
-                            }
+                            response.data.entitlements.forEach(entitlement => {
+                                const entitlProducts = entitlement.entitlementProducts;
+                                Object.entries(entitlProducts).forEach(([key, value]) => {
+                                    if(response.data.regular_skus.includes(key) && key.startsWith(contractedSkus)) {
+                                        values.push(value);
+                                    }
+                                });
+                            });
                             responseData = values; 
                         }
                         callback(null, responseData);
