@@ -396,8 +396,8 @@ router.get('/:api', function (req, res, next) {
                         if (response.status === 200) {
                             let values = []
                             response.data.entitlements.forEach(entitlement => {
-                                const entitlProducts = entitlement.entitlementProducts;
-                                Object.entries(entitlProducts).forEach(([key, value]) => {
+                                const entitelMentProduct = entitlement.entitlementProducts;
+                                Object.entries(entitelMentProduct).forEach(([key, value]) => {
                                     if(response.data.regular_skus.includes(key) && key.startsWith(contractedSkus)) {
                                         values.push(value);
                                     }
