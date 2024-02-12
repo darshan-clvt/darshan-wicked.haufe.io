@@ -53,10 +53,10 @@ function getSkus(truid, req, res, next, callback) {
             .then(response => {
                 if (response.status === 200) {
                     response.data.entitlements.forEach(entitlement => {
-                        const entitlProducts = entitlement.entitlementProducts;
+                        const entitlmentProduct = entitlement.entitlementProducts;
                         // Create an array to store skus for the current iteration
                         let skusArray = [];
-                        Object.entries(entitlProducts).forEach(([key, value]) => {
+                        Object.entries(entitlmentProduct).forEach(([key, value]) => {
                             if (response.data.regular_skus.includes(key) && key.startsWith(contractedSkus)) {
                                 // Push the current sku to the skusArray
                                 skusArray.push({ [key]: value });
