@@ -18,14 +18,14 @@ block bodyScripts
             $('[data-toggle="popover"]').popover(); 
         });
         //Extacting the Paragraph values and Check for disabling subscribe button!
-        //- var pValue = $('#skusId').text().trim();
-        //- if (pValue === '') {
-        //-     // Hide all buttons when pValue is empty
-        //-     let allButtons = document.getElementById('application-subs-list').getElementsByTagName("button");
-        //-     for (let i = 0; i < allButtons.length; i++) {
-        //-         allButtons[i].disabled = true;
-        //-     }
-        //- } else {
+        var pValue = $('#skusId').text().trim();
+        if (pValue === '') {
+            // Hide all buttons when pValue is empty
+            let allButtons = document.getElementById('application-subs-list').getElementsByTagName("button");
+            for (let i = 0; i < allButtons.length; i++) {
+                allButtons[i].disabled = true;
+            }
+        } else {
             // Iterate over buttons and disable specific ones
             let subscriptionButtons = document.getElementById('application-subs-list').getElementsByTagName("button");
             for (let i = 0; i < subscriptionButtons.length; i++) {
@@ -33,7 +33,7 @@ block bodyScripts
                     subscriptionButtons[i].disabled = true;
                 }
             }
-        //- }
+        }
     script.
         document.addEventListener('DOMContentLoaded', function () {
               // Get the first element with the 'api-link' class
