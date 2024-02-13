@@ -379,10 +379,11 @@ router.get('/:api', function (req, res, next) {
                 else {
                 const trueId = sanitizedId.replace(/\"$/, '');
                 const apiKey = req.app.portalGlobals.network.portalEntitlementKey;
+                const entitlementApiPath = req.app.portalGlobals.network.portalEntitlementPath;
                 const kongProxyURl = req.app.portalGlobals.network.apiHost;
                 async.parallel({
                     getTruid: (callback) => {
-                      const apiUrl = `https://${kongProxyURl}//api/key/entitlements/description/${trueId}`;
+                      const apiUrl = `https://${kongProxyURl}${entitlementApiPath}/${trueId}`;
                       const headers = {
                         'Content-Type': 'application/json',
                         'X-ApiKey': `${apiKey}`

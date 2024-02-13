@@ -39,11 +39,12 @@ router.get('/:userId', function (req, res, next) {
 function getSkus(truid, req, res, next, callback) {
 
     const apiKey = req.app.portalGlobals.network.portalEntitlementKey;
+    const entitlementApiPath = req.app.portalGlobals.network.portalEntitlementPath;
     const kongProxyURl = req.app.portalGlobals.network.apiHost;
     const contractedSkus =  req.app.portalGlobals.cortellisUi.cortellisContractedSkus.regularSkus
     let responseData = [];
        
-        const entitlementsUrl = `https://${kongProxyURl}/api/key/entitlements/description/${truid}`;
+        const entitlementsUrl = `https://${kongProxyURl}${entitlementApiPath}/${truid}`;
       
         const headers = {
             'Content-Type': 'application/json',
