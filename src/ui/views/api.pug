@@ -15,18 +15,16 @@ block bodyScripts
     script(type='text/javascript').
         $(window).on('load', function () {
         // Log the window location to the console
-        var apiEndpoints = [
-            "cortellis-np-drugs-api",
-            "cortellis-np-companies-api",
-            "cortellis-np-sources-api"
-        ];
+            let apiEndpoints = [];
+            let cortellisIdValue = $('#cortellisIdElement').text().trim(); // Trim to remove leading/trailing spaces
+            apiEndpoints = cortellisIdValue.split(',');
 
-            // Check if the window location includes "apis/cortellies-api-collection"
-            for (var i = 0; i < apiEndpoints.length; i++) {
+            // Check if the window location includes any of the apiEndpoints
+            for (let i = 0; i < apiEndpoints.length; i++) {
                 if (window.location.href.includes("apis/" + apiEndpoints[i])) {
-                    // Hide the elements with the specified IDs
                     $(".custom-hide").hide();
-                    break; // exit the loop if a match is found
+                    $(".custom-show").show();
+                    break;
                 }
             }
         });
@@ -149,6 +147,7 @@ block content
                     - var apiData = JSON.parse(apiDataString)
                     - var apiIDs = apiData.map(obj => Object.values(obj))
                     
+                    p#cortellisIdElement= KKK //DND or remove the class #cortellisIdElement
                     if (apiIDs.some(innerArray => innerArray.includes(apiInfo.id))) 
                         if CortellisApiKey !== null
                             if apiInfo.auth == "key-auth" && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
