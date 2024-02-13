@@ -196,13 +196,13 @@ router.get('/:api', function (req, res, next) {
         });
         // Note: callback and results are used all the time, but in the end, all's
         // good, as the variable scopes are playing nice with us. Just watch out.
+        if (cortelliesapiIdForSwap.includes(apiId)) {
+            cortelliesOriginalApiId.push(apiId);
+            apiId = cortellisMainApi; // Assuming cortellisMainApi is defined somewhere in your code
+        }
         async.parallel({
             getSubs: function (callback) {
                 async.map(appIds, function (appId, callback) {
-                    if (cortelliesapiIdForSwap.includes(apiId)) {
-                        cortelliesOriginalApiId.push(apiId);
-                        apiId = cortellisMainApi; // Assuming cortellisMainApi is defined somewhere in your code
-                    }
                     utils.get(req, '/applications/' + appId + '/subscriptions/' + apiId, function (err, apiResponse, apiBody) {
                         if (err)
                             return callback(err);
