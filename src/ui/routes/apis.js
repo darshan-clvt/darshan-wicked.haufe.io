@@ -199,12 +199,9 @@ router.get('/:api', function (req, res, next) {
         async.parallel({
             getSubs: function (callback) {
                 async.map(appIds, function (appId, callback) {
-                    for (let i = 0; i < cortelliesapiIdForSwap.length; i++) {
-                        if (apiId === cortelliesapiIdForSwap[i]) {
-                        cortelliesOriginalApiId.push(apiId)
-                        apiId = cortellisMainApi;
-                        break;
-                      }
+                    if (cortelliesapiIdForSwap.includes(apiId)) {
+                        cortelliesOriginalApiId.push(apiId);
+                        apiId = cortellisMainApi; // Assuming cortellisMainApi is defined somewhere in your code
                     }
                     utils.get(req, '/applications/' + appId + '/subscriptions/' + apiId, function (err, apiResponse, apiBody) {
                         if (err)
