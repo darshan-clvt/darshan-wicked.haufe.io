@@ -92,13 +92,17 @@ block content
                     +apiDef(filteredApiList[i+1])
                   if (i+2) < filteredApiList.length
                     +apiDef(filteredApiList[i+2])
-          else if authUser && (authUser.admin !== true && authUser.authenticated_scope.includes('wicked:api-cortellis-user'))
-              - const excludedApiIds = ["cortellis-np-drugs-api", "cortellis-np-companies-api", "cortellis-np-sources-api"];
-              - const filteredApiList = apilist.filter(api => !excludedApiIds.includes(api.id));
+          else if authUser && (authUser.admin !== true && authUser.authenticated_scope.includes('wicked:')) || authUser !== true
+
+              - const apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi);
+              - const apiData = JSON.parse(apiDataString);
+              - const KKK = apiData.map(obj => Object.values(obj));
+              - const filteredApiList = apilist.filter(api => !KKK.some(item => item.includes(api.id)));
               each api, i in filteredApiList
                 if i % 3 === 0
                   div(class="row")
                     +apiDef(filteredApiList[i])
+       
                     if i + 1 < filteredApiList.length
                       +apiDef(filteredApiList[i + 1])
                     if i + 2 < filteredApiList.length
