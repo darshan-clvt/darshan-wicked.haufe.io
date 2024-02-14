@@ -131,9 +131,9 @@ block content
                 .panel-body
                     != apiDesc
                     if apiInfo.auth == "none"
-                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?apikey=none&url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Swagger definition &raquo;
+                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?apikey=none&url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
                     else
-                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Swagger definition &raquo;
+                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
         
         if !authUser && apiInfo.auth != "none"
             .panel.panel-danger
