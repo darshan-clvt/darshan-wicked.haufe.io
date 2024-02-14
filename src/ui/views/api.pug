@@ -147,7 +147,7 @@ block content
                     - var apiData = JSON.parse(apiDataString)
                     - var apiIDs = apiData.map(obj => Object.values(obj))
                     
-                    p#cortellisIdElement= KKK //DND or remove the class #cortellisIdElement
+                    p#cortellisIdElement= apiIDs
                     if (apiIDs.some(innerArray => innerArray.includes(apiInfo.id))) 
                         if CortellisApiKey !== null
                             if apiInfo.auth == "key-auth" && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
