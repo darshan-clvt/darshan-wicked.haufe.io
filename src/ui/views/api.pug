@@ -17,13 +17,12 @@ block bodyScripts
         // Log the window location to the console
             let apiEndpoints = [];
             let cortellisIdValue = $('#cortellisIdElement').text().trim(); // Trim to remove leading/trailing spaces
-            apiEndpoints = cortellisIdValue.split(',');
+            apiEndpoints = cortellisIdValue.replace(/ /g, '').split(',').filter(Boolean);
 
             // Check if the window location includes any of the apiEndpoints
             for (let i = 0; i < apiEndpoints.length; i++) {
                 if (window.location.href.includes("apis/" + apiEndpoints[i])) {
                     $(".custom-hide").hide();
-                    $(".custom-show").show();
                     break;
                 }
             }
