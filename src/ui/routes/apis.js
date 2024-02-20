@@ -196,16 +196,13 @@ router.get('/:api', function (req, res, next) {
         });
         // Note: callback and results are used all the time, but in the end, all's
         // good, as the variable scopes are playing nice with us. Just watch out.
+        if (cortelliesapiIdForSwap.includes(apiId)) {
+            cortelliesOriginalApiId.push(apiId);
+            apiId = cortellisMainApi; // Assuming cortellisMainApi is defined somewhere in your code
+        }
         async.parallel({
             getSubs: function (callback) {
                 async.map(appIds, function (appId, callback) {
-                    for (let i = 0; i < cortelliesapiIdForSwap.length; i++) {
-                        if (apiId === cortelliesapiIdForSwap[i]) {
-                        cortelliesOriginalApiId.push(apiId)
-                        apiId = cortellisMainApi;
-                        break;
-                      }
-                    }
                     utils.get(req, '/applications/' + appId + '/subscriptions/' + apiId, function (err, apiResponse, apiBody) {
                         if (err)
                             return callback(err);
@@ -382,10 +379,11 @@ router.get('/:api', function (req, res, next) {
                 else {
                 const trueId = sanitizedId.replace(/\"$/, '');
                 const apiKey = req.app.portalGlobals.network.portalEntitlementKey;
+                const entitlementApiPath = req.app.portalGlobals.network.portalEntitlementPath;
                 const kongProxyURl = req.app.portalGlobals.network.apiHost;
                 async.parallel({
                     getTruid: (callback) => {
-                      const apiUrl = `https://${kongProxyURl}//api/key/entitlements/description/${trueId}`;
+                      const apiUrl = `https://${kongProxyURl}${entitlementApiPath}/${trueId}`;
                       const headers = {
                         'Content-Type': 'application/json',
                         'X-ApiKey': `${apiKey}`
