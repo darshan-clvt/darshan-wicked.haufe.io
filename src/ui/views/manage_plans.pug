@@ -124,8 +124,16 @@ block bodyScripts
                 data: filter,
                 dataType: "json"
               }).done(function(result) {
+                let filterKeyAuth = result.subscriptions.items
+                      .filter(function (responseData) {
+                          return responseData.auth === 'key-auth' && responseData.auth !== undefined && responseData.approved !== false && responseData.api_group !== 'api-internal';;
+                      })
+                      .map(function (responseData) {
+                          return responseData;
+                      });
+
                 d.resolve({
-                    data: result.subscriptions.items,
+                    data: filterKeyAuth,
                     itemsCount: result.subscriptions.count
                 });
               });
