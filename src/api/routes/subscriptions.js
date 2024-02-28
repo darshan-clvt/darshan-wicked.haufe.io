@@ -379,7 +379,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     }
 
 
-                    const actionType = subsCreateInfo.ModifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_ADD;
+                    const actionType = subsCreateInfo.modifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_ADD;
 
                     // Webhook it, man
                     webhooks.logEvent(app, {
@@ -599,7 +599,7 @@ subscriptions.deleteSubscription = function (app, res, applications, loggedInUse
                     }
                     res.status(204).send('');
 
-                    const actionType = subsCreateInfo.ModifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_DELETE;
+                    const actionType = subsCreateInfo.modifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_DELETE;
 
                     if (actionType === webhooks.ACTION_DELETE) {
                         webhooks.logEvent(app, {
