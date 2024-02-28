@@ -68,6 +68,10 @@ block bodyScripts
     
     function modifyFunction() {
         var selectedPlanInput = document.getElementById('newPlan').value;
+        let PlanInput = document.getElementById('Modifiedplan');
+        if (PlanInput) {
+          PlanInput.value = selectedPlanInput;
+        }
         const requestBody = {
           plan: selectedPlanInput,
           apikey: apiKeyConstant
@@ -81,10 +85,6 @@ block bodyScripts
         })
           .then(response => !response.json())
           .then(data => {
-            let PlanInput = document.getElementById('Modifiedplan');
-            if (PlanInput) {
-              PlanInput.value = selectedPlanInput;
-            }
           })
           .catch((error) => {
           });
@@ -155,7 +155,7 @@ block bodyScripts
                 return $("<a>").attr("href", item._links.application.href.toLowerCase()).text(value);
               }
           },   
-            { name: "application.trusted", type: "text", title: "Trusted", width: "6%",
+            { name: "application", type: "text", title: "Trusted", width: "6%",
             itemTemplate: function (value, item) {
               return item.application.trusted ? 'Yes' : '-';
             }

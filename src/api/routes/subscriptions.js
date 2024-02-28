@@ -379,9 +379,11 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     }
 
 
+                    const actionType = subsCreateInfo.modifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_ADD;
+
                     // Webhook it, man
                     webhooks.logEvent(app, {
-                        action: webhooks.ACTION_ADD,
+                        action: actionType,
                         entity: webhooks.ENTITY_SUBSCRIPTION,
                         data: {
                             subscriptionId: persistedSubscription.id,
@@ -597,17 +599,21 @@ subscriptions.deleteSubscription = function (app, res, applications, loggedInUse
                     }
                     res.status(204).send('');
 
-                    webhooks.logEvent(app, {
-                        action: webhooks.ACTION_DELETE,
-                        entity: webhooks.ENTITY_SUBSCRIPTION,
-                        data: {
-                            subscriptionId: subscriptionId,
-                            applicationId: appId,
-                            apiId: apiId,
-                            userId: loggedInUserId,
-                            auth: subscriptionData.auth
-                        }
-                    });
+                    const actionType = subsCreateInfo.modifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_DELETE;
+
+                    if (actionType === webhooks.ACTION_DELETE) {
+                        webhooks.logEvent(app, {
+                            action: actionType,
+                            entity: webhooks.ENTITY_SUBSCRIPTION,
+                            data: {
+                                subscriptionId: subscriptionId,
+                                applicationId: appId,
+                                apiId: apiId,
+                                userId: loggedInUserId,
+                                auth: subscriptionData.auth
+                            }
+                        });
+                    }
                 });
             });
         });
