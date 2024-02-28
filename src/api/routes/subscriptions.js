@@ -544,7 +544,7 @@ function findApprovalIndex(approvalInfos, appId, apiId) {
     return approvalIndex;
 }
 
-subscriptions.deleteSubscription = function (app, res, applications, loggedInUserId, appId, apiId) {
+subscriptions.deleteSubscription = function (app, res, applications, loggedInUserId, appId, apiId, subsCreateInfo) {
     debug('deleteSubscription(): ' + appId + ', apiId: ' + apiId);
     dao.applications.getById(appId, (err, appInfo) => {
         if (err) {
