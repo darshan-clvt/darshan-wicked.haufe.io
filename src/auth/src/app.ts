@@ -56,6 +56,17 @@ function rejectFromKong(req, res, next) {
     return next();
 }
 
+function requestChecker(req, res, next) {
+    // If URL or any part of it contains __proto__, reject it.
+    // This is a security measure against prototype pollution.
+    const url = req.url;
+    if (url && url.indexOf('__proto__') >= 0) {
+        res.status(400).json({ code: 400, message: 'Bad request.' });
+        return;
+    }
+    return next();
+}
+
 app.initApp = function (authServerConfig: WickedAuthServer, callback: SimpleCallback) {
     // Store auth Config with application
     app.authConfig = authServerConfig;
@@ -81,7 +92,8 @@ app.initApp = function (authServerConfig: WickedAuthServer, callback: SimpleCall
     const basePath = app.get('base_path');
 
     app._startupSeconds = utils.getUtc();
-
+    
+    app.use(requestChecker);
     app.use(prometheusMiddleware.middleware('wicked_auth'));
 
     function answerPing(req, res, next) {

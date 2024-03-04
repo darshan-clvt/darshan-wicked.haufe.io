@@ -44,7 +44,7 @@ router.get('/approvals', function (req, res, next) {
                 authUser: req.user,
                 glob: req.app.portalGlobals,
                 title: 'Pending Subscription Approvals',
-                approvals: JSON.stringify(apiResponse)
+                approvals: JSON.stringify(apiResponse).replace(/\//g, '\\/')
             });
         } else {
             res.json({
@@ -529,7 +529,7 @@ router.get('/verifications', mustBeAdminMiddleware, function (req, res, next) {
                 authUser: req.user,
                 glob: req.app.portalGlobals,
                 title: 'Pending Verifications',
-                verifications: JSON.stringify(verifResponse)
+                verifications: JSON.stringify(verifResponse).replace(/\//g, '\\/')
             });
         } else {
             res.json({
