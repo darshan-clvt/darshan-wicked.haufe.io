@@ -83,14 +83,10 @@ block bodyScripts
           .then(response => response.json())
           .then(data => {
             if(data.status === 201){
-          let PlanInput = document.getElementById('Modifiedplan');
-          if (PlanInput) {
-            PlanInput.value = data.plan;
+              let PlanInput = document.getElementById('Modifiedplan');
+              if (PlanInput) {
+                PlanInput.value = data.plan;
           }
-          //- console.log("Current URL")
-          //- console.log(window.location.href);
-          //- console.log("Current URL ABOVE")
-
           }
           })
           .catch((error) => {
