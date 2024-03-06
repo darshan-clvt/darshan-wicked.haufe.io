@@ -94,12 +94,10 @@ block bodyScripts
             }
         })
           .then(data => {
-            if(data.status === 201){
               let PlanInput = document.getElementById('Modifiedplan');
               if (PlanInput) {
                 PlanInput.value = data.plan;
-          }
-           if (planInput) {
+                 if (planInput) {
               planInput.innerText = "Subscription plan has been succesfully modified"
               planInput.classList.remove('blink');
               planInput.style.color = '#0799fa';
