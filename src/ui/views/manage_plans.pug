@@ -72,6 +72,7 @@ block bodyScripts
           plan: selectedPlanInput,
           apikey: apiKeyConstant
         };
+        let planInput = document.getElementById('Note');
         fetch(`/clarivate/${appIdForModify}/subscribe/${apiIdForModify}`, {
           method: 'POST',
           headers: {
@@ -80,13 +81,29 @@ block bodyScripts
           },
           body: JSON.stringify(requestBody),
         })
-          .then(response => response.json())
+          .then(response => {
+            if (response.status === 201) {
+                return response.json();
+            } else {
+                  if (planInput) {
+            planInput.innerText = "Subscription plan has Not Modified and Create New Subscription"
+            planInput.classList.remove('blink');
+            planInput.style.color = 'red';
+            planInput.style.fontWeight = 'bold';
+          }
+            }
+        })
           .then(data => {
             if(data.status === 201){
               let PlanInput = document.getElementById('Modifiedplan');
               if (PlanInput) {
                 PlanInput.value = data.plan;
           }
+           if (planInput) {
+              planInput.innerText = "Subscription plan has been succesfully modified"
+              planInput.classList.remove('blink');
+              planInput.style.color = '#0799fa';
+            }
           }
           })
           .catch((error) => {
@@ -317,8 +334,8 @@ block content
                   h3.panel-title.box-board#uniqueId
                   //- a.close(href='#') &times;
                   .panel-body
-                    p(style="color: #0799fa")
-                      | Subscription plan has been succesfully modified.
+                    p(id="Note").blink
+                      | Please wait while we update the plan
                     .custom-input(style="display: flex; align-items: center;")
                       label(for="Modifiedplan") Current Plan
                       span(style="margin: 0 10px;")
