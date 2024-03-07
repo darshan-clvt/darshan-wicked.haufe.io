@@ -379,11 +379,9 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     }
 
 
-                    const actionType = subsCreateInfo && subsCreateInfo.modifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_ADD;
-
                     // Webhook it, man
                     webhooks.logEvent(app, {
-                        action: actionType,
+                        action: webhooks.ACTION_ADD,
                         entity: webhooks.ENTITY_SUBSCRIPTION,
                         data: {
                             subscriptionId: persistedSubscription.id,
@@ -544,7 +542,7 @@ function findApprovalIndex(approvalInfos, appId, apiId) {
     return approvalIndex;
 }
 
-subscriptions.deleteSubscription = function (app, res, applications, loggedInUserId, appId, apiId, subsCreateInfo) {
+subscriptions.deleteSubscription = function (app, res, applications, loggedInUserId, appId, apiId) {
     debug('deleteSubscription(): ' + appId + ', apiId: ' + apiId);
     dao.applications.getById(appId, (err, appInfo) => {
         if (err) {
@@ -599,21 +597,17 @@ subscriptions.deleteSubscription = function (app, res, applications, loggedInUse
                     }
                     res.status(204).send('');
 
-                    const actionType =  subsCreateInfo && subsCreateInfo.modifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_DELETE;
-
-                    if (actionType === webhooks.ACTION_DELETE) {
-                        webhooks.logEvent(app, {
-                            action: actionType,
-                            entity: webhooks.ENTITY_SUBSCRIPTION,
-                            data: {
-                                subscriptionId: subscriptionId,
-                                applicationId: appId,
-                                apiId: apiId,
-                                userId: loggedInUserId,
-                                auth: subscriptionData.auth
-                            }
-                        });
-                    }
+                    webhooks.logEvent(app, {
+                        action: webhooks.ACTION_DELETE,
+                        entity: webhooks.ENTITY_SUBSCRIPTION,
+                        data: {
+                            subscriptionId: subscriptionId,
+                            applicationId: appId,
+                            apiId: apiId,
+                            userId: loggedInUserId,
+                            auth: subscriptionData.auth
+                        }
+                    });
                 });
             });
         });
