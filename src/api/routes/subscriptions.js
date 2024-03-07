@@ -378,10 +378,10 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         persistedSubscription.apikey = apiKey;
                     }
 
-
+                    const actionType = subsCreateInfo && subsCreateInfo.modifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_ADD;
                     // Webhook it, man
                     webhooks.logEvent(app, {
-                        action: webhooks.ACTION_ADD,
+                        action: actionType,
                         entity: webhooks.ENTITY_SUBSCRIPTION,
                         data: {
                             subscriptionId: persistedSubscription.id,
