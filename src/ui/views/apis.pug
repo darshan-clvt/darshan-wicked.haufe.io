@@ -77,6 +77,7 @@ block content
       div(class="row")
         - var length = apilist.length
         - var apiClass = "col-md-12"
+        - var filteredApiList = apilist 
         if (apiTags.length > 0)
           div(class="col-md-3")
             +apiCategories(apiTags, params, params.searchQuery)
@@ -87,7 +88,7 @@ block content
             p(style='margin-top: 5px; font-size: 40px; font-weight: bold;') No APIs Found
         div(class=apiClass)
           if authUser && (authUser.admin === true && authUser.superadmin === false)
-            - var filteredApiList = apilist.filter(api => api.id !== 'portal-api')
+            filteredApiList = apilist.filter(api => api.id !== 'portal-api')
             each api, i in filteredApiList
               if (i % 3 == 0)
                 div(class="row")
