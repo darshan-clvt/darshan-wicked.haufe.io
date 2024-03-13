@@ -50,6 +50,22 @@ router.get('/', function (req, res, next) {
                 return false;
             });
         }
+
+        // Search functionality based on 'searchQuery' parameter
+        if (req.query && req.query.searchQuery) {
+            const searchQuery = req.query.searchQuery.toLowerCase();
+        
+            // Find the first exact match
+            const exactMatch = apiList.find(function (api) {
+                return api.name.toLowerCase() === searchQuery;
+            });
+        
+            // If an exact match is found, use it; otherwise, include partial matches
+            apiList = exactMatch ? [exactMatch] : apiList.filter(function (api) {
+                return api.name.toLowerCase().includes(searchQuery);
+            });
+        }
+        
         const desc = results.getDesc;
         if (!utils.acceptJson(req)) {
             res.render('apis',
