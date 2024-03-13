@@ -45,6 +45,11 @@ block bodyScripts
                 data: filter,
                 dataType: "json"
               }).done(function(result) {
+                 result.auditlog.items.forEach(function(item) {
+                if (item.data && item.data.modifyplan !== undefined) {
+                      item.activity = "modify subscription"
+                  }
+              });
                 count =  result.auditlog.count;
                 d.resolve({
                     data: result.auditlog.items,

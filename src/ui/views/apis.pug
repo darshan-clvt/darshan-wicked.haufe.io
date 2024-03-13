@@ -79,8 +79,12 @@ block content
         - var apiClass = "col-md-12"
         if (apiTags.length > 0)
           div(class="col-md-3")
-            +apiCategories(apiTags, params)
+            +apiCategories(apiTags, params, params.searchQuery)
           - apiClass = "col-md-9"
+        if (filteredApiList.length === 0)
+          div.apiClass(style='text-align: center;')
+            img(src='/content/images/image.png', style='margin-top: 5px; margin-right: 5px;')
+            p(style='margin-top: 5px; font-size: 40px; font-weight: bold;') No APIs Found
         div(class=apiClass)
           if authUser && (authUser.admin === true && authUser.superadmin === false)
             - var filteredApiList = apilist.filter(api => api.id !== 'portal-api')
