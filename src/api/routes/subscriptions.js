@@ -378,25 +378,6 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         persistedSubscription.apikey = apiKey;
                     }
 
-                    // const actionType = subsCreateInfo && subsCreateInfo.modifyPlan ? webhooks.ACTION_MODIFY : webhooks.ACTION_ADD;
-                    // Webhook it, man
-                    if(subsCreateInfo.modifyPlan === true){
-                        webhooks.logEvent(app, {
-                            action: webhooks.ACTION_ADD,
-                            entity: webhooks.ENTITY_SUBSCRIPTION,
-                            data: {
-                                subscriptionId: persistedSubscription.id,
-                                applicationId: appInfo.id,
-                                apiId: selectedApi.id,
-                                userId: userInfo.id,
-                                planId: apiPlan.id,
-                                group: selectedApi.requiredGroup,
-                                modifyplan: true
-                            }
-                        });
-                    }
-                    else {
-                    // Webhook it, man
                     webhooks.logEvent(app, {
                         action: webhooks.ACTION_ADD,
                         entity: webhooks.ENTITY_SUBSCRIPTION,
@@ -408,7 +389,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                             planId: apiPlan.id,
                             group: selectedApi.requiredGroup,
                         }
-                    });}
+                    });
 
                     if (!needsApproval) {
                         // No approval needed, we can send the answer directly.
