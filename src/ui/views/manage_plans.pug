@@ -142,17 +142,19 @@ block bodyScripts
                 data: filter,
                 dataType: "json"
               }).done(function(result) {
-                let filterKeyAuth = result.subscriptions.items
-                      .filter(function (responseData) {
-                          return responseData.auth === 'key-auth' && responseData.auth !== undefined && responseData.approved !== false && responseData.api_group !== 'api-internal';;
-                      })
-                      .map(function (responseData) {
-                          return responseData;
-                      });
-
+                result.subscriptions.items.forEach(function(item) {
+                if (!item['api_group']) {
+                      item['api_group'] = "noGroup";
+                    }
+                });
+                // Filter out items with api-group set to "no group"
+                let count = result.subscriptions.count;
+                let filteredItems = result.subscriptions.items.filter(function(item) {
+                    return item['api_group'] === "noGroup";
+                });
                 d.resolve({
-                    data: filterKeyAuth,
-                    itemsCount: result.subscriptions.count
+                    data: filteredItems,
+                    itemsCount: count
                 });
               });
               return d.promise();

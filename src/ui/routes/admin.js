@@ -776,7 +776,11 @@ function getApiIdPlan(apiId, userId, req, res, next, callback) {
             }
         }
         else{
-            callback(null,  undefined);
+            finalResult = allowRefinedPlan.map(x => {
+                return {
+                    ...apiPlan
+                  };
+            })
         }
         callback(null, finalResult);
     });
