@@ -4,134 +4,181 @@ block bodyScripts
     function sanitizeHTML(text) {
         return $('<div>').text(text).html();
     }
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-      })
-    var popupMessage = document.querySelector('.popup-message');
-                if (popupMessage) {
-                        popupMessage.style.display = 'none';
-                    }
-    var apiIdForModify, appIdForModify, apiKeyConstant, apiPlanForModify ;
-    function handleExtractedValues(apiValue, applicationValue, apiKey, apiPlan, apiAllPlan, allPlanNames, allPlantoHide) {
-        apiIdForModify =  apiValue; appIdForModify =  applicationValue; apiKeyConstant =  apiKey; apiPlanForModify = apiPlan;
-        //- //header 
-        let newTitle = 'Modify Subscription Plan (API: ' + apiIdForModify  + ', Application: ' + appIdForModify + ')';
-        let elements = document.querySelectorAll('#uniqueId');
-        elements.forEach(function (element) {
-            element.innerHTML = newTitle;
-        });
-        //-  //header 
-
-        //- Set the value of the input with id 'currentPlan' to the value of apiPlan
-        let currentPlanInput = document.getElementById('currentPlan');
-        if (currentPlanInput) {
-          currentPlanInput.value = apiPlan;
-        }
-        let newPlanInput = document.getElementById('newPlan');
-
-          if (newPlanInput) {
-              newPlanInput.innerHTML = "";
-              apiAllPlan.forEach(function (plan) {
-                  var option = document.createElement('option');
-                  option.value = plan.id;  
-                  option.text = plan.id;
-                  if ('this' in plan) {
-                      option.style.backgroundColor = '#CCCCCC';
-                      option.disabled = true;
-                      option.classList.add('options');
-                      if (popupMessage) {
-                          popupMessage.style.display = 'block';
-                      }
-                  }
-                  newPlanInput.appendChild(option);
-                  if(option.disabled){
-                    for (let i = 0; i < option.attributes.length; i++) {
-                      const attribute = option.attributes[i];
-                    }
-                    $(document).ready(function () {
-                        $('#newPlan').hover(
-                          function () {
-                            $('.popup-message').css('display', 'block');
-                          },
-                          function () {
-                            $('.popup-message').css('display', 'none');
-                          }
-                        );
-                      });
-                  }
-                  
-              });
-
-              newPlanInput.disabled = apiAllPlan.length === 0;
-          }
-      }
     
-    function modifyFunction() {
-        var selectedPlanInput = document.getElementById('newPlan').value;
-        const requestBody = {
-          plan: selectedPlanInput,
-          apikey: apiKeyConstant
-        };
-        let planInput = document.getElementById('Note');
-        fetch(`/clarivate/${appIdForModify}/subscribe/${apiIdForModify}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        })
-          .then(response => {
-            if (response.status === 201) {
-                return response.json();
-            } else {
-                  if (planInput) {
-            planInput.innerText = "Subscription plan has Not Modified and Create New Subscription"
-            planInput.classList.remove('blink');
-            planInput.style.color = 'red';
-            planInput.style.fontWeight = 'bold';
-          }
-            }
-        })
-          .then(data => {
-              let PlanInput = document.getElementById('Modifiedplan');
-              if (PlanInput) {
-                PlanInput.value = data.plan;
-                 if (planInput) {
-              planInput.innerText = "Subscription plan has been succesfully modified"
-              planInput.classList.remove('blink');
-              planInput.style.color = '#0799fa';
-            }
-          }
-          })
-          .catch((error) => {
-          });
-      }
-
-
-    function closeFunction() {
-      var currentUrl = window.location.href;
-      var newUrl = currentUrl.split('#')[0]; 
-      window.location.href = newUrl;
-    }
-
-    function cancelFunction() {
-      document.getElementById('popup').style.display = 'none';
-    }
-    
-
-
-
     function donwloadCSVFile() {
       var filter = $("#subscriptionsGrid").jsGrid("getFilter");
       window.location = `/admin/subscriptions_csv?${$.param(filter)}`;
     };
+    
+   var currentPopup = null;
+
+    function showPopup(apiName, apiApplication, apikey, planValue, apiId, userId) {
+        // Remove current popup if exists
+        if (currentPopup) {
+            currentPopup.remove();
+        }
+
+        // Create a custom alert popup
+        var $popup = $('<div class="custom-alert">');
+
+        // HTML content for the popup
+        var htmlContent = '<div class="modifyPlan">' +
+            '<div class="panel panel-default">' +
+            '<h3 class="panel-title box-board" id="uniqueId">Modify Subscription Plan (API: ' + apiName + ', Application:' + apiApplication + ')</h3>' +
+            '<div class="panel-body box-outline">' +
+            '<p class="success"><strong>Please be aware that changing the plan will reset all the request count values, if applicable. Subscription will be automatically approved with the existing API key.</strong></p>' +
+            // First input group for Current Plan
+            '<div class="custom-input" style="display: flex; align-items: center;">' +
+            '<label for="currentPlan">Current Plan</label>' +
+            '<span style="margin: 0 10px;"></span>' +
+            '<input type="text" class="form-control" value="' + planValue + '" id="planInput" style="width: 200px;">' +
+            '</div>' +
+            // Second input group for New Plan
+            '<span style="margin: 20px 20px 0 10px;"></span>' +
+            '<div class="custom-select" style="display: flex; align-items: center; justify-content: flex-start; margin-right: 0;">' +
+            '<label for="newPlan" class="new-plan-label">New Plan</label>' +
+            '<span style="margin: 20px 20px 0 10px;"></span>' +
+            '<select class="form-control" id="ajaxInput" style="width: 200px;"></select>' + 
+            '<span style="margin: 20px 20px 0 10px;"></span>' +
+            '<span class="popup-message" id="Notify">Some plans are disabled as user is not part of the plan group</span>' +
+            '</div>' +
+            // Buttons
+            '<div style="margin-top: 50px; border-top: 1px solid #e9e9e9; margin-bottom: 10px">'+
+            '<p class="blink" id="Note">Please wait while we update the plan</p>' +
+            '<button class="btn btn-danger btn-close">cancel</button>' +
+            '<button class="btn btn-success btn-modify-plan">Modify</button>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+           
+
+        // Set the HTML content for the popup
+        $popup.html(htmlContent);
+
+        $popup.find('#Note').hide();
+        // Add click event to close button
+        $popup.find('.btn-close').on('click', function() {
+            $popup.remove();
+        });
+
+        // Add click event to confirm plan button
+        $popup.find('.btn-modify-plan').on('click', function() {
+            var selectedPlanInput = $popup.find('#ajaxInput').val(); 
+            $popup.find('#Note').show();// Get selected plan
+            const requestBody = {
+                plan: selectedPlanInput,
+                apikey: apikey
+            };
+
+            // Make a fetch call to modify subscription plan
+            fetch(`/clarivate/${apiApplication}/subscribe/${apiName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                })
+                .then(response => {
+                    if (response.status === 201) { // If plan modification successful
+                        return response.json();
+                    } else {
+                        // Handle error responses
+                    }
+                })
+                .then(data => { // Handle response data
+                         $popup.remove();
+                        // Create a new popup inside the current popup
+                        var newPopup = $('<div class="custom-alert">');
+                        var newhtmlContent = '<div class="modifyPlan">' +
+                            '<div class="panel panel-default">' +
+                            '<h3 class="panel-title box-board" id="uniqueId">Modify Subscription Plan (API: ' + apiName + ', Application:' + apiApplication + ')</h3>' +
+                            '<div class="panel-body box-outline">' +
+                            '<p class="success"><strong>Subscription plan has been successfully modified</strong></p>' +
+                            // First input group for Current Plan
+                            '<div class="custom-input" style="display: flex; align-items: center;">' +
+                            '<label for="currentPlan">Current Plan</label>' +
+                            '<span style="margin: 0 10px;"></span>' +
+                            '<input type="text" class="form-control" value="' + data.plan + '" id="planInput" style="width: 200px;">' +
+                            '</div>' +
+                            // Close button container
+                            '<div style="text-align: center;">' +
+                            '<button class="btn btn-danger btn-close">Cancel</button>' +
+                            '</div>' + // closing button container
+                            '</div>' + // closing panel-body box-outline
+                            '</div>' + // closing panel panel-default
+                            '</div>'; // closing modifyPlan
+
+
+                        newPopup.html(newhtmlContent);
+                        newPopup.find('.btn-close').on('click', function() {
+                            newPopup.remove();
+                            window.location.reload();
+                        });
+                        
+                        $('body').append(newPopup);
+                        
+
+                    })
+                .catch(error => { // Handle errors
+                });
+        });
+
+
+        // Append the dialog to the body
+        $('body').append($popup);
+
+        // Set up AJAX call to fetch additional data
+        $.ajax({
+            type: 'GET',
+            url: `/admin/plansModify/${apiId}/${userId}`,
+            dataType: 'json',
+            success: function(apiPlans) {
+                var $ajaxInput = $('#ajaxInput');
+                var $Notify = $('#Notify');
+                var $note = $('#Note')
+                // Add options to the select input
+                
+                apiPlans.forEach((plan) => {
+                if (plan && plan.id && plan.this) {
+                    // If the plan's name contains 'thise', disable it
+                    $Notify.show();
+                    $note.hide();
+                    $ajaxInput.append($('<option>', {
+                    value: plan.id,
+                    text: plan.name,
+                    disabled: true, // Disable this option
+                    style: 'background: #dddddd;' // Set color to blue
+
+                    //- title: 'Some plans are disabled as user is not part of the plan group' // Tooltip
+                }));
+                } else {
+                    // If the plan's name doesn't contain 'thise', keep it enabled
+                    $Notify.hide();
+                    $note.hide();
+                    $ajaxInput.append($('<option>', {
+                        value: plan.id,
+                        text: plan.name
+                    }));
+                }
+            });
+
+            },
+            error: function(xhr, status, error) {
+            }
+        });
+
+        // Store reference to current popup
+        currentPopup = $popup;
+    }
+
+
 
     $(document).ready(function(){
        window.onpopstate = function (event) {
           initializeGridFromStateServerSide(grid).then(() => { grid.isGridRefreshAvailable = true }).catch(err => console.log('Error', err));
        }
-    
        $('#subscriptionsGrid').jsGrid({
          width: "100%", pageSize: 10, sorting: true, paging: true, filtering: true, pageLoading:true, autoload: true,
          controller: {
@@ -142,24 +189,30 @@ block bodyScripts
                 data: filter,
                 dataType: "json"
               }).done(function(result) {
-                let filterKeyAuth = result.subscriptions.items
-                      .filter(function (responseData) {
-                          return responseData.auth === 'key-auth' && responseData.auth !== undefined && responseData.approved !== false && responseData.api_group !== 'api-internal';;
-                      })
-                      .map(function (responseData) {
-                          return responseData;
-                      });
-
-                d.resolve({
-                    data: filterKeyAuth,
-                    itemsCount: result.subscriptions.count
+                // Update items with empty api-group to "no group"
+                result.subscriptions.items.forEach(function(item) {
+                    if (!item['api_group']) {
+                        item['api_group'] = "no group";
+                    }
                 });
-              });
+
+                // Filter out items with api-group set to "no group"
+                var count = result.subscriptions.count;
+                var filteredItems = result.subscriptions.items.filter(function(item) {
+                    return item['api_group'] === "no group";
+                });
+
+                // Resolve the promise with paginated data
+                d.resolve({
+                    data: filteredItems,
+                    itemsCount: count
+                });
+            });
               return d.promise();
           }
         },
         fields: [
-                    { name: "owner", type: "text", title: "User", width: 110, editing: false,
+           { name: "owner", type: "text", title: "User", width: 110, editing: false,
             itemTemplate: function(value, item) {
               let resp = [];
               item.owner_data.forEach(function(owner){
@@ -206,140 +259,36 @@ block bodyScripts
               }
             }
           },
-
-          { type: "control", width: "100", editButton: false, deleteButton: false,
-               _createFilterSwitchButton: function() {
-                return this._createOnOffSwitchButton("filtering", this.searchModeButtonClass, false);
-               },
-              itemTemplate: function (value, item) {
-                var $modifyBtn = $("<button>")
-                    .attr("type", "submit")
-                    .attr("class", "btn btn-sm btn-success")
-                    .attr("style", "margin: auto; display: block; width: 10rem; height: 4rem; border-radius: .3rem;")
-                    .text("Modify")
-                    .on("click", function () {
-                        $(".hide").show();
-                        if (window.location.href.includes('#popup') && window.location.href.includes('#')) {
-                            window.location.href = '#popup';
-                        } 
-                        else {
-                            const apiId = item.api;
-                            const userId = item.owner_data[0].users_id
-                            const planIds = [], planName = [], plansToHide = [];
-                            $.ajax({
-                                type: 'GET',
-                                url: `/admin/plansModify/${apiId}/${userId}`,
-                                dataType: 'json',
-                                success: function (apiPlans) {
-                                  window.location.href = '#popup'
-                                  apiPlans.forEach((plan) => {
-                                      if (plan && plan.id && plan.this) {
-                                          planIds.push(plan);
-                                      }
-                                      else {
-                                        planIds.push(plan);
-                                      }
-                                  });
-                                  handleExtractedValues(item.api, item.application, item.apikey, item.plan, planIds, planName, plansToHide);
-                                },
-                                error: function (xhr, status, error) {
-                                }
-                            });
-                        }
-                        
-                    })
-                    .hover(
-                        function () {
-                            // Mouse over, change background color to RGB disco
-                            $(this).css("background-position", "100%");
-                        },
-                        function () {
-                            // Mouse out, change background color back to initial position
-                            $(this).css("background-position", "0%");
-                        }
-                    );
-
-                return $("<td nowrap>").append($modifyBtn)
-                    .append("<span>&nbsp;</span>");
-            }
-
+          { 
+                type: "control", 
+                width: "60", 
+                editButton: false, 
+                deleteButton: false,
+                itemTemplate: function(value, item) {
+                    // Create a custom button to show API name
+                    var $button = $("<button>").addClass("btn btn-success").text("Modify");
+                    $button.on("click", function() {
+                        // Call function to show popup with API name and plan value
+                        showPopup(item.api, item.application, item.apikey, item.plan, item.api, item.owner_data[0].users_id);
+                    });
+                    return $button;
+                }
             }
         ]
        });
        var grid = $("#subscriptionsGrid").data("JSGrid");
        grid.isGridRefreshAvailable = true;
-       
     });
 block content
     .jumbotron.wicked-admin-title
         .container.wicked-title-container
-            h1 Modify Subscription Plans
+            h1 All Subscriptions
 
-            p Please review the subscription plans
+            p Index of all subscriptions in the API Portal.
 
     .container.wicked-container
-        if filter == ''
-            h3 No Subscriptions
-        else
-
-            p Please be aware that changing the plan will reset all the request count values, if applicable. Subscription will be automatically approved with existing API key.
-            br
-            div#subscriptionsGrid
-            br
-            p
-              button(class="btn btn-success" onclick="donwloadCSVFile()") Download as CSV
-            .overlay#popup
-              .modifyPlan
-                .panel.panel-default
-                  
-                  h3.panel-title.box-board#uniqueId
-                   
-                  .panel-body.box-outline
-                    p.success
-                      strong 
-                      | Please be aware that changing the plan will reset all the request count values, if applicable. Subscription will be automatically approved with the existing API key.
-                    .custom-input(style="display: flex; align-items: center;")
-                      label(for="currentPlan") Current Plan
-                      span(style="margin: 0 10px;")
-                      input(type="text" id="currentPlan" name="currentPlan" readonly class="dropdown-toggle")
-
-                    div(style="margin-top: 10px;")
-
-                    .custom-select(style="display: flex; align-items: center; justify-content: flex-start; margin-right: 0;")
-
-                      label(for="newPlan") New Plan
-                      span(style="margin: 0 20px;")
-                      select(id="newPlan" name="newPlan" style="cursor: pointer;")
-                        option.options(value="" disabled selected) Choose below plan
-                      span(style="margin: 0 20px;")
-                      span.popup-message(style="")
-                        | Some plans are disabled as user is not part of the plan group
-
-
-
-                    div(style="margin-top: 50px; border-top: 1px solid #e9e9e9; margin-bottom: 5px")
-
-                    div(style="display: flex; justify-content: flex-end;")
-                      button(type="button" id="modifyButton" class="btn btn-success" onclick=`modifyFunction(); window.location.href="#openpopup"` style="padding: 5px 10px; height: 30px;") Modify
-                      span(style="margin: 0 10px;")
-                      button(type="button" id="cancelButton" class="btn btn-danger" onclick='closeFunction();' style="padding: 5px 10px; height: 30px;") Cancel
-
-
-
-            .overlay#openpopup
-              .modifyPlan
-                .panel.panel-default
-                  h3.panel-title.box-board#uniqueId
-                  //- a.close(href='#') &times;
-                  .panel-body
-                    p(id="Note").blink
-                      | Please wait while we update the plan
-                    .custom-input(style="display: flex; align-items: center;")
-                      label(for="Modifiedplan") Current Plan
-                      span(style="margin: 0 10px;")
-                      input(type="text" id="Modifiedplan" name="Modifiedplan" readonly)
-
-                    div(style="margin-top: 10px;")
-
-                    div(style="text-align: center;")
-                      button(type="button" id="closeButtonPopup" class="btn" onclick='closeFunction();') Close
+        br
+        div#subscriptionsGrid
+        br
+        p
+          button(class="btn btn-success" onclick="donwloadCSVFile()") Download as CSV

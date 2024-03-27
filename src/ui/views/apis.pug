@@ -84,7 +84,6 @@ block content
           - apiClass = "col-md-9"
         if (filteredApiList.length === 0)
           div.apiClass(style='text-align: center;')
-            img(src='/content/images/image.png', style='margin-top: 5px; margin-right: 5px;')
             p(style='margin-top: 5px; font-size: 40px; font-weight: bold;') No APIs Found
         div(class=apiClass)
           if authUser && (authUser.admin === true && authUser.superadmin === false)
