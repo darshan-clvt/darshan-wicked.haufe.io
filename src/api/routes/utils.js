@@ -348,6 +348,15 @@ utils.loadAuthServer = function (serverId) {
     debug(`loadAuthServer(${serverId})`);
 
     if (!_authServers[serverId]) {
+        const authServerNames = utils.loadAuthServerNames();
+        if (authServerNames.indexOf(serverId) < 0) {
+            debug('Unknown auth-server: ' + serverId);
+            _authServers[serverId] = {
+                name: serverId,
+                exists: false
+            };
+            return _authServers[serverId];
+        }
         const staticDir = utils.getStaticDir();
         const authServerFileName = path.join(staticDir, 'auth-servers', serverId + '.json');
 
@@ -691,6 +700,7 @@ utils.getEmbed = (req) => {
     return false;
 };
 
+const fieldRegEx = /^[a-zA-Z_0-9]+$/;
 utils.getFilter = (req) => {
     const filterString = req.query.filter;
     if (filterString && filterString.startsWith("{")) {
@@ -698,7 +708,8 @@ utils.getFilter = (req) => {
             const filter = JSON.parse(filterString);
             let invalidObject = false;
             for (let p in filter) {
-                if (typeof (filter[p]) !== 'string') {
+                if ((!fieldRegEx.test(p))
+                || (typeof (filter[p]) !== 'string')) {
                     invalidObject = true;
                 }
             }
@@ -719,9 +730,12 @@ utils.getOrderBy = (req) => {
     let orderBy = null;
     if (orderByInput) {
         const oList = orderByInput.split(' ');
-        let invalidInput = false;
         if (oList.length === 2) {
             const field = oList[0];
+            if (!fieldRegEx.test(field)) {
+                warn(`Invalid order_by request parameter (invalid field), expected '<field> <ASC|DESC>': "${orderByInput}"`);
+                return null;
+            }
             const direction = oList[1].toUpperCase();
             if (direction !== 'ASC' && direction !== 'DESC') {
                 warn(`Invalid order_by request parameter, direction to be either ASC or DESC: "${orderByInput}"`);
