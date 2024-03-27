@@ -776,11 +776,24 @@ function getApiIdPlan(apiId, userId, req, res, next, callback) {
             }
         }
         else{
-            finalResult = allowRefinedPlan.map(x => {
-                return {
-                    ...apiPlan
-                  };
-            })
+            for (let i = 0; i < allPlan.length; i++) {
+                const eachAllPlan = allPlan[i];
+                if (eachAllPlan && eachAllPlan.requiredGroup) {
+                    const eachRequiredGroup = eachAllPlan.requiredGroup;
+                    requiredGroupValues.push(eachRequiredGroup);
+                }}
+                if (requiredGroupValues.length > 0){
+                finalResult = allowRefinedPlan.map(apiPlan => {
+                    if (!apiPlan.requiredGroup) {
+                        return apiPlan;
+                      }
+                    return {
+                        ...apiPlan,
+                        is: requiredGroupValues.includes(apiPlan.requiredGroup),
+                        ...(requiredGroupValues.includes(apiPlan.requiredGroup) ? {} : { this: 'hide' })
+                      };
+                });
+            }
         }
         callback(null, finalResult);
     });
