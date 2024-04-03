@@ -751,6 +751,7 @@ function getApiIdPlan(apiId, userId, req, res, next, callback) {
         let finalResult = [];
 
         if (userGroups.length > 0) {
+            //User part of Group
             for (let i = 0; i < allPlan.length; i++) {
                 const eachAllPlan = allPlan[i];
                 if (eachAllPlan && eachAllPlan.requiredGroup) {
@@ -774,8 +775,22 @@ function getApiIdPlan(apiId, userId, req, res, next, callback) {
                       };
                 });
             }
+            else {
+                //restriction for User Group which are not part of plan's required group
+                finalResult = allowRefinedPlan.map(apiPlan => {
+                    if (!apiPlan.requiredGroup) {
+                        return apiPlan;
+                      }
+                    return {
+                        ...apiPlan,
+                        this: apiPlan.requiredGroup,
+                        ...(apiPlan.requiredGroup ? {} : { this: 'hide' })
+                      };
+                });
+            }
         }
         else{
+            //If Public User or without any Group
             for (let i = 0; i < allPlan.length; i++) {
                 const eachAllPlan = allPlan[i];
                 if (eachAllPlan && eachAllPlan.requiredGroup) {
