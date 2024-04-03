@@ -8,6 +8,7 @@ import app from '../app';
 const { debug, info, warn, error } = require('portal-env').Logger('kong-adapter:kong-adapter');
 const http = require('http');
 const async = require('async');
+const axios = require('axios');
 
 // On Demand Resync Changes : Start
 const fs = require('fs');
@@ -130,11 +131,20 @@ let watchDirectory = (directory) => {
 function startResync(){
     debug('Kong-Adapter File Watcher: Starting Resync for changes in :');
             for(let file of watcherChanges){
+                debug(`the file name updated is-----${file}`);
+                debug(file);
                 if(file.includes('apis.json'))
                 {
                     // triger wicked api restart
+                    debug('detected the apis.json change, restarting the api component')
+                    const globals = utils.getGlobals();
+                    const localKey = globals.localKey;
+                    const headers = {"X-Local_key" : localKey};
+                    let response = axios.post(`http://localhost:3001/kill`,null,{headers});
+                    debug('restarted the api component');
+                    watcherChanges = [];
+                    return;
                 }
-                debug(file);
             }
     watcherChanges = [];
     kongMain.resyncApis();
