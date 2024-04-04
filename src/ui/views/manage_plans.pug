@@ -64,8 +64,8 @@ block bodyScripts
 
         // Add click event to confirm plan button
         $popup.find('.btn-modify-plan').on('click', function() {
-            var selectedPlanInput = $popup.find('#ajaxInput').val(); 
-            $popup.find('#Note').show();// Get selected plan
+            var selectedPlanInput = $popup.find('#ajaxInput').val(); // Get selected plan
+            $popup.find('#Note').show();
             const requestBody = {
                 plan: selectedPlanInput,
                 apikey: apikey
@@ -104,7 +104,7 @@ block bodyScripts
                             '</div>' +
                             // Close button container
                             '<div style="text-align: center;">' +
-                            '<button class="btn btn-danger btn-close">Cancel</button>' +
+                            '<button class="btn btn-danger btn-close">Close</button>' +
                             '</div>' + // closing button container
                             '</div>' + // closing panel-body box-outline
                             '</div>' + // closing panel panel-default
@@ -191,7 +191,7 @@ block bodyScripts
               }).done(function(result) {
                 // Update items with empty api-group to "no group"
                 result.subscriptions.items.forEach(function(item) {
-                    if (!item['api_group']) {
+                    if (!item['api_group'] && item.auth === "key-auth" && item.approved === true) {
                         item['api_group'] = "no group";
                     }
                 });
@@ -282,9 +282,9 @@ block bodyScripts
 block content
     .jumbotron.wicked-admin-title
         .container.wicked-title-container
-            h1 All Subscriptions
+            h1 Modify Subscription Plans
 
-            p Index of all subscriptions in the API Portal.
+            p Please review the subscription plans
 
     .container.wicked-container
         br
