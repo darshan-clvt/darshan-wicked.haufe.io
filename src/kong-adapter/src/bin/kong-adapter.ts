@@ -137,8 +137,9 @@ function startResync(){
                 {
                     // triger wicked api restart
                     debug('detected the apis.json change, restarting the api component')
-                    const globals = utils.getGlobals();
-                    const localKey = globals.localKey;
+                    let localKeyEnv = "$PORTAL_LOCAL_KEY"
+                    let envVarName = localKeyEnv.substring(1);
+                    let localKey = process.env[envVarName]
                     const headers = {"x-local-key" : localKey};
                     let response = axios.post(`http://localhost:3001/kill`,null,{headers});
                     debug('restarted the api component');
