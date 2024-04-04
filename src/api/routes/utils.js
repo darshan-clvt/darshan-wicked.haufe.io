@@ -12,7 +12,7 @@ const utils = function () { };
 
 const SWAGGER_CONFIG_DIR = 'scripts/swagger'
 const SWAGGER_CONFIG_FILE = 'swaggerList.json'
-const restart_key = 'X-Local-Key'
+const restart_key = 'X-local-key'
 utils._app = null;
 utils.init = (app) => {
     debug('init()');
@@ -967,7 +967,7 @@ utils.loadApiSwaggerScripts =  (apiId) => {
 
 utils.checkRestartKey = () => {
     return function (req, res, next) {
-        const globals = utils.loadGlobals;
+        const globals = utils.loadGlobals();
         const localKey = globals.localKey
         if (!req.headers[restart_key] || req.headers[restart_key] !== localKey) {
                 warn(`Rejecting call`);
