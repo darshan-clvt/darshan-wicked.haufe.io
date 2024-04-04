@@ -139,7 +139,7 @@ function startResync(){
                     debug('detected the apis.json change, restarting the api component')
                     const globals = utils.getGlobals();
                     const localKey = globals.localKey;
-                    const headers = {"X-local-key" : localKey};
+                    const headers = {"x-local-key" : localKey};
                     let response = axios.post(`http://localhost:3001/kill`,null,{headers});
                     debug('restarted the api component');
                     setTimeout(function () {

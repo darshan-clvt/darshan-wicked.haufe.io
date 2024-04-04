@@ -12,7 +12,7 @@ const utils = function () { };
 
 const SWAGGER_CONFIG_DIR = 'scripts/swagger'
 const SWAGGER_CONFIG_FILE = 'swaggerList.json'
-const restart_key = 'X-local-key'
+const restart_key = 'x-local-key'
 utils._app = null;
 utils.init = (app) => {
     debug('init()');
