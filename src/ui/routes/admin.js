@@ -804,7 +804,7 @@ function getApiIdPlan(apiId, userId, req, res, next, callback) {
                       }
                     return {
                         ...apiPlan,
-                        is: requiredGroupValues.includes(apiPlan.requiredGroup),
+                        this: requiredGroupValues.includes(apiPlan.requiredGroup),
                         ...(requiredGroupValues.includes(apiPlan.requiredGroup) ? {} : { this: 'hide' })
                       };
                 });
