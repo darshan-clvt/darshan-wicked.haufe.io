@@ -190,16 +190,9 @@ block bodyScripts
                 dataType: "json"
               }).done(function(result) {
                 // Update items with empty api-group to "no group"
-                result.subscriptions.items.forEach(function(item) {
-                    if (!item['api_group'] && item.auth === "key-auth" && item.approved === true) {
-                        item['api_group'] = "no group";
-                    }
-                });
-
-                // Filter out items with api-group set to "no group"
                 var count = result.subscriptions.count;
                 var filteredItems = result.subscriptions.items.filter(function(item) {
-                    return item['api_group'] === "no group";
+                    return item.auth === "key-auth" && item.approved === true;
                 });
 
                 // Resolve the promise with paginated data
@@ -290,5 +283,5 @@ block content
         br
         div#subscriptionsGrid
         br
-        p
-          button(class="btn btn-success" onclick="donwloadCSVFile()") Download as CSV
+        //- p
+        //-   button(class="btn btn-success" onclick="donwloadCSVFile()") Download as CSV
