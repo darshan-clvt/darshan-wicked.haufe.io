@@ -33,24 +33,11 @@ function applyGridFilter(filter, item) {
 }
 
 function getStateFromHistory() {
-    if (history.state) {
-        const filter = history.state.filter ? JSON.parse(history.state.filter) : null;
-        const sorting = history.state.sorting ? JSON.parse(history.state.sorting) : null;
-        const pageIndex = history.state.pageIndex;
-
-        return {
-            filter,
-            sorting,
-            pageIndex
-        };
-    } else {
-        // Handle the case when history.state is null or undefined
-        return {
-            filter: null,
-            sorting: null,
-            pageIndex: null
-        };
-    }
+    return {
+        filter: JSON.parse(history.state.filter),
+        sorting: JSON.parse(history.state.sorting),
+        pageIndex: history.state.pageIndex
+    };
 }
 
 function getStateFromGrid(grid) {
