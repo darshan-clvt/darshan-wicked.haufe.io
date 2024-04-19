@@ -56,6 +56,7 @@ webhooks.ACTION_DELETE = 'delete';
 webhooks.ACTION_PASSWORD = 'password';
 webhooks.ACTION_VALIDATED = 'validated';
 webhooks.ACTION_LOGIN = 'login';
+webhooks.ACTION_MODIFY = 'modify';
 // used for import and export
 webhooks.ACTION_FAILED = 'failed';
 webhooks.ACTION_DONE = 'done';

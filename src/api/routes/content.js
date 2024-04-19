@@ -48,13 +48,16 @@ content.setup = function (app) {
     });
 };
 
-function makeTocEntry(category, url, title, subTitle, requiredGroup, tags) {
+function makeTocEntry(category, url, title, subTitle, auth, requiredGroup, businessSegment, productGroup, tags) {
     return {
         category: category,
         url: url,
         title: title,
         subTitle: subTitle,
+        auth: auth,
         requiredGroup: requiredGroup,
+        businessSegment: businessSegment,
+        productGroup: productGroup,
         tags: tags
     };
 }
@@ -67,7 +70,10 @@ function addApisToToc(app, toc) {
             "/apis/" + thisApi.id,
             thisApi.name,
             thisApi.desc,
+            thisApi.auth,
             thisApi.requiredGroup,
+            thisApi.businessSegment,
+            thisApi.productGroup,
             thisApi.tags));
     }
 }
@@ -118,7 +124,10 @@ function addContentDirToToc(app, dir, uriPart, toc) {
             uriPart + strippedFileName,
             metaData.title,
             metaData.subTitle,
+            metaData.auth,
             metaData.requiredGroup,
+            metaData.businessSegment,
+            metaData.productGroup,
             metaData.tags));
     }
 }
