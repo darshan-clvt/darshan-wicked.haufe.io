@@ -1,5 +1,36 @@
 extends layout
 
+block bodyScripts
+  script(type='text/javascript').
+   $('#downloadButton').on('click', function() {
+      var csvContent = "data:text/csv;charset=utf-8,";
+
+      // Extract all rows and cells from the table
+        $('#uniqueContentTableId tr').each(function(index, row) {
+            var cols = $(row).find('td, th');
+            cols.each(function(index, col) {
+                // Check if the cell contains commas
+                var cellText = $(col).text();
+                if (cellText.includes(',')) {
+                    // If the cell contains commas, wrap it in double quotes
+                    csvContent += '"' + cellText + '"';
+                } else {
+                    csvContent += cellText;
+                }
+                csvContent += ",";
+            });
+            csvContent += "\n";
+        });
+
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "table.csv");
+        document.body.appendChild(link);
+
+        link.click();
+    });
+
 block content
   - var tocPointers = [];
   .jumbotron.wicked-content-title
@@ -8,7 +39,7 @@ block content
         if subTitle
             != subTitle
 
-  .container.wicked-container
+  .container.wicked-container.contentBody
 
     if !authUser
       h4 You are not logged in.
@@ -21,6 +52,8 @@ block content
       br
     br
     br
+
+
 
     if (authUser == undefined) 
       each cat, name in toc
@@ -37,111 +70,51 @@ block content
     
     else if (toc) && authUser.admin 
       each cat, name in toc
-        .panel.panel-default
+        .panel.panel-default.contentBody
           .panel-heading
             h4.panel-title= cat.name
-          .panel-body
-            style.
-              .my-table {
-              border-collapse: collapse;
-              border-spacing: 22;
-              width: 80%;
-              border: 1px solid #ddd;
-              padding: 40px;
-              }
-               .myd, .my-row{
-              text-align: left ;
-              border: 1px solid #ddd;
-              padding:10px;
-              word-wrap: break-word; 
-              }
-              th{
-                background-color:rgb(240, 240, 240);
-                text-align: left ;
-                border: 1px solid #ddd;
-                padding: 16px; 
-              }
-              @media(min-width: 100px) and (max-width: 249px){
-                 .my-table {
-                  display: none;
-                 }
-              }
-               @media(min-width: 250px) and (max-width: 399px){
-              .my-table, .my-row{
-                display: block;
-                width: 30%;
-
-              }
-              .my-row{
-              margin-bottom:15px;
-              width: 30%;
-              }
-              th{
-              margin-bottom:15px;
-              width: 35%;
-              }
-              }
-              @media(min-width: 400px) and (max-width: 599px){
-              .my-table, .my-row{
-                display: block;
-                width: 90%;
-              }
-              .my-row{
-              margin-bottom:15px;
-              width: 30%;
-              }
-              }
-              @media(min-width: 600px) and (max-width: 900px)  {
-              .my-table, .my-row{
-                display: block;
-                width: 86%;
-              }
-              .my-row,th{
-              margin-bottom:15px;
-               width: 48%;
-              }
-              .myd{
-                width:48%;
-              }
-              }
-              @media(min-width: 900px)and (max-width: 1199px)  {
-              .my-table , .my-row{
-                 display: block;
-                 width: 100%;
-              }
-              .my-row,th{
-                 margin-bottom:15px;
-                 width: 70%;
-              }
-              .myd{
-              width:70%;
-              
-              }
-              }
-            if cat.name == 'APIs'
-              div(style="max-height: 30vh; overflow: auto")
-                table.my-table
-                      tr.my-row
-                        th APIs
-                        th Tags
-                        th Groups 
-                      each entry in cat.entries
-                        tr.my-row
-                          td.myd 
-                            a(href=entry.url)= entry.title
-                          td.myd 
-                            a(href=entry.url)= entry.tags
-                          td.myd
-                            a(href=entry.url style="text-transform:capitalize; font-style: nomral;")= entry.requiredGroup
-                            
-            else if cat.name =='Portal Content'
-              .panel-body
-                ul
+          .panel-body.contentBody
+              if cat.name == 'APIs'
+                table#uniqueContentTableId
+                  thead.panel-heading
+                    tr
+                      th.panel-heading APIs
+                      th.panel-heading Auth
+                      th.panel-heading Groups 
+                      th.panel-heading Business Segment
+                      th.panel-heading Product Group
+                      th.panel-heading Tags
                   each entry in cat.entries
-                    if (entry.title !== 'API Usage Information' && entry.title !==  'Terms and Conditions')
-                      li
+                    tr
+                      td#skuTableBody
                         a(href=entry.url)= entry.title
-  
+                      td#skuTableBody
+                        a(href=entry.url)= entry.auth
+                      td#skuTableBody
+                        a(href=entry.url style="text-transform:capitalize; font-style:normal;")= entry.requiredGroup
+                      td#skuTableBody
+                        a(href=entry.url)= entry.businessSegment
+                      td#skuTableBody
+                        a(href=entry.url)= entry.productGroup
+                      td#skuTableBody
+                        a(href=entry.url)= entry.tags 
+                br
+              else if cat.name =='Portal Content'
+                .panel-body
+                  ul
+                    each entry in cat.entries
+                      if (entry.title !== 'API Usage Information' && entry.title !== 'Terms and Conditions')
+                        li
+                          a(href=entry.url)= entry.title
+                  br
+                        
+        if cat.name == 'APIs'
+          .panel-body
+                p
+                  button#downloadButton.btn.btn-success(type='button') Download as CSV
+
+
+    
                       
     else if (toc) && !authUser || !authUser.admin  
       each cat, name in toc
