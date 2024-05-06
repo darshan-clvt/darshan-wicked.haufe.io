@@ -409,11 +409,13 @@ router.get('/:api', function (req, res, next) {
                             let values = []
                             response.data.entitlements.forEach(entitlement => {
                                 const entitelMentProduct = entitlement.entitlementProducts;
+                                if (entitelMentProduct) {
                                 Object.entries(entitelMentProduct).forEach(([key, value]) => {
                                     if(response.data.regular_skus.includes(key) && key.startsWith(contractedSkus)) {
                                         values.push(value);
                                     }
                                 });
+                                } 
                             });
                             responseData = values; 
                         }
