@@ -8,6 +8,7 @@ import app from '../app';
 const { debug, info, warn, error } = require('portal-env').Logger('kong-adapter:kong-adapter');
 const http = require('http');
 const async = require('async');
+const axios = require('axios');
 
 // On Demand Resync Changes : Start
 const fs = require('fs');
