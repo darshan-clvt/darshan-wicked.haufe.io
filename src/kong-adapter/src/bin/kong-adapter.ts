@@ -130,9 +130,24 @@ let watchDirectory = (directory) => {
 function startResync(){
     debug('Kong-Adapter File Watcher: Starting Resync for changes in :');
             for(let file of watcherChanges){
+                debug(`the file name updated is-----${file}`);
+                debug(file);
                 if(file.includes('apis.json'))
                 {
                     // triger wicked api restart
+                    debug('detected the apis.json change, restarting the api component')
+                    let localKeyEnv = "$PORTAL_LOCAL_KEY"
+                    let envVarName = localKeyEnv.substring(1);
+                    let localKey = process.env[envVarName]
+                    const headers = {"x-local-key" : localKey};
+                    let response = axios.post(`http://localhost:3001/kill`,null,{headers});
+                    debug('restarted the api component');
+                    setTimeout(function () {
+                        process.exit(0);
+                    }, 3000);
+                    watcherChanges = [];
+                    return;
+                    
                 }
                 debug(file);
             }
