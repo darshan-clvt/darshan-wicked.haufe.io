@@ -963,4 +963,15 @@ utils.loadApiSwaggerScripts =  (apiId) => {
     return swaggerScript;
 };
 
+utils.checkRestartKey = () => {
+    return function (req, res, next) {
+        const globals = utils.loadGlobals();
+        const localKey = globals.localKey
+        if (!req.headers[restart_key] || req.headers[restart_key] !== localKey) {
+                warn(`Rejecting call`);
+                return res.status(403).json({ code: 403, message: `Forbidden'` });
+        }
+        return next();
+    }
+};
 module.exports = utils;
