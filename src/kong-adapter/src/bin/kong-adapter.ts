@@ -147,8 +147,26 @@ function startResync(){
                         process.exit(0);
                     }, 3000);
                     watcherChanges = [];
+                    kongMain.resyncApis(); 
                     return;
                 }
+                else if(file.includes('plans.json')) 
+                    {
+                        // trigger wicked api restart
+                        debug('detected the plans.json change, restarting the api component')
+                        let localKeyEnv = "$PORTAL_LOCAL_KEY"
+                        let envVarName = localKeyEnv.substring(1);
+                        let localKey = process.env[envVarName]
+                        const headers = {"x-local-key" : localKey};
+                        let response = axios.post(`http://localhost:3001/kill`,null,{headers});
+                        debug('restarted the api component');
+                        setTimeout(function () {
+                            process.exit(0);
+                        }, 3000);
+                        watcherChanges = [];
+                        kongMain.resyncConsumer(); // call resyncConsumer when plans.json changes
+                        return;
+                    }
             }
     watcherChanges = [];
     kongMain.resyncApis();

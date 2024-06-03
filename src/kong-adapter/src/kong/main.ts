@@ -92,6 +92,20 @@ export const kongMain = {
         });
     },
 
+    resyncConsumer: function () {
+        info('Resyncing all consumers (to check for updated scopes)');
+        const initOptions = {
+            syncApis: false,
+            syncConsumers: true
+        };
+        kongMain.init(initOptions, function (err) {
+            if (err) {
+                error('Resyncing all Consumers: An error occurred!');
+                error(err);
+            }
+        });
+    },
+
     processWebhooks: function (callback) {
         debug('processWebhooks()');
         info(`Processing events.`);
