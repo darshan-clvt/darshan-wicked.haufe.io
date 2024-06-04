@@ -73,6 +73,33 @@ async.series([
         syncApis: true,
         syncConsumers: true
     };
+    const filePaths = [
+        `${staticConfigFolder}/plans/plans.json`,
+        `${staticConfigFolder}/apis/apis.json`
+    ];
+    
+    filePaths.forEach(filePath => {
+        fs.stat(filePath, (err, stats) => {
+            if (err) {
+                console.error(`Error getting file stats for ${filePath}: ${err}`);
+                return;
+            }
+            const currentTime = new Date();
+            const lastModifiedTime = stats.mtime;
+            const timeDifference = currentTime.getTime() - lastModifiedTime.getTime();
+            const timeDifferenceInMinutes = timeDifference / (1000 * 60);
+            if (timeDifferenceInMinutes < 10) {
+                console.log(`${filePath} was modified less than 10 minutes ago.`);
+                if (filePath.includes('apis.json')) {
+                    initOptions.syncApis = true;
+                } else if (filePath.includes('plans.json')) {
+                    initOptions.syncConsumers = true;
+                }
+            } else {
+                console.log(`${filePath} was modified more than 10 minutes ago.`);
+            }
+        });
+    });
     kongMain.init(initOptions, function (err) {
         debug('kong.init() returned.');
         if (err) {
@@ -131,10 +158,7 @@ let watchDirectory = (directory) => {
 function startResync(){
     debug('Kong-Adapter File Watcher: Starting Resync for changes in :');
             for(let file of watcherChanges){
-                debug(`the file name updated is-----${file}`);
-                debug(file);
-                if(file.includes('apis.json'))
-                {
+                if (file && (file.includes('apis.json') || file.includes('plans.json'))) {
                     // triger wicked api restart
                     debug('detected the apis.json change, restarting the api component')
                     let localKeyEnv = "$PORTAL_LOCAL_KEY"
@@ -147,26 +171,8 @@ function startResync(){
                         process.exit(0);
                     }, 3000);
                     watcherChanges = [];
-                    kongMain.resyncApis(); 
                     return;
                 }
-                else if(file.includes('plans.json')) 
-                    {
-                        // trigger wicked api restart
-                        debug('detected the plans.json change, restarting the api component')
-                        let localKeyEnv = "$PORTAL_LOCAL_KEY"
-                        let envVarName = localKeyEnv.substring(1);
-                        let localKey = process.env[envVarName]
-                        const headers = {"x-local-key" : localKey};
-                        let response = axios.post(`http://localhost:3001/kill`,null,{headers});
-                        debug('restarted the api component');
-                        setTimeout(function () {
-                            process.exit(0);
-                        }, 3000);
-                        watcherChanges = [];
-                        kongMain.resyncConsumer(); // call resyncConsumer when plans.json changes
-                        return;
-                    }
             }
     watcherChanges = [];
     kongMain.resyncApis();
