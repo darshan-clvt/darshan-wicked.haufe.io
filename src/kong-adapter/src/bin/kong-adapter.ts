@@ -70,8 +70,8 @@ async.series([
     // Now let's register with the portal API; we'll use the standard Admin
     const initOptions = {
         initGlobals: true,
-        syncApis: true,
-        syncConsumers: true
+        syncApis: false,
+        syncConsumers: false
     };
     const filePaths = [
         `${staticConfigFolder}/plans/plans.json`,
