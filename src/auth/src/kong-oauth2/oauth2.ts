@@ -914,9 +914,7 @@ function postTokenRequest(tokenRequest: TokenRequestPayload, callback: AccessTok
         }
         debug('Kong authorize response:');
         debug(JSON.stringify(jsonBody));
-        setTimeout(function() {
-            callback(null, jsonBody);
-        }, 1000);
+        return callback(null, jsonBody);
     });
 }
 
