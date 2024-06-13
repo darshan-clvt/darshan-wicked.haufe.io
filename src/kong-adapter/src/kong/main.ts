@@ -38,7 +38,7 @@ export const kongMain = {
             syncApis: function (callback) {
                 if (options.syncApis) {
                     debug('Calling sync.syncApis()');
-                    sync.syncApis(callback);
+                    sync.syncApis(options.apisList,callback);
                 } else {
                     callback(null);
                 }
@@ -78,11 +78,12 @@ export const kongMain = {
         kongMain.init(initOptions, done);
     },
 
-    resyncApis: function () {
+    resyncApis: function (changedApis=[]) {
         info('Resyncing all APIs (to check for updated scopes)');
         const initOptions = {
             syncApis: true,
-            syncConsumers: false
+            syncConsumers: false,
+            apisList: changedApis
         };
         kongMain.init(initOptions, function (err) {
             if (err) {

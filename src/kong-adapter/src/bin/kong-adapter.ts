@@ -73,33 +73,7 @@ async.series([
         syncApis: false,
         syncConsumers: false
     };
-    const filePaths = [
-        `${staticConfigFolder}/plans/plans.json`,
-        `${staticConfigFolder}/apis/apis.json`
-    ];
-    
-    filePaths.forEach(filePath => {
-        fs.stat(filePath, (err, stats) => {
-            if (err) {
-                console.error(`Error getting file stats for ${filePath}: ${err}`);
-                return;
-            }
-            const currentTime = new Date();
-            const lastModifiedTime = stats.mtime;
-            const timeDifference = currentTime.getTime() - lastModifiedTime.getTime();
-            const timeDifferenceInMinutes = timeDifference / (1000 * 60);
-            if (timeDifferenceInMinutes < 10) {
-                console.log(`${filePath} was modified less than 10 minutes ago.`);
-                if (filePath.includes('apis.json')) {
-                    initOptions.syncApis = true;
-                } else if (filePath.includes('plans.json')) {
-                    initOptions.syncConsumers = true;
-                }
-            } else {
-                console.log(`${filePath} was modified more than 10 minutes ago.`);
-            }
-        });
-    });
+    detectChangedApis(staticConfigFolder,initOptions);
     kongMain.init(initOptions, function (err) {
         debug('kong.init() returned.');
         if (err) {
@@ -132,7 +106,13 @@ let watchDirectory = (directory) => {
     // Watch the directory itself
     fs.watch(directory, (eventType, fileName) => {
         info(`wicked-config Watcher: Detected change in :${fileName} , event: ${eventType}`);
-        watcherChanges.push(fileName);
+        let fullPath=path.join(directory, fileName);
+        if (fullPath.endsWith("config.json")) {
+            const apiFolderName = fullPath.split("/").slice(-2, -1)[0];
+            watcherChanges.push(apiFolderName);
+        } else {
+            watcherChanges.push(fileName);
+        }
         info('wicked-config Watcher: Waiting for more changes to arrive..');
         clearTimeout(watcherDebouceTime);
         watcherDebouceTimeout = setTimeout(() => {
@@ -174,8 +154,8 @@ function startResync(){
                     return;
                 }
             }
+    kongMain.resyncApis(watcherChanges);
     watcherChanges = [];
-    kongMain.resyncApis();
 }
 // On Demand Resync Changes : End
 
@@ -237,4 +217,52 @@ function onListening() {
         'pipe ' + addr :
         'port ' + addr.port;
     debug('Listening on ' + bind);
+}
+
+
+function detectChangedApis(rootFolder, initOptions) {
+    debug("inside detectChangedApis");
+    const currentTime = new Date();
+    let changedApis = [];
+
+    function isFileChanged(filePath, currentTime, timeThreshold) {
+        const stats = fs.statSync(filePath);
+        const lastModifiedTime = stats.mtime;
+        const timeDifference = currentTime.getTime() - lastModifiedTime.getTime();
+        const diffInMinutes = timeDifference / (1000 * 60);
+        return diffInMinutes <= timeThreshold;
+    }
+
+    const rootFolderChanged = isFileChanged(rootFolder, currentTime, 30);
+    if (!rootFolderChanged) {
+        debug("root folder not changed in last 30 minutes");
+        return;
+    }
+
+    const plansPath = path.join(rootFolder, 'plans', 'plans.json');
+    const plansChanged = isFileChanged(plansPath, currentTime, 30);
+    if (plansChanged) {
+        debug("plans.json changed in last 30 minutes");
+        initOptions.syncConsumers = true;
+    }
+
+    const apisPath = path.join(rootFolder, 'apis');
+    const apiFolders = fs.readdirSync(apisPath);
+    for (let i = 0; i < apiFolders.length; i++) {
+        const folder = apiFolders[i];
+        const configPath = path.join(apisPath, folder, 'config.json');
+        if (fs.existsSync(configPath)) {
+            const configChanged = isFileChanged(configPath, currentTime, 30);
+            if (configChanged) {
+                changedApis.push(folder);
+            }
+        }
+    }
+
+    if (changedApis.length > 0) {
+        initOptions.syncApis = true;
+        initOptions.apisList = changedApis;
+    }
+    debug(changedApis);
+    debug("done with getChangedFolders");
 }
