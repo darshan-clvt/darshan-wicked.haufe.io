@@ -70,10 +70,11 @@ export const kongMain = {
         });
     },
 
-    resync: function (done) {
+    resync: function (options={syncApis:false,syncConsumers:false,apisList:[]},done) {
         const initOptions = {
-            syncApis: true,
-            syncConsumers: true
+            syncApis: options.syncApis,
+            syncConsumers: options.syncConsumers,
+            apisList:options.apisList
         };
         kongMain.init(initOptions, done);
     },
