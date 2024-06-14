@@ -87,7 +87,7 @@ block content
             p(style='margin-top: 5px; font-size: 40px; font-weight: bold;') No APIs Found
         div(class=apiClass)
           if authUser && (authUser.admin === true && authUser.superadmin === false)
-            filteredApiList = apilist.filter(api => api.id !== 'portal-api')
+            - const filteredApiList = apilist.filter(api => api.id !== 'portal-api')
             each api, i in filteredApiList
               if (i % 3 == 0)
                 div(class="row")
