@@ -106,8 +106,8 @@ let watchDirectory = (directory) => {
     // Watch the directory itself
     fs.watch(directory, (eventType, fileName) => {
         info(`wicked-config Watcher: Detected change in :${fileName} , event: ${eventType}`);
-        let fullPath=path.join(directory, fileName);
-        if (fullPath.endsWith("config.json")) {
+        if (fileName == "config.json") {
+            let fullPath=path.join(directory, fileName);
             const apiFolderName = fullPath.split("/").slice(-2, -1)[0];
             watcherChanges.push(apiFolderName);
         } else {
@@ -154,7 +154,9 @@ function startResync(){
                     return;
                 }
             }
-    kongMain.resyncApis(watcherChanges);
+    if(watcherChanges.length > 0) {
+       kongMain.resyncApis(watcherChanges);
+    }
     watcherChanges = [];
 }
 // On Demand Resync Changes : End
