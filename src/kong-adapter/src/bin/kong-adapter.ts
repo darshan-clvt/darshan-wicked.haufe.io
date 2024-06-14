@@ -233,14 +233,14 @@ function detectChangedApis(rootFolder, initOptions) {
         return diffInMinutes <= timeThreshold;
     }
 
-    const rootFolderChanged = isFileChanged(rootFolder, currentTime, 30);
-    if (!rootFolderChanged) {
-        debug("root folder not changed in last 30 minutes");
+    const rootFolderChanged = isFileChanged(rootFolder, currentTime, 60);
+    if (rootFolderChanged) {
+        debug("No sync, It might be a new dev portal relase as root folder changed in last 30 minutes");
         return;
     }
 
     const plansPath = path.join(rootFolder, 'plans', 'plans.json');
-    const plansChanged = isFileChanged(plansPath, currentTime, 30);
+    const plansChanged = isFileChanged(plansPath, currentTime, 10);
     if (plansChanged) {
         debug("plans.json changed in last 30 minutes");
         initOptions.syncConsumers = true;
@@ -252,7 +252,7 @@ function detectChangedApis(rootFolder, initOptions) {
         const folder = apiFolders[i];
         const configPath = path.join(apisPath, folder, 'config.json');
         if (fs.existsSync(configPath)) {
-            const configChanged = isFileChanged(configPath, currentTime, 30);
+            const configChanged = isFileChanged(configPath, currentTime, 10);
             if (configChanged) {
                 changedApis.push(folder);
             }
