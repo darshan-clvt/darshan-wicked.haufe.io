@@ -38,7 +38,7 @@ export const kongMain = {
             syncApis: function (callback) {
                 if (options.syncApis) {
                     debug('Calling sync.syncApis()');
-                    sync.syncApis(callback);
+                    sync.syncApis(options.apisList,callback);
                 } else {
                     callback(null);
                 }
@@ -70,19 +70,21 @@ export const kongMain = {
         });
     },
 
-    resync: function (done) {
+    resync: function (options={syncApis:false,syncConsumers:false,apisList:[]},done) {
         const initOptions = {
-            syncApis: true,
-            syncConsumers: true
+            syncApis: options.syncApis,
+            syncConsumers: options.syncConsumers,
+            apisList:options.apisList
         };
         kongMain.init(initOptions, done);
     },
 
-    resyncApis: function () {
+    resyncApis: function (changedApis=[]) {
         info('Resyncing all APIs (to check for updated scopes)');
         const initOptions = {
             syncApis: true,
-            syncConsumers: false
+            syncConsumers: false,
+            apisList: changedApis
         };
         kongMain.init(initOptions, function (err) {
             if (err) {
