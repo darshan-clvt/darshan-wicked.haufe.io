@@ -223,48 +223,54 @@ function onListening() {
 
 
 function detectChangedApis(rootFolder, initOptions) {
-    debug("inside detectChangedApis");
-    const currentTime = new Date();
-    let changedApis = [];
+    try {
+        debug("inside detectChangedApis");
+        const currentTime = new Date();
+        let changedApis = [];
 
-    function isFileChanged(filePath, currentTime, timeThreshold) {
-        const stats = fs.statSync(filePath);
-        const lastModifiedTime = stats.mtime;
-        const timeDifference = currentTime.getTime() - lastModifiedTime.getTime();
-        const diffInMinutes = timeDifference / (1000 * 60);
-        return diffInMinutes <= timeThreshold;
-    }
+        function isFileChanged(filePath, currentTime, timeThreshold) {
+            const stats = fs.statSync(filePath);
+            const lastModifiedTime = stats.mtime;
+            const timeDifference = currentTime.getTime() - lastModifiedTime.getTime();
+            const diffInMinutes = timeDifference / (1000 * 60);
+            return diffInMinutes <= timeThreshold;
+        }
 
-    const rootFolderChanged = isFileChanged(rootFolder, currentTime, 60);
-    if (rootFolderChanged) {
-        debug("No sync, It might be a new dev portal relase as root folder changed in last 30 minutes");
-        return;
-    }
+        const rootFolderChanged = isFileChanged(rootFolder, currentTime, 60);
+        if (rootFolderChanged) {
+            debug("No sync, It might be a new dev portal relase as root folder changed in last 30 minutes");
+            return;
+        }
 
-    const plansPath = path.join(rootFolder, 'plans', 'plans.json');
-    const plansChanged = isFileChanged(plansPath, currentTime, 10);
-    if (plansChanged) {
-        debug("plans.json changed in last 30 minutes");
-        initOptions.syncConsumers = true;
-    }
+        const plansPath = path.join(rootFolder, 'plans', 'plans.json');
+        const plansChanged = isFileChanged(plansPath, currentTime, 10);
+        if (plansChanged) {
+            debug("plans.json changed in last 30 minutes");
+            initOptions.syncConsumers = true;
+        }
 
-    const apisPath = path.join(rootFolder, 'apis');
-    const apiFolders = fs.readdirSync(apisPath);
-    for (let i = 0; i < apiFolders.length; i++) {
-        const folder = apiFolders[i];
-        const configPath = path.join(apisPath, folder, 'config.json');
-        if (fs.existsSync(configPath)) {
-            const configChanged = isFileChanged(configPath, currentTime, 10);
-            if (configChanged) {
-                changedApis.push(folder);
+        const apisPath = path.join(rootFolder, 'apis');
+        const apiFolders = fs.readdirSync(apisPath);
+        for (let i = 0; i < apiFolders.length; i++) {
+            const folder = apiFolders[i];
+            const configPath = path.join(apisPath, folder, 'config.json');
+            if (fs.existsSync(configPath)) {
+                const configChanged = isFileChanged(configPath, currentTime, 10);
+                if (configChanged) {
+                    changedApis.push(folder);
+                }
             }
         }
-    }
 
-    if (changedApis.length > 0) {
-        initOptions.syncApis = true;
-        initOptions.apisList = changedApis;
+        if (changedApis.length > 0) {
+            initOptions.syncApis = true;
+            initOptions.apisList = changedApis;
+        }
+        debug(changedApis);
+        debug("done with getChangedFolders");
     }
-    debug(changedApis);
-    debug("done with getChangedFolders");
+    catch(err) {
+        debug('error occured during the api changed filkes detection')
+        debug(err)
+    }
 }
