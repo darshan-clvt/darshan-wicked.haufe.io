@@ -18,7 +18,7 @@ const MAX_ASYNC_CALLS = 10;
 // ========= INTERFACE FUNCTIONS ========
 
 export const sync = {
-    syncApis: function (done: ErrorCallback) {
+    syncApis: function (changedApis=[],done: ErrorCallback) {
         debug('syncApis()');
         async.parallel({
             portalApis: function (callback) { portal.getPortalApis(callback); },
@@ -29,7 +29,7 @@ export const sync = {
             const portalApis = results.portalApis as ApiDescriptionCollection;
             const kongApis = results.kongApis as KongApiConfigCollection;
 
-            const todoLists = assembleApiTodoLists(portalApis, kongApis);
+            const todoLists = assembleApiTodoLists(changedApis,portalApis, kongApis);
             debug('Infos on sync APIs todo list:');
             debug('  add items: ' + todoLists.addList.length);
             debug('  update items: ' + todoLists.updateList.length);
@@ -250,9 +250,9 @@ function syncConsumers(portalConsumers: ConsumerInfo[], kongConsumers: ConsumerI
 
 // ========= INTERNALS ===========
 
-function assembleApiTodoLists(portalApis: ApiDescriptionCollection, kongApis: KongApiConfigCollection): ApiTodos {
+function assembleApiTodoLists(apisList=[],portalApis: ApiDescriptionCollection, kongApis: KongApiConfigCollection): ApiTodos {
     debug('assembleApiTodoLists()');
-    const updateList: UpdateApiItem[] = [];
+    let updateList: UpdateApiItem[] = [];
     const addList: AddApiItem[] = [];
     const deleteList: DeleteApiItem[] = [];
 
@@ -278,7 +278,9 @@ function assembleApiTodoLists(portalApis: ApiDescriptionCollection, kongApis: Ko
             });
         }
     }
-
+    updateList=updateList.filter((updateItem)=>{
+        return apisList.includes(updateItem.portalApi.id)
+    })
     // Now do the mop up, clean up APIs in Kong but not in the Portal;
     // these we want to delete.
     for (let i = 0; i < kongApis.apis.length; ++i) {

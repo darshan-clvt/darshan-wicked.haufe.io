@@ -70,9 +70,10 @@ async.series([
     // Now let's register with the portal API; we'll use the standard Admin
     const initOptions = {
         initGlobals: true,
-        syncApis: true,
-        syncConsumers: true
+        syncApis: false,
+        syncConsumers: false
     };
+    detectChangedApis(staticConfigFolder,initOptions);
     kongMain.init(initOptions, function (err) {
         debug('kong.init() returned.');
         if (err) {
@@ -105,7 +106,13 @@ let watchDirectory = (directory) => {
     // Watch the directory itself
     fs.watch(directory, (eventType, fileName) => {
         info(`wicked-config Watcher: Detected change in :${fileName} , event: ${eventType}`);
-        watcherChanges.push(fileName);
+        if (fileName == "config.json") {
+            let fullPath=path.join(directory, fileName);
+            const apiFolderName = fullPath.split("/").slice(-2, -1)[0];
+            watcherChanges.push(apiFolderName);
+        } else {
+            watcherChanges.push(fileName);
+        }
         info('wicked-config Watcher: Waiting for more changes to arrive..');
         clearTimeout(watcherDebouceTime);
         watcherDebouceTimeout = setTimeout(() => {
@@ -131,10 +138,7 @@ let watchDirectory = (directory) => {
 function startResync(){
     debug('Kong-Adapter File Watcher: Starting Resync for changes in :');
             for(let file of watcherChanges){
-                debug(`the file name updated is-----${file}`);
-                debug(file);
-                if(file.includes('apis.json'))
-                {
+                if (file && (file.includes('apis.json') || file.includes('plans.json'))) {
                     // triger wicked api restart
                     debug('detected the apis.json change, restarting the api component')
                     let localKeyEnv = "$PORTAL_LOCAL_KEY"
@@ -148,12 +152,12 @@ function startResync(){
                     }, 3000);
                     watcherChanges = [];
                     return;
-                    
                 }
-                debug(file);
             }
+    if(watcherChanges.length > 0) {
+       kongMain.resyncApis(watcherChanges);
+    }
     watcherChanges = [];
-    kongMain.resyncApis();
 }
 // On Demand Resync Changes : End
 
@@ -215,4 +219,58 @@ function onListening() {
         'pipe ' + addr :
         'port ' + addr.port;
     debug('Listening on ' + bind);
+}
+
+
+function detectChangedApis(rootFolder, initOptions) {
+    try {
+        debug("inside detectChangedApis");
+        const currentTime = new Date();
+        let changedApis = [];
+
+        function isFileChanged(filePath, currentTime, timeThreshold) {
+            const stats = fs.statSync(filePath);
+            const lastModifiedTime = stats.mtime;
+            const timeDifference = currentTime.getTime() - lastModifiedTime.getTime();
+            const diffInMinutes = timeDifference / (1000 * 60);
+            return diffInMinutes <= timeThreshold;
+        }
+
+        const rootFolderChanged = isFileChanged(rootFolder, currentTime, 60);
+        if (rootFolderChanged) {
+            debug("No sync, It might be a new dev portal relase as root folder changed in last 30 minutes");
+            return;
+        }
+
+        const plansPath = path.join(rootFolder, 'plans', 'plans.json');
+        const plansChanged = isFileChanged(plansPath, currentTime, 10);
+        if (plansChanged) {
+            debug("plans.json changed in last 30 minutes");
+            initOptions.syncConsumers = true;
+        }
+
+        const apisPath = path.join(rootFolder, 'apis');
+        const apiFolders = fs.readdirSync(apisPath);
+        for (let i = 0; i < apiFolders.length; i++) {
+            const folder = apiFolders[i];
+            const configPath = path.join(apisPath, folder, 'config.json');
+            if (fs.existsSync(configPath)) {
+                const configChanged = isFileChanged(configPath, currentTime, 10);
+                if (configChanged) {
+                    changedApis.push(folder);
+                }
+            }
+        }
+
+        if (changedApis.length > 0) {
+            initOptions.syncApis = true;
+            initOptions.apisList = changedApis;
+        }
+        debug(changedApis);
+        debug("done with getChangedFolders");
+    }
+    catch(err) {
+        debug('error occured during the api changed filkes detection')
+        debug(err)
+    }
 }
