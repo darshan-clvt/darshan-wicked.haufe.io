@@ -318,10 +318,12 @@ function shouldIgnore(name) {
 }
 
 function shouldIgnoreConsumerWithTags(kongConsumer) {
-    for(let tag of kongConsumer.consumer.tags){
-        if(tag == "wicked-ignore"){
-            debug(`skipping consumer :${kongConsumer.consumer.username} with tag wicked-ignore`);
-            return true;
+    if(kongConsumer.consumer.tags != null){
+        for(let tag of kongConsumer.consumer.tags){
+            if(tag == "wicked-ignore"){
+                debug(`skipping consumer :${kongConsumer.consumer.username} with tag wicked-ignore`);
+                return true;
+            }
         }
     }
     return false;
