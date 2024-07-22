@@ -317,6 +317,18 @@ function shouldIgnore(name) {
     return false;
 }
 
+function shouldIgnoreConsumerWithTags(kongConsumer) {
+    if(kongConsumer.consumer.tags != null){
+        for(let tag of kongConsumer.consumer.tags){
+            if(tag == "wicked-ignore"){
+                debug(`skipping consumer :${kongConsumer.consumer.username} with tag wicked-ignore`);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 //@ts-ignore
 async function assemblePluginTodoLists(portalApi: ApiDescription, kongApi: KongApiConfig): PluginTodos {
     debug('assemblePluginTodoLists()');
@@ -429,7 +441,7 @@ function assembleConsumerTodoLists(portalConsumers: ConsumerInfo[], kongConsumer
     // Mop up?
     for (let i = 0; i < kongConsumers.length; ++i) {
         let kongConsumer = kongConsumers[i];
-        if (!handledKongConsumers[kongConsumer.consumer.username]) {
+        if (!handledKongConsumers[kongConsumer.consumer.username] && !shouldIgnoreConsumerWithTags(kongConsumer)) {
             debug('Username "' + kongConsumer.consumer.username + "' found in Kong, but not in portal, delete needed.");
             // Superfluous consumer; we control them
             deleteList.push({
