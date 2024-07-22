@@ -77,13 +77,17 @@ block content
       div(class="row")
         - var length = apilist.length
         - var apiClass = "col-md-12"
+        - var filteredApiList = apilist 
         if (apiTags.length > 0)
           div(class="col-md-3")
-            +apiCategories(apiTags, params)
+            +apiCategories(apiTags, params, params.searchQuery)
           - apiClass = "col-md-9"
+        if (filteredApiList.length === 0)
+          div.apiClass(style='text-align: center;')
+            p(style='margin-top: 5px; font-size: 40px; font-weight: bold;') No APIs Found
         div(class=apiClass)
           if authUser && (authUser.admin === true && authUser.superadmin === false)
-            - var filteredApiList = apilist.filter(api => api.id !== 'portal-api')
+            - const filteredApiList = apilist.filter(api => api.id !== 'portal-api')
             each api, i in filteredApiList
               if (i % 3 == 0)
                 div(class="row")
@@ -92,9 +96,12 @@ block content
                     +apiDef(filteredApiList[i+1])
                   if (i+2) < filteredApiList.length
                     +apiDef(filteredApiList[i+2])
-          else if authUser && (authUser.admin !== true && authUser.authenticated_scope.includes('wicked:api-cortellis-user'))
-              - const excludedApiIds = ["cortellis-np-drugs-api", "cortellis-np-companies-api", "cortellis-np-sources-api"];
-              - const filteredApiList = apilist.filter(api => !excludedApiIds.includes(api.id));
+          //- //Hideing All api listed in glob.cortellisUi.cortelliesApi.InvestigationalApi For {Admin}{superadmin}{appover}{publicUser}{authUser} requiredGroup which empty
+          else if authUser && (authUser.admin !== true && authUser.authenticated_scope.includes('wicked:')) || authUser !== true
+              - const apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi);
+              - const apiData = JSON.parse(apiDataString);
+              - const apiIDs = apiData.map(obj => Object.values(obj));
+              - const filteredApiList = apilist.filter(api => !apiIDs.some(item => item.includes(api.id)));
               each api, i in filteredApiList
                 if i % 3 === 0
                   div(class="row")

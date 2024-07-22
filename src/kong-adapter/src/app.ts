@@ -91,6 +91,20 @@ app.get('/ping', function (req, res, next) {
     res.json(health);
 });
 
+function validatePayload(req) {
+    const { syncApis = false, syncConsumers = false, apisList = [] } = req.body;
+    if (typeof syncApis !== 'boolean' || typeof syncConsumers !== 'boolean' || !Array.isArray(apisList)) {
+        return 'Invalid Request';
+    }
+
+    if (syncApis && apisList.length === 0) {
+        return 'apisList is mandatory when syncApis is true';
+    }
+
+    return null; // Return null if payload is valid
+}
+
+
 /*
     End point to trigger a full resync of the Kong settings, similar
     as at initial startup of the component. This is used in conjunection
@@ -102,13 +116,17 @@ app.get('/ping', function (req, res, next) {
     Requires the env variable ALLOW_RESYNC to be set; if the variable is
     not set, a POST to this end point will just render a 404.
 */
-if (process.env.ALLOW_RESYNC) {
-    app.post('/resync', function (req, res, next) {
+
+app.post('/resync', function (req, res, next) {
         debug('/resync');
         // Reset usage statistics and keep changing actions/non-matching objects
         utils.resetStatistics(true);
         const startTime = Date.now();
-        kongMain.resync(function (err) {
+        const payloadError = validatePayload(req);
+        if (payloadError) {
+            return res.status(400).send(payloadError);
+        }
+        kongMain.resync(req.body,function (err) {
             // Retrieve the list of statistics, we will definitely return these,
             // disregarding of the success of the action.
             const duration = Date.now() - startTime;
@@ -124,9 +142,8 @@ if (process.env.ALLOW_RESYNC) {
                 res.status(200);
             }
             return res.send(stats);
-        });
     });
-}
+});
 
 /*
     End point used to kill the Kong Adapter process. This is used

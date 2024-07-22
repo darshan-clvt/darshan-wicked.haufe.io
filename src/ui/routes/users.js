@@ -38,11 +38,13 @@ router.get('/:userId', function (req, res, next) {
 
 function getSkus(truid, req, res, next, callback) {
 
-    const apiKey = req.app.portalGlobals.network.clarivateapikey;
+    const apiKey = req.app.portalGlobals.network.portalEntitlementKey;
+    const entitlementApiPath = req.app.portalGlobals.network.portalEntitlementPath;
     const kongProxyURl = req.app.portalGlobals.network.apiHost;
-    let responseData;
+    const contractedSkus =  req.app.portalGlobals.cortellisUi.cortellisContractedSkus.regularSkus
+    let responseData = [];
        
-        const entitlementsUrl = `https://${kongProxyURl}//clarivate/entitlements/${truid}`;
+        const entitlementsUrl = `https://${kongProxyURl}${entitlementApiPath}/${truid}`;
       
         const headers = {
             'Content-Type': 'application/json',
@@ -51,8 +53,27 @@ function getSkus(truid, req, res, next, callback) {
         axios.get(entitlementsUrl, { headers })
             .then(response => {
                 if (response.status === 200) {
-                    responseData = { values:response.data.endDate, skus:response.data.entitlementProducts };
-                } 
+                    response.data.entitlements.forEach(entitlement => {
+                        const entitlmentProduct = entitlement.entitlementProducts;
+                        // Create an array to store skus for the current iteration
+                        let skusArray = [];
+                        Object.entries(entitlmentProduct).forEach(([key, value]) => {
+                            if (response.data.regular_skus.includes(key) && key.startsWith(contractedSkus)) {
+                                // Push the current sku to the skusArray
+                                skusArray.push({ [key]: value });
+                            }
+                        });
+                    
+                        // Check if skusArray is not empty before pushing to responseDataArray
+                        if (skusArray.length > 0) {
+                            responseData.push({
+                                endDate: entitlement.endDate,
+                                skus: skusArray,
+                                contractId: entitlement.contractId
+                            });
+                        }
+                    });
+                }
                 // Invoke the callback with the response data
                 callback(null, responseData);
             })

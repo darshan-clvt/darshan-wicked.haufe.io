@@ -109,6 +109,12 @@ html
                         if authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
                             li
                                 a(href="/content/cortellis-admin-ui/view") Admin tool
+                        if route == '/apis'
+                            li
+                               form(role='form' action='/apis' method='GET' class='search-form')
+                                    input(name='searchQuery' id='searchQuery' type='text' class='form-control' placeholder='Enter API name' value=params.searchQuery)
+                                    button(type='submit' class='btn btn-primary' style='background-color: #666aac; color: #fff;' )
+                                        i(class='glyphicon glyphicon-search')
                     ul(class=`nav navbar-nav navbar-${glob.layouts.menu.classForLoginSignupPosition}`)
                         if !authUser
                             if route == '/login'

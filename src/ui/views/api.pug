@@ -15,24 +15,21 @@ block bodyScripts
     script(type='text/javascript').
         $(window).on('load', function () {
         // Log the window location to the console
-        var apiEndpoints = [
-            "cortellis-np-drugs-api",
-            "cortellis-np-companies-api",
-            "cortellis-np-sources-api"
-        ];
+            let apiEndpoints = [];
+            let cortellisIdValue = $('#cortellisIdElement').text().trim(); // Trim to remove leading/trailing spaces
+            apiEndpoints = cortellisIdValue.replace(/ /g, '').split(',').filter(Boolean);
 
-            // Check if the window location includes "apis/cortellies-api-collection"
-            for (var i = 0; i < apiEndpoints.length; i++) {
+            // Check if the window location includes any of the apiEndpoints
+            for (let i = 0; i < apiEndpoints.length; i++) {
                 if (window.location.href.includes("apis/" + apiEndpoints[i])) {
-                    // Hide the elements with the specified IDs
                     $(".custom-hide").hide();
-                    break; // exit the loop if a match is found
+                    break;
                 }
             }
         });
 
 block content
-    .jumbotron.wicked-api-title
+    .jumbotron.wicked-api-title 
         .container.wicked-title-container
             .row
                 .col-md-8
@@ -144,13 +141,29 @@ block content
             #apidescription.collapse.panel-collapse.in
                 .panel-body
                     != apiDesc
-                    if apiInfo.auth == "none"
-                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?apikey=none&url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Swagger definition &raquo;
+
+                    - var apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi)
+                    - var apiData = JSON.parse(apiDataString)
+                    - var apiIDs = apiData.map(obj => Object.values(obj))
+                    
+                    p#cortellisIdElement= apiIDs
+                    if (apiIDs.some(innerArray => innerArray.includes(apiInfo.id))) 
+                        if CortellisApiKey !== null
+                            if apiInfo.auth == "key-auth" && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
+                                a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?apikey=${CortellisApiKey}&url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
+                        else 
+                            if apiInfo.auth == "key-auth" && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
+                                a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
+                            else if apiInfo.auth == "none" && authUser && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.admin && authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser && authUser.superadmin && authUser.authenticated_scope.includes('wicked:api-cortellis-user')
+                                a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
+                                
+                    else if !authUser || (apiInfo.auth == "none") && (authUser && !authUser.authenticated_scope.includes('wicked:api-cortellis-user') || authUser.authenticated_scope.includes('wicked:api-cortellis-user'))
+                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?apikey=none&url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
                     else
-                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Swagger definition &raquo;
+                        a(href=`${glob.network.schema}://${glob.network.apiHost}/swagger-ui/?url=${encodeURIComponent(genericSwaggerUrl)}` role="button" target="_blank").btn.btn-default View Technical Documentation/ Swagger Definition &raquo;
         
         if !authUser && apiInfo.auth != "none"
-            .panel.panel-danger
+            .panel.panel-danger.custom-hide
                 .panel-heading
                     h4.panel-title Not logged in
                 .panel-body

@@ -378,8 +378,6 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         persistedSubscription.apikey = apiKey;
                     }
 
-
-                    // Webhook it, man
                     webhooks.logEvent(app, {
                         action: webhooks.ACTION_ADD,
                         entity: webhooks.ENTITY_SUBSCRIPTION,
@@ -389,7 +387,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                             apiId: selectedApi.id,
                             userId: userInfo.id,
                             planId: apiPlan.id,
-                            group: selectedApi.requiredGroup
+                            group: selectedApi.requiredGroup,
                         }
                     });
 
