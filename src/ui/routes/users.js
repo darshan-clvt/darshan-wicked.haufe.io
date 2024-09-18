@@ -56,6 +56,7 @@ function getSkus(truid, req, res, next, callback) {
                     response.data.entitlements.forEach(entitlement => {
                         const entitlmentProduct = entitlement.entitlementProducts;
                         // Create an array to store skus for the current iteration
+                        if (entitlmentProduct) {
                         let skusArray = [];
                         Object.entries(entitlmentProduct).forEach(([key, value]) => {
                             if (response.data.regular_skus.includes(key) && key.startsWith(contractedSkus)) {
@@ -72,6 +73,7 @@ function getSkus(truid, req, res, next, callback) {
                                 contractId: entitlement.contractId
                             });
                         }
+                    }
                     });
                 }
                 // Invoke the callback with the response data
