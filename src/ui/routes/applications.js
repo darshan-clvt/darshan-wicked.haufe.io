@@ -178,6 +178,27 @@ router.get('/', function (req, res, next) {
         });
     });
 });
+router.post('/:appId/subscriptions/:apiId/rotatekey', function (req, res, next) {
+    const appId = req.params.appId;
+    const apiId = req.params.apiId;
+    debug(`POST /${appId}/subscriptions/${apiId}`);
+    utils.post(req, `/applications/${appId}/subscriptions/${apiId}/rotatekey`, {
+      application: appId,  // Only sending appId
+      api: apiId           // Only sending apiId
+    }, function (err, apiRes, apiBody) {
+      if (err) {
+        debug('Error during request:', err);
+        return next(err);
+      }
+  
+      debug('Response status: ' + apiRes.statusCode);
+      debug('Full Response: ' + JSON.stringify(apiRes, null, 2));
+      setTimeout(()=>{
+        res.redirect(`/applications/${appId}`);
+      },1000)
+
+    });
+  });
 
 function findUserRole(appInfo, userInfo) {
     const userEmail = userInfo.email;

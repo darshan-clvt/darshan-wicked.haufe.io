@@ -147,6 +147,66 @@ subscriptions.getSubscriptions = function (app, res, applications, loggedInUserI
     });
 };
 
+subscriptions.rotatekey = function (app, res, appId, apiId) {
+    debug('Rotating key for appId: ' + appId + ', apiId: ' + apiId);
+    dao.subscriptions.getByAppId(appId, (err, appSubs) => {
+      if (err) {
+          return utils.fail(res, 500, 'Failed to load subscriptions');
+      }
+      const subsIndex = findSubsIndex(appSubs, apiId);
+      if (subsIndex < 0) {
+          return utils.fail(res, 404, `Subscription to API "${apiId}" not found.`);
+      }
+  
+      const thisSubs = appSubs[subsIndex];
+      if (thisSubs.newApiKey) {
+          // New API key already exists, skip rotation
+          return res.status(400).json({ message: 'API key rotation has already occurred.' });
+      }
+  webhooks.logEvent(app, {
+      action: webhooks.KEY_ROTATION,
+      entity: webhooks.ENTITY_SUBSCRIPTION,
+      data: {
+        applicationId: appId,
+        apiId: apiId
+      }
+    });
+  
+    // Send a success status code
+    res.sendStatus(200);
+  });
+  };
+
+  subscriptions.updateKey = function (appId, apiId, newApiKey, res) {
+    dao.subscriptions.getByAppId(appId, (err, appSubs) => {
+        if (err) {
+            debug('error while extracting apikey'+err);
+            return utils.fail(res, 500, 'patchSubscription: DAO load app subscriptions failed', err);
+        }
+        const subsIndex = findSubsIndex(appSubs, apiId);
+        if (subsIndex < 0) {
+            return utils.fail(res, 404, 'Not found. Subscription to API "' + apiId + '" does not exist: ' + appId);
+        }
+        debug('appSub_details'+utils.getText(appSubs));
+        const thisSubs = appSubs[subsIndex];
+        thisSubs.newApiKey = newApiKey;
+        debug('sub_key_rotation'+utils.getText(thisSubs));
+  
+        dao.subscriptions.patch(appId, thisSubs,null, (err) => {
+            if (err) {
+              debug('error while updating apikey'+err);
+                return utils.fail(res, 500, 'patchSubscription: DAO patch subscription failed', err);
+            }
+            // Send a success message without returning additional data
+            debug('apikey_updated')
+            res.status(200).json({
+                status: 200,
+                message: 'Subscription updated successfully'
+            });
+        });
+    });
+  };
+
 subscriptions.addSubscription = function (app, res, applications, loggedInUserId, appId, subsCreateInfo) {
     debug('addSubscription(): ' + appId);
     debug(subsCreateInfo);

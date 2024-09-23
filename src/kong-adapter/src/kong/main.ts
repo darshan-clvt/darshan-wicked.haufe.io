@@ -16,7 +16,7 @@ const SUBSCRIPTION = 'subscription'
 const ACTION_ADD ='add'
 const ACTION_DELETE = 'delete'
 const ACTION_UPDATE = 'update'
-
+const KEY_ROTATION='key_rotation';
 // ====== PUBLIC INTERFACE ======
 
 export const kongMain = {
@@ -180,6 +180,10 @@ function dispatchWebhookAction(webhookData, onlyDelete, callback) {
         syncAction = callback => syncAppConsumers(webhookData.data.applicationId, callback);
     else if (entity === SUBSCRIPTION && action === ACTION_DELETE)
         syncAction = callback => deleteAppSubscriptionConsumer(webhookData.data, callback);
+    else if (entity === SUBSCRIPTION && action === KEY_ROTATION && !onlyDelete) {
+        syncAction = callback => handleKeyRotation(webhookData.data.applicationId, webhookData.data.apiId, callback);
+        debug('handle_key_rotation' + utils.getText(webhookData.data.applicationId));
+    }
     else
         debug(`Discarding event ${action} ${entity}.`)
 
@@ -245,6 +249,11 @@ function acknowledgeEvent(eventId, callback) {
         debug('deleteWebhookEvent returned');
         callback(null);
     });
+}
+function handleKeyRotation(appId, apiId, callback) {
+    info(`Key rotation for app ${appId} and api ${apiId}`);
+    // Relay to sync
+    sync.handleKeyRotation(appId, apiId, callback);
 }
 
 // ====== INTERNALS =======

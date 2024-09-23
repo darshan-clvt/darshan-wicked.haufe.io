@@ -92,6 +92,27 @@ applications.patch('/:appId/subscriptions/:apiId', verifySubscriptionsWriteScope
     subscriptions.patchSubscription(req.app, res, applications, req.apiUserId, req.params.appId, req.params.apiId, req.body);
 });
 
+applications.post('/:appId/subscriptions/:apiId/rotatekey', verifySubscriptionsWriteScope, function (req, res, next) {
+    // Extracting appId and apiId from the request body
+    const appId = req.body.application;
+    const apiId = req.body.api;
+    debug('req.params: ' + JSON.stringify(req.params));
+    debug('req.body: ' + JSON.stringify(req.body));
+  
+    // Call the rotatekey function with the extracted appId and apiId
+    subscriptions.rotatekey(req.app, res, appId, apiId);
+  
+  });
+
+  applications.post('/update-key', (req, res) => {
+    const { applicationId, apiId, newApiKey } = req.body;
+    debug('newkey_update'+utils.getText(req.body));
+    debug('key_rotaion appId'+utils.getText(applicationId));
+    debug('key_rotaion apiid'+utils.getText(apiId));
+    debug('key_rotaion newkey'+utils.getText(newApiKey));
+    subscriptions.updateKey(applicationId, apiId, newApiKey, res);
+  });
+
 // ===== SPECIAL ENDPOINT, THIS IS REGISTERED IN app.js =====
 
 // '/subscriptions/:clientId'
