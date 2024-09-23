@@ -202,10 +202,10 @@ export const sync = {
     },
     handleKeyRotation: function (applicationId, apiId, callback) {
         const consumerUsername = utils.makeUserName(applicationId, apiId);
-        const kongAdminUrl = 'http://$PORTAL_KONG_ADMIN_HOST';
+        const kongAdminUrl = 'http://$PORTAL_KONG_ADMIN_HOST';    
         function postKeyDetails(newApiKey, apiId, applicationId) {
-        const apiEndpoint = 'http://$PORTAL_KONG_API_HOST/applications/update-key';
-          axios.post(apiEndpoint, {
+            const apiEndpoint = 'http://$PORTAL_KONG_API_HOST/applications/update-key';
+            axios.post(apiEndpoint, {
                 newApiKey,
                 apiId,
                 applicationId
@@ -221,12 +221,12 @@ export const sync = {
                 console.error('Error posting API details:', err);
             });
         }
-      
+    
         utils.kongGetConsumerByName(consumerUsername, function (error, consumer) {
             if (error) {
                 return callback(error); // Handle error
             }
-      
+    
             if (consumer) {
                 // If the consumer exists, generate a new key
                 axios.post(`${kongAdminUrl}/consumers/${consumerUsername}/key-auth`)
@@ -234,10 +234,10 @@ export const sync = {
                         if (response.status === 201) {
                             const newApiKey = response.data.key;
                             console.log(`New key generated for consumer: ${consumerUsername}`);
-      
+    
                             // Call the REST API function with newApiKey, apiId, and applicationId
                             postKeyDetails(newApiKey, apiId, applicationId);
-      
+    
                             // Return these details via the callback
                             callback(null, { newApiKey, apiId, applicationId });
                         } else {
@@ -252,8 +252,8 @@ export const sync = {
                 callback(new Error("Consumer does not exist"));
             }
         });
-      }
-};
+    }
+};    
 
 function syncAppConsumers(portalConsumers: ConsumerInfo[], callback: ErrorCallback): void {
     if (portalConsumers.length === 0) {
