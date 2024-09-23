@@ -73,18 +73,26 @@ block content
                                         a(href=`/apis/${sub.api}`)= sub.api
                                     td(style='vertical-align: middle')= sub.auth
                                     td(style='vertical-align: middle')= sub.trusted ? 'Yes' : '-'
-                                    td(style='vertical-align: middle') <a href='/applications/#{sub.application}/subscriptions/#{sub.api}'>#{sub.allowedScopesMode}</a>
+                                    td(style='vertical-align: middle')
+                                        a(href='/applications/#{sub.application}/subscriptions/#{sub.api}')= sub.allowedScopesMode
                                     if (sub.approved)
                                         if ('oauth2' == sub.auth)
                                             td(style='max-width: 250px')
                                                 input(readonly type='password' data-toggle='password' value=sub.clientId).form-control
                                             td(style='max-width: 250px')
                                                 input(readonly type='password' data-toggle='password' value=sub.clientSecret).form-control
-                                        else
-                                            td(colspan=2)
+                                        else if ('key-auth' == sub.auth)
+                                            td(style='max-width: 250px')
                                                 input(readonly type='password' data-toggle='password' value=sub.apikey).form-control
+                                                if sub.newApiKey
+                                                    br
+                                                    label New API Key:
+                                                    input(readonly type='password' data-toggle='password' value=sub.newApiKey).form-control
+                                            td
+                                                form.rotate-key-form(action=`/applications/${sub.application}/subscriptions/${sub.api}/rotatekey`, method='post', style='display: inline;')
+                                                    button.btn.btn-warning(type='submit', disabled=sub.newApiKey) Rotate Key
                                     else
-                                        td(style='vertical-align: middle;' colspan=2)
+                                        td(style='vertical-align: middle;' colspan=3)
                                             i Subscription approval is pending
 
         .panel.panel-default

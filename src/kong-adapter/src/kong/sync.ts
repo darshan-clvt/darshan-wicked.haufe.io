@@ -199,7 +199,60 @@ export const sync = {
             error(JSON.stringify(globalPlugins, null, 2));
             return callback(new Error('Detected multiple global prometheus plugins.'));
         });
-    }
+    },
+    handleKeyRotation: function (applicationId, apiId, callback) {
+        const consumerUsername = utils.makeUserName(applicationId, apiId);
+        const kongAdminUrl = 'http://$PORTAL_KONG_ADMIN_HOST';
+        function postKeyDetails(newApiKey, apiId, applicationId) {
+        const apiEndpoint = 'http://$PORTAL_KONG_API_HOST/applications/update-key';
+          axios.post(apiEndpoint, {
+                newApiKey,
+                apiId,
+                applicationId
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    console.log('API details posted successfully:', response.data);
+                } else {
+                    console.error('Failed to post API details:', response.statusText);
+                }
+            })
+            .catch(err => {
+                console.error('Error posting API details:', err);
+            });
+        }
+      
+        utils.kongGetConsumerByName(consumerUsername, function (error, consumer) {
+            if (error) {
+                return callback(error); // Handle error
+            }
+      
+            if (consumer) {
+                // If the consumer exists, generate a new key
+                axios.post(`${kongAdminUrl}/consumers/${consumerUsername}/key-auth`)
+                    .then(response => {
+                        if (response.status === 201) {
+                            const newApiKey = response.data.key;
+                            console.log(`New key generated for consumer: ${consumerUsername}`);
+      
+                            // Call the REST API function with newApiKey, apiId, and applicationId
+                            postKeyDetails(newApiKey, apiId, applicationId);
+      
+                            // Return these details via the callback
+                            callback(null, { newApiKey, apiId, applicationId });
+                        } else {
+                            callback(new Error('Failed to generate new key.'));
+                        }
+                    })
+                    .catch(err => {
+                        callback(err);
+                    });
+            } else {
+                // If the consumer does not exist, handle appropriately
+                callback(new Error("Consumer does not exist"));
+            }
+        });
+      }
 };
 
 function syncAppConsumers(portalConsumers: ConsumerInfo[], callback: ErrorCallback): void {
