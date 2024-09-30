@@ -202,9 +202,10 @@ export const sync = {
     },
     handleKeyRotation: function (applicationId, apiId, callback) {
         const consumerUsername = utils.makeUserName(applicationId, apiId);
-        const kongAdminUrl = 'http://$PORTAL_KONG_ADMIN_HOST';    
+        const kongAdminUrl = utils.getKongUrl();    
         function postKeyDetails(newApiKey, apiId, applicationId) {
-            const apiEndpoint = 'http://$PORTAL_KONG_API_HOST/applications/update-key';
+            const apiUrl=wicked.getInternalApiUrl();
+            const apiEndpoint = `${apiUrl}applications/update-key`;
             axios.post(apiEndpoint, {
                 newApiKey,
                 apiId,
@@ -229,7 +230,7 @@ export const sync = {
     
             if (consumer) {
                 // If the consumer exists, generate a new key
-                axios.post(`${kongAdminUrl}/consumers/${consumerUsername}/key-auth`)
+                axios.post(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`)
                     .then(response => {
                         if (response.status === 201) {
                             const newApiKey = response.data.key;
