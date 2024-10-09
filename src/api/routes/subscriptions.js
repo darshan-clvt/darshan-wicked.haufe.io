@@ -934,5 +934,51 @@ function checkScopeSettings(appSub) {
     }
 }
 
+/**
+ * Used only for key rotation feature
+ * This function replaces the old key with new key in portal db and syncs to adapter
+ * @param {*} app 
+ * @param {*} res 
+ * @param {*} appId -- application id 
+ * @param {*} apiId -- api id
+ */
+subscriptions.revokeOldKey = function (app, res, appId, apiId) {
+    debug('revokeOldKey(): ' + appId + ', apiId: ' + apiId);
+    dao.subscriptions.getByAppId(appId, (err, appSubs) => {
+        if (err) {
+          return utils.fail(res, 500, 'Failed to load subscriptions');
+        }
+        const subsIndex = findSubsIndex(appSubs, apiId);
+        if (subsIndex < 0) {
+          return utils.fail(res, 404, `Subscription to API "${apiId}" not found.`);
+        }
+    const thisSubs = appSubs[subsIndex];
+    if (!thisSubs.newApiKey) {
+        debug('revokeOldKey(): API key rotation is not allowed.');
+        return res.status(400).json({ message: 'API key rotation is not allowed' });
+    }
+    const keyToRevoke=thisSubs.apikey;
+    thisSubs.apikey = thisSubs.newApiKey;
+    delete thisSubs.newApiKey;
+    dao.subscriptions.patch(appId, thisSubs,null, (err) => {
+        if (err) {
+          debug('error while updating apikey'+err);
+            return utils.fail(res, 500, 'patchSubscription: DAO patch subscription failed', err);
+        }
+        debug('apikey revoked successfully,initiating sync with adapter');
+    });
+    webhooks.logEvent(app, {
+      action: webhooks.REVOKE_OLD_KEY,
+      entity: webhooks.ENTITY_SUBSCRIPTION,
+      data: {
+        applicationId: appId,
+        apiId: apiId,
+        apiKey:keyToRevoke
+      }
+    });
+    res.sendStatus(200);
+  });
+};
+
 
 module.exports = subscriptions;

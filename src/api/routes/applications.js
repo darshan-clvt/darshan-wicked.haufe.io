@@ -102,16 +102,27 @@ applications.post('/:appId/subscriptions/:apiId/rotatekey', verifySubscriptionsW
     // Call the rotatekey function with the extracted appId and apiId
     subscriptions.rotatekey(req.app, res, appId, apiId);
   
-  });
+});
 
-  applications.post('/update-key', (req, res) => {
+applications.post('/update-key', (req, res) => {
     const { applicationId, apiId, newApiKey } = req.body;
     debug('newkey_update'+utils.getText(req.body));
     debug('key_rotaion appId'+utils.getText(applicationId));
     debug('key_rotaion apiid'+utils.getText(apiId));
     debug('key_rotaion newkey'+utils.getText(newApiKey));
     subscriptions.updateKey(applicationId, apiId, newApiKey, res);
-  });
+});
+
+/** 
+ * This endpoint is used to revoke the old key of the application.
+ * Only valid for apis subscriptions which have key roation enabled
+*/
+applications.post('/:appId/subscriptions/:apiId/revoke', function (req, res, next) {
+    debug('apiKeyRevoke invoked')
+    const appId = req.params.appId;
+    const apiId = req.params.apiId;  
+    subscriptions.revokeOldKey(req.app, res, appId, apiId);
+});
 
 // ===== SPECIAL ENDPOINT, THIS IS REGISTERED IN app.js =====
 

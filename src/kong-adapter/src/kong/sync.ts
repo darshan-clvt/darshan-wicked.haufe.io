@@ -253,6 +253,35 @@ export const sync = {
                 callback(new Error("Consumer does not exist"));
             }
         });
+    },
+    handleKeyRevoke: function (applicationId, apiId, apikey,callback) {
+        const consumerUsername = utils.makeUserName(applicationId, apiId);
+        const kongAdminUrl = utils.getKongUrl();
+        utils.kongGetConsumerByName(consumerUsername, function (error, consumer) {
+            if (error) {
+                return callback(error);
+            }
+            if (consumer) {
+                debug(`Consumer ${consumerUsername} exists, deleting old key.`);
+                debug(kongAdminUrl)
+                axios.delete(`${kongAdminUrl}consumers/${consumerUsername}/key-auth/${apikey}`)
+                    .then(response => {
+                    if (response.status === 204) {
+                        debug(`Key revoked for consumer: ${consumerUsername}`);
+                        callback(null, { apikey, apiId, applicationId });
+                    }
+                    else {
+                        callback(new Error('Failed to generate new key.'));
+                    }
+                })
+                    .catch(err => {
+                    callback(err);
+                });
+            }
+            else {
+                callback(new Error("Consumer does not exist"));
+            }
+        });
     }
 };    
 
