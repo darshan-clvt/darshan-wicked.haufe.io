@@ -281,19 +281,19 @@ block content
             .panel.panel-default
                 .cortellis-navbar.navbar-collapse.collapse
                     ul.nav.navbar-nav.cortellies-navbar
-                        - var apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi)
-                        - var apiData = JSON.parse(apiDataString)
-                        each apiObject in apiData
-                            li
-                                - var apiKey = Object.keys(apiObject)[0];
-                                a(href='javascript:void(0);', class='api-link', data-api-value=apiObject[apiKey])
-                                    | #{apiKey}
-                                    ul(class='view-menu')
-                                        each subApiObject in apiObject[apiKey]
-                                            li
-                                                - var subApiKey = Object.keys(subApiObject)[0];
-                                                a(href='javascript:void(0);', class='api-link', data-api-value=subApiObject[subApiKey])
-                                                    | #{subApiKey}
+                        - var apiDataString = glob.cortellisUi.cortelliesApi.InvestigationalApi
+                        each apiObject in apiDataString
+                            - var apiKey = Object.keys(apiObject)[0];
+                            if apiKey !== 'x-common-apis'
+                                li
+                                    a(href='javascript:void(0);', class='api-link', data-api-value=apiObject[apiKey])
+                                        | #{apiKey}
+                                        ul(class='view-menu')
+                                            each subApiObject in apiObject[apiKey]
+                                                li
+                                                    - var subApiKey = Object.keys(subApiObject)[0];
+                                                    a(href='javascript:void(0);', class='api-link', data-api-value=subApiObject[subApiKey])
+                                                        | #{subApiKey}
                 .unique-panel-body(id='investigationalDrugPanel1')
                     iframe(src='', width='100%',height='auto', scrolling="no", id='myIframe' style='border: none')
 
