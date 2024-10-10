@@ -14,6 +14,7 @@ mixin checkBox(source, value)
         | !{label}
 
 mixin apiCategories(apiTags, params)
+    - apiTags = apiTags.sort((a, b) => a.localeCompare(b))
     .panel.panel-default
       .panel-body.wicked-api-body
         form(role='form' action='/apis' method='GET')
@@ -98,10 +99,7 @@ block content
                     +apiDef(filteredApiList[i+2])
           //- //Hideing All api listed in glob.cortellisUi.cortelliesApi.InvestigationalApi For {Admin}{superadmin}{appover}{publicUser}{authUser} requiredGroup which empty
           else if authUser && (authUser.admin !== true && authUser.authenticated_scope.includes('wicked:')) || authUser !== true
-              - const apiDataString = JSON.stringify(glob.cortellisUi.cortelliesApi.InvestigationalApi);
-              - const apiData = JSON.parse(apiDataString);
-              - const apiIDs = apiData.map(obj => Object.values(obj));
-              - const filteredApiList = apilist.filter(api => !apiIDs.some(item => item.includes(api.id)));
+              - const filteredApiList = apilist.filter(api => !cortelliesApisId.some(item => item.includes(api.id)));
               each api, i in filteredApiList
                 if i % 3 === 0
                   div(class="row")

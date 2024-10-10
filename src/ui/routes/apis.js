@@ -67,6 +67,14 @@ router.get('/', function (req, res, next) {
         }
         
         const desc = results.getDesc;
+        const apiDataObject = req.app.portalGlobals.cortellisUi.cortelliesApi.InvestigationalApi;
+
+        const values = apiDataObject.map(item => {
+            const value = Object.values(item); // Get values of the object
+            return Array.isArray(value[0]) ? value[0] : value; // Return array if it's an array, otherwise return the value
+        });
+        // Flatten the array of values
+        const flattenedValues = [].concat(...values);
         if (!utils.acceptJson(req)) {
             res.render('apis',
                 {
@@ -77,6 +85,7 @@ router.get('/', function (req, res, next) {
                     title: 'APIs',
                     desc: marked(desc, markedOptions),
                     apilist: apiList,
+                    cortelliesApisId : flattenedValues,
                     apiTags: unique(apiTags)
                 });
         } else {
