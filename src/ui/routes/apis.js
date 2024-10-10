@@ -67,6 +67,7 @@ router.get('/', function (req, res, next) {
         }
         
         const desc = results.getDesc;
+        
         if (!utils.acceptJson(req)) {
             res.render('apis',
                 {
