@@ -149,6 +149,10 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
             if (item.methods && item.methods.length) {
                 route.methods = item.methods;
             }
+
+            if (item.headers) {
+                route.headers = item.headers;
+            }
             
             if(item.name) {
                 route.name = item.name
@@ -160,6 +164,7 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
     //just in case, backward compatibility
     else {
       const route: KongRoute = {
+          headers:null,
           hosts: null,
           protocols: [ProtocolType.http, ProtocolType.https],
           paths: api.uris,
@@ -207,6 +212,7 @@ export function kongApiToServiceRoute(api: KongApi): { service: KongService, rou
         write_timeout: api.write_timeout,
     }
     const route: KongRoute = {
+        headers: null,
         hosts: null,
         protocols: [ProtocolType.http, ProtocolType.https],
         paths: api.uris,

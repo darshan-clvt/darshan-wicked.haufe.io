@@ -200,6 +200,7 @@ export const sync = {
             return callback(new Error('Detected multiple global prometheus plugins.'));
         });
     },
+    //function to generate new api key in kong -only for key rotation enabled apis
     handleKeyRotation: function (applicationId, apiId, callback) {
         const consumerUsername = utils.makeUserName(applicationId, apiId);
         const kongAdminUrl = utils.getKongUrl();    
@@ -230,7 +231,9 @@ export const sync = {
     
             if (consumer) {
                 // If the consumer exists, generate a new key
-                axios.post(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`)
+                axios.post(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`, {
+                    tags: ["rotate-key"]
+                  })
                     .then(response => {
                         if (response.status === 201) {
                             const newApiKey = response.data.key;

@@ -147,6 +147,15 @@ subscriptions.getSubscriptions = function (app, res, applications, loggedInUserI
     });
 };
 
+/**
+ * This function checks if a new API key already exists for the subscription.
+ * If a new key exists, it skips the rotation process.
+ * Otherwise, it logs the key rotation webhook event  event and sends a success status code.
+ * @param {*} app - The application instance
+ * @param {*} res - The response object
+ * @param {*} appId - The application ID
+ * @param {*} apiId - The API ID
+ */
 subscriptions.rotatekey = function (app, res, appId, apiId) {
     debug('Rotating key for appId: ' + appId + ', apiId: ' + apiId);
     dao.subscriptions.getByAppId(appId, (err, appSubs) => {
@@ -163,19 +172,27 @@ subscriptions.rotatekey = function (app, res, appId, apiId) {
           // New API key already exists, skip rotation
           return res.status(400).json({ message: 'API key rotation has already occurred.' });
       }
-  webhooks.logEvent(app, {
-      action: webhooks.KEY_ROTATION,
-      entity: webhooks.ENTITY_SUBSCRIPTION,
-      data: {
-        applicationId: appId,
-        apiId: apiId
-      }
-    });
+      webhooks.logEvent(app, {
+          action: webhooks.KEY_ROTATION,
+          entity: webhooks.ENTITY_SUBSCRIPTION,
+          data: {
+            applicationId: appId,
+            apiId: apiId
+          }
+      });
   
-    // Send a success status code
-    res.sendStatus(200);
-  });
-  };
+      // Send a success status code
+      res.sendStatus(200);
+    });
+};
+
+/**
+ * This function is for updating the new key in the database from Kong.
+ * @param {string} appId - The application ID.
+ * @param {string} apiId - The API ID.
+ * @param {string} newApiKey - The new API key to be updated.
+ * @param {object} res - The response object.
+ */
 
   subscriptions.updateKey = function (appId, apiId, newApiKey, res) {
     dao.subscriptions.getByAppId(appId, (err, appSubs) => {
