@@ -230,7 +230,9 @@ export const sync = {
     
             if (consumer) {
                 // If the consumer exists, generate a new key
-                axios.post(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`)
+                axios.post(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`, {
+                    tags: ["rotate-key"]
+                  })
                     .then(response => {
                         if (response.status === 201) {
                             const newApiKey = response.data.key;

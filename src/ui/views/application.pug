@@ -11,7 +11,6 @@ block scripts
 
         function addRedirectUri() {
             const randomId = Math.random().toString(16).substring(2);
-            // I dislike my web skills.
             $('#redirect_uris').append('<div class="input-group" id="' + randomId + '"><input value="" name="redirecturi" class="form-control" style="margin-bottom: 5px"><span class="input-group-btn"><a style="margin-bottom: 5px" onClick="javascript:deleteRedirectUri(\'' + randomId + '\');" class="btn btn-danger">Remove</a></span></div>');
         }
 
@@ -23,26 +22,98 @@ block scripts
             }
         }
 
+        function showPopup2Modal(index) {
+            $(`#Popup1Modal-${index}`).modal('hide');
+            $(`#Popup2Modal-${index}`).modal('show');
+        }
+
+        function OkPopup2Modal(index) {
+            $(`#Popup2Modal-${index}`).modal('hide');
+            location.reload(); // Reload the page after closing the modal
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             var markedOptions = { sanitize: true };
             $('#desc').on('change keyup paste', function() {
                 var text = $('#desc').val();
                 $('#markdown').html(marked(text, markedOptions));
             });
-            // First time
-             $('#markdown').html(marked($('#desc').val(), markedOptions));      
+            $('#markdown').html(marked($('#desc').val(), markedOptions));
+
+            // Handle form submission for rotating the key
+            document.querySelectorAll('.rotate-key-form').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault(); // Prevent default form submission
+                    const formData = new FormData(this);
+                    const index = this.getAttribute('data-index');
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(Object.fromEntries(formData))
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Network response was not ok');
+                        }
+                    })
+                    .then(data => {
+                        if (data.subscription && data.subscription.newApiKey) {
+                            updateModalContent(index, data.subscription.apiKey, data.subscription.newApiKey);
+                            showPopup2Modal(index);
+                        } else {
+                            alert('Key rotation failed');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            });
+
+            // Handle form submission for expiring the key
+            document.querySelectorAll('.expire-key-form').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault(); // Prevent default form submission
+                    const formData = new FormData(this);
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(Object.fromEntries(formData))
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            location.reload(); // Reload the page after successful expiration
+                        } else {
+                            throw new Error('Network response was not ok');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            });
         });
+
+        function updateModalContent(index, apiKey, newApiKey) {
+            $(`#Popup2Modal-${index} #newKey`).val(newApiKey);
+            $(`#Popup2Modal-${index} #oldKey`).val(apiKey);
+        }
 
 block content
     .jumbotron.wicked-application-title
         .container.wicked-title-container
             h1= application.name
-            
+
             p.
                 This page lets you administer the owners of this application. You can add and remove
                 co-owners of the application. New co-owners must be already be registered in the portal
                 in order to make them co-owners of the application.
-
 
     .container.wicked-container
         .panel.panel-default
@@ -52,12 +123,12 @@ block content
                 if subscriptions.length == 0
                     p.
                         Your application does not have any API subscriptions currently. You may add
-                        subscriptions on the API pages. 
+                        subscriptions on the API pages.
                     a(href='/apis').btn.btn-default View APIs &raquo;
                 else
                     p.
                         Your application has the following API subscriptions:
-                    
+
                     table.table.table-striped
                         thead
                             tr
@@ -65,7 +136,8 @@ block content
                                 th Auth Type
                                 th <a href="/help/trusted" target="_blank">Trusted</a>
                                 th <a href="/help/allowed_scopes" title="Allowed Scopes Mode">Scopes</a>
-                                th(colspan=2) Secrets (API Key or Client ID/Secret)
+                                th Secrets (API Key or Client ID/Secret)
+                                th Actions
                         tbody
                             each sub, i in subscriptions
                                 tr
@@ -80,9 +152,57 @@ block content
                                                 input(readonly type='password' data-toggle='password' value=sub.clientId).form-control
                                             td(style='max-width: 250px')
                                                 input(readonly type='password' data-toggle='password' value=sub.clientSecret).form-control
-                                        else
-                                            td(colspan=2)
-                                                input(readonly type='password' data-toggle='password' value=sub.apikey).form-control
+                                        else if ('key-auth' == sub.auth)
+                                            td(style='max-width: 250px')
+                                                if sub.apikey && !sub.newApiKey
+                                                    input(readonly type='password' data-toggle='password' value=sub.apikey).form-control
+                                                else if sub.newApiKey && sub.apikey
+                                                    input.readonly(type='password' data-toggle='password' value=sub.apikey).form-control.hidden-input
+                                                    br.hidden-input
+                                                    div.d-flex.align-items-center.hidden-input
+                                                        span.ml-2 New Api Key
+                                                        input.readonly(type='password' value=sub.newApiKey data-toggle='password').form-control
+                                            td
+                                                if keyRotationEnabledApis && keyRotationEnabledApis.some(api => api.id === sub.api)
+                                                    if sub.newApiKey
+                                                        form.expire-key-form(action=`/applications/${sub.application}/subscriptions/${sub.api}/revoke`, method='post', style='display: inline;')
+                                                            button.btn.btn-danger(type='submit') Expire Key
+                                                    else
+                                                        button.btn.btn-warning(type='button' data-toggle='modal' data-target=`#Popup1Modal-${i}`,style='background-color: #00573F; color: white;') Rotate Key
+                                                    // Modal for each subscription
+                                                    .modal.fade(id=`Popup1Modal-${i}`, tabindex='-1', role='dialog')
+                                                        .modal-dialog(role='document')
+                                                            .modal-content.modal-dialog-centered.modal-dialog-scrollable
+                                                                h2#uniqueId.panel-title.box-board
+                                                                    | Rotate API Key Application (Application: #{sub.application} Api Name: #{sub.api})
+                                                                .modal-body
+                                                                    p.success
+                                                                        strong
+                                                                            | Please be aware that changing the plan will reset all the request count values, if applicable. Subscription will be automatically approved with the existing API key.
+                                                                .modal-footer
+                                                                    form.rotate-key-form(action=`/applications/${sub.application}/subscriptions/${sub.api}/rotatekey`, method='post', style='display: inline;' data-index=i)
+                                                                        button.btn(type='submit', id=sub.id, style='background-color: #00573F; color: white;') Rotate
+                                                    // Second Modal for each subscription
+                                                    .modal.fade(id=`Popup2Modal-${i}`, tabindex='-1', role='dialog' aria-labelledby='exampleModalLabel' aria-hidden='true')
+                                                        .modal-dialog(role='document')
+                                                            .modal-content.modal-dialog-centered.modal-dialog-scrollable
+                                                                h2#uniqueId.panel-title.box-board
+                                                                    | Rotate API Key Application (Application ID: #{sub.application} Api Name: #{sub.api})
+                                                                .modal-body
+                                                                    p.success
+                                                                        strong
+                                                                            | New API Key Has been successfully generated.
+                                                                    form
+                                                                        .form-group
+                                                                            label.col-form-label New API Key:
+                                                                            input#newKey(readonly type='password' data-toggle='password').form-control
+                                                                        .form-group
+                                                                            label.col-form-label Current API Key:
+                                                                            input#oldKey(readonly type='password' data-toggle='password').form-control
+                                                                .modal-footer
+                                                                    button.btn(role="button" data-bs-toggle="button" aria-pressed="true" data-dismiss='modal' aria-label='Close' style='background-color: #C80815; color: white; transition: none;' onclick=`OkPopup2Modal('${i}')`) Ok
+                                                else
+                                                    p No key rotation enabled for this API
                                     else
                                         td(style='vertical-align: middle;' colspan=2)
                                             i Subscription approval is pending
@@ -93,7 +213,6 @@ block content
             #applicationinfo.collapse.panel-collapse.in
                 .panel-body
                     if application._links.patchApplication
-
                         form(role='form' action=`/applications/${application.id}/patch` method='post')
                             p.
                                 You may update the application "friendly" name and redirect URIs here; it is not possible to update
@@ -133,7 +252,6 @@ block content
                                                     a(style='margin-bottom: 5px' onClick='javascript:deleteRedirectUri("redirect_' + i + '");').btn.btn-danger Remove
                                 a(style='margin-top:5px' onClick='javascript:addRedirectUri()').btn.btn-success.btn-small Add Redirect URI
                                 br
-
                             .form-group
                                 label(for='clienttype') Client Type:
                                 select(name='clienttype' id='clienttype').form-control
@@ -195,7 +313,7 @@ block content
                                             .form-group
                                                 label(for='owneremail') Owner Email:
                                                 input(type='email' name='owneremail').form-control
-                                                p 
+                                                p
                                                     small Additional owners must already be registered with this API Portal.
                                             label(for='ownerrole') Owner Role:
                                             select(name='ownerrole').form-control
@@ -206,8 +324,8 @@ block content
                                             p
                                                 button(class='btn btn-primary' type='submit') Register Co-Owner &raquo;
                     else
-                        i Only owners and admins may add and delete owners.                        
-        
+                        i Only owners and admins may add and delete owners.
+
         if application._links.deleteApplication
             .panel.panel-danger
                 .panel-heading
