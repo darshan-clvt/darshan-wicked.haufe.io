@@ -65,6 +65,9 @@ export interface KongRoute {
     }
     name? :string
     plugins? : KongPlugin[]
+    headers?: {
+        [key: string]: string[];
+    }
 }
 
 export interface KongPlugin {
