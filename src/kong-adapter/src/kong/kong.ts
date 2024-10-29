@@ -551,6 +551,7 @@ function enrichConsumerPlugins(consumerInfo: ConsumerInfo, callback: Callback<Co
         utils.kongGetConsumerPluginData(consumerInfo.consumer.id, pluginName, function (err, pluginData) {
             if (pluginData.data.length > 0) {
 
+                // Filter out 'key-auth' plugin entries that have the 'rotate-key' tag
                 if (pluginName === 'key-auth') {
                     pluginData.data = pluginData.data.filter(entry => {
                         const shouldIgnore = shouldIgnoreKeyWithTag(entry);

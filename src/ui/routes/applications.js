@@ -192,11 +192,18 @@ router.get('/', function (req, res, next) {
         });
     });
 });
+/**
+ * This route handler rotates the API key for a given application subscription.
+ * It first sends a POST request to the backend to initiate the key rotation.
+ * If the new API key is available, it sends the updated subscription info in the response.
+ */
 router.post('/:appId/subscriptions/:apiId/rotatekey', function (req, res, next) {
     const appId = req.params.appId;
     const apiId = req.params.apiId;
     debug(`POST /${appId}/subscriptions/${apiId}`);
     debug('rotate-key-ui');
+    
+    // Initiate the key rotation by sending a POST request to the backend
     utils.post(req, `/applications/${appId}/subscriptions/${apiId}/rotatekey`, {
       application: appId,
       api: apiId
@@ -209,11 +216,12 @@ router.post('/:appId/subscriptions/:apiId/rotatekey', function (req, res, next) 
       debug('Response status: ' + apiRes.statusCode);
       debug('Full Response: ' + JSON.stringify(apiRes, null, 2));
   
-      //Polling function to repeatedly check for the updated subscription data
+      // Polling function to repeatedly check for the updated subscription data
       const pollForNewApiKey = (retryCount = 0) => {
-        const maxRetries = 5;  
-        const delay = 1000;     
+        const maxRetries = 5;  // Maximum number of retries
+        const delay = 1000;    // Delay between retries in milliseconds
   
+        // Send a GET request to check if the new API key is available
         utils.getFromAsync(req, res, `/applications/${appId}/subscriptions/${apiId}`, 200, function (err, subsInfo) {
           if (err) return next(err);
   
@@ -249,11 +257,19 @@ router.post('/:appId/subscriptions/:apiId/rotatekey', function (req, res, next) 
       pollForNewApiKey();
     });
   });
-  
- router.post('/:appId/subscriptions/:apiId/revoke', function (req, res, next) {
+
+
+/**
+ * This route handler revokes the API key for a given application subscription.
+ * This functionality is only enabled for APIs with key rotation enabled.
+ * 
+ */
+router.post('/:appId/subscriptions/:apiId/revoke', function (req, res, next) {
     const appId = req.params.appId;
     const apiId = req.params.apiId;
-    debug(`POST /${appId}/subscriptions/${apiId}`);
+    debug(`POST /${appId}/subscriptions/${apiId}/revoke`);
+
+    // Initiate the key revocation by sending a POST request to the backend
     utils.post(req, `/applications/${appId}/subscriptions/${apiId}/revoke`, {
       application: appId,  // Only sending appId
       api: apiId           // Only sending apiId
@@ -265,12 +281,11 @@ router.post('/:appId/subscriptions/:apiId/rotatekey', function (req, res, next) 
 
       debug('Response status: ' + apiRes.statusCode);
       debug('Full Response: ' + JSON.stringify(apiRes, null, 2));
-      setTimeout(()=>{
+      setTimeout(() => {
         res.redirect(`/applications/${appId}`);
-      },1000)
-
+      }, 1000);
     });
-  });
+});
 
 function findUserRole(appInfo, userInfo) {
     const userEmail = userInfo.email;

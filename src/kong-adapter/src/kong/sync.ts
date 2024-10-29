@@ -200,6 +200,7 @@ export const sync = {
             return callback(new Error('Detected multiple global prometheus plugins.'));
         });
     },
+    //function to generate new api key in kong -only for key rotation enabled apis
     handleKeyRotation: function (applicationId, apiId, callback) {
         const consumerUsername = utils.makeUserName(applicationId, apiId);
         const kongAdminUrl = utils.getKongUrl();    

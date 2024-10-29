@@ -254,6 +254,13 @@ function acknowledgeEvent(eventId, callback) {
         callback(null);
     });
 }
+/**
+ * Handles the key rotation for a given application and API.
+ * 
+ * @param {string} appId - The ID of the application.
+ * @param {string} apiId - The ID of the API.
+ * @param {Function} callback - The callback function to be called after handling the key rotation.
+ */
 function handleKeyRotation(appId, apiId, callback) {
     info(`Key rotation for app ${appId} and api ${apiId}`);
     // Relay to sync
