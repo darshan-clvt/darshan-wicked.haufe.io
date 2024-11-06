@@ -9,7 +9,7 @@ export interface SyncStatistics {
 }
 
 export interface ConsumerPlugin {
-    key: any;
+    key?: any;
     consumer?: { id: string },
     created_at?: number,
     id?: string,
