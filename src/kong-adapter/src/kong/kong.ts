@@ -708,13 +708,38 @@ function addKongConsumer(addItem, done) {
 
 function addKongConsumerPlugin(consumerId: string, pluginName: string, pluginDataList: ConsumerPlugin[], done) {
     debug('addKongConsumerPlugin()');
-    async.eachSeries(pluginDataList, function (pluginData: ConsumerPlugin, callback) {
-        info(`Adding consumer plugin ${pluginName} for consumer ${consumerId}`);
-        utils.kongPostConsumerPlugin(consumerId, pluginName, pluginData, callback);
-    }, function (err) {
-        if (err)
+    debug('before getting subscription data');
+
+    utils.kongGetConsumerPluginData(consumerId, pluginName, function (err, existingPluginsData) {
+        if (err) {
             return done(err);
-        done(null);
+        }
+
+        debug('Retrieved existing plugins data:' + JSON.stringify(existingPluginsData, null, 2));
+        debug('pluginDataList:' + JSON.stringify(pluginDataList, null, 2));
+        async.eachSeries(pluginDataList, function (pluginData: ConsumerPlugin, callback) {
+            debug('Processing plugin data:' + JSON.stringify(pluginData, null, 2));
+
+            if (pluginData.key) {
+                const keyToCheck = pluginData.key;
+                const keyExists = existingPluginsData.data.some(plugin => plugin.key === keyToCheck);
+                if (keyExists) {
+                    info(`Key ${keyToCheck} already exists for plugin ${pluginName}. Skipping.`);
+                    return callback();
+                }
+                info(`Key ${keyToCheck} does not exist. Adding consumer plugin ${pluginName}.`);
+            } else {
+                info(`Adding consumer plugin ${pluginName} without key check.`);
+            }
+
+            utils.kongPostConsumerPlugin(consumerId, pluginName, pluginData, callback);
+
+        }, function (err) {
+            if (err) {
+                return done(err);
+            }
+            done(null);
+        });
     });
 }
 

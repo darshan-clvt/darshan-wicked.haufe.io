@@ -23,6 +23,7 @@ block scripts
         }
 
         function showPopup2Modal(index) {
+            $('#loadingMessage').hide(); // Hide the loading message
             $(`#Popup1Modal-${index}`).modal('hide');
             $(`#Popup2Modal-${index}`).modal('show');
         }
@@ -30,6 +31,15 @@ block scripts
         function OkPopup2Modal(index) {
             $(`#Popup2Modal-${index}`).modal('hide');
             location.reload(); // Reload the page after closing the modal
+        }
+
+        function showExpireKeyModal(index) {
+            $(`#ExpireKeyModal-${index}`).modal('show');
+        }
+
+        function confirmExpireKey(index) {
+            $(`#ExpireKeyModal-${index}`).modal('hide');
+            $(`#expire-key-form-${index}`).submit();
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -46,6 +56,8 @@ block scripts
                     event.preventDefault(); // Prevent default form submission
                     const formData = new FormData(this);
                     const index = this.getAttribute('data-index');
+
+                    $('#loadingMessage').show(); // Show the loading message
 
                     fetch(this.action, {
                         method: 'POST',
@@ -68,9 +80,13 @@ block scripts
                             showPopup2Modal(index);
                         } else {
                             alert('Key rotation failed');
+                            $('#loadingMessage').hide(); // Hide the loading message if rotation fails
                         }
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(error => {
+                        console.error('Error:', error);
+                        $('#loadingMessage').hide(); // Hide the loading message if there is an error
+                    });
                 });
             });
 
@@ -103,6 +119,11 @@ block scripts
         function updateModalContent(index, apiKey, newApiKey) {
             $(`#Popup2Modal-${index} #newKey`).val(newApiKey);
             $(`#Popup2Modal-${index} #oldKey`).val(apiKey);
+        }
+
+        function OkPopup2Modal(index) {
+            $(`#Popup2Modal-${index}`).modal('hide');
+            location.reload(); // Reload the page after closing the modal
         }
 
 block content
@@ -165,8 +186,8 @@ block content
                                             td
                                                 if keyRotationEnabledApis && keyRotationEnabledApis.some(api => api.id === sub.api)
                                                     if sub.newApiKey
-                                                        form.expire-key-form(action=`/applications/${sub.application}/subscriptions/${sub.api}/revoke`, method='post', style='display: inline;')
-                                                            button.btn.btn-danger(type='submit') Expire Key
+                                                        form.expire-key-form(id=`expire-key-form-${i}`, action=`/applications/${sub.application}/subscriptions/${sub.api}/revoke`, method='post', style='display: inline;')
+                                                            button.btn.btn-danger(type='button', onclick=`showExpireKeyModal(${i})`) Expire Key
                                                     else
                                                         button.btn.btn-warning(type='button' data-toggle='modal' data-target=`#Popup1Modal-${i}`,style='background-color: #00573F; color: white;') Rotate Key
                                                     // Modal for each subscription
@@ -178,10 +199,14 @@ block content
                                                                 .modal-body
                                                                     p.success
                                                                         strong
-                                                                            | Please be aware that changing the plan will reset all the request count values, if applicable. Subscription will be automatically approved with the existing API key.
+                                                                            | Please be aware that rotating the API key will create a new key.Either the old key or the new key can be used.You can comeback and deactivate the old key at any time.
+                                                                    // Loading message
+                                                                    #loadingMessage(style='display: none; text-align: center;')
+                                                                        p Please wait...
                                                                 .modal-footer
                                                                     form.rotate-key-form(action=`/applications/${sub.application}/subscriptions/${sub.api}/rotatekey`, method='post', style='display: inline;' data-index=i)
                                                                         button.btn(type='submit', id=sub.id, style='background-color: #00573F; color: white;') Rotate
+                                                                        button.btn(role="button" data-bs-toggle="button" aria-pressed="true" data-dismiss='modal' aria-label='Close' style='background-color: #C80815; color: white; transition: none;') Cancel
                                                     // Second Modal for each subscription
                                                     .modal.fade(id=`Popup2Modal-${i}`, tabindex='-1', role='dialog' aria-labelledby='exampleModalLabel' aria-hidden='true')
                                                         .modal-dialog(role='document')
@@ -201,8 +226,20 @@ block content
                                                                             input#oldKey(readonly type='password' data-toggle='password').form-control
                                                                 .modal-footer
                                                                     button.btn(role="button" data-bs-toggle="button" aria-pressed="true" data-dismiss='modal' aria-label='Close' style='background-color: #C80815; color: white; transition: none;' onclick=`OkPopup2Modal('${i}')`) Ok
-                                                else
-                                                    p No key rotation enabled for this API
+                                                    // Expire Key Modal for each subscription
+                                                    .modal.fade(id=`ExpireKeyModal-${i}`, tabindex='-1', role='dialog' aria-labelledby='expireKeyModalLabel' aria-hidden='true')
+                                                        .modal-dialog(role='document')
+                                                            .modal-content.modal-dialog-centered.modal-dialog-scrollable
+                                                                h2#uniqueId.panel-title.box-board
+                                                                    | Expire API Key Application (Application ID: #{sub.application} Api Name: #{sub.api})
+                                                                .modal-body
+                                                                    p.warning
+                                                                        strong
+                                                                            | This action will replace the old key with a new key. Are you sure you want to proceed?
+                                                                .modal-footer
+                                                                    button.btn.btn-danger(role="button" onclick=`confirmExpireKey(${i})`) Expire
+                                                                    button.btn(role="button" data-bs-toggle="button" aria-pressed="true" data-dismiss='modal' aria-label='Close' style='background-color: #C80815; color: white; transition: none;') Cancel
+
                                     else
                                         td(style='vertical-align: middle;' colspan=2)
                                             i Subscription approval is pending
@@ -213,6 +250,7 @@ block content
             #applicationinfo.collapse.panel-collapse.in
                 .panel-body
                     if application._links.patchApplication
+
                         form(role='form' action=`/applications/${application.id}/patch` method='post')
                             p.
                                 You may update the application "friendly" name and redirect URIs here; it is not possible to update
@@ -252,6 +290,7 @@ block content
                                                     a(style='margin-bottom: 5px' onClick='javascript:deleteRedirectUri("redirect_' + i + '");').btn.btn-danger Remove
                                 a(style='margin-top:5px' onClick='javascript:addRedirectUri()').btn.btn-success.btn-small Add Redirect URI
                                 br
+
                             .form-group
                                 label(for='clienttype') Client Type:
                                 select(name='clienttype' id='clienttype').form-control
