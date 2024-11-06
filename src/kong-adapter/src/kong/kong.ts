@@ -717,7 +717,7 @@ function addKongConsumerPlugin(consumerId: string, pluginName: string, pluginDat
 
         debug('Retrieved existing plugins data:' + JSON.stringify(existingPluginsData, null, 2));
         debug('pluginDataList:' + JSON.stringify(pluginDataList, null, 2));
-        async.eachSeries(pluginDataList, function (pluginData, callback) {
+        async.eachSeries(pluginDataList, function (pluginData: ConsumerPlugin, callback) {
             debug('Processing plugin data:' + JSON.stringify(pluginData, null, 2));
 
             if (pluginData.key) {
