@@ -7,9 +7,8 @@ export interface SyncStatistics {
     failedComparisons: any[],
     err?: any
 }
-
 export interface ConsumerPlugin {
-    key?: any;
+    key: any;
     consumer?: { id: string },
     created_at?: number,
     id?: string,
