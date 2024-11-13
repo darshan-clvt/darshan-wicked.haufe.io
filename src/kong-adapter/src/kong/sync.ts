@@ -257,36 +257,60 @@ export const sync = {
             }
         });
     },
-    handleKeyRevoke: function (applicationId, apiId, apikey,callback) {
+    handleKeyRevoke: function (applicationId, apiId, apikey, callback) {
         const consumerUsername = utils.makeUserName(applicationId, apiId);
         const kongAdminUrl = utils.getKongUrl();
         utils.kongGetConsumerByName(consumerUsername, function (error, consumer) {
-            if (error) {
-                return callback(error);
-            }
-            if (consumer) {
-                debug(`Consumer ${consumerUsername} exists, deleting old key.`);
-                debug(kongAdminUrl)
-                axios.delete(`${kongAdminUrl}consumers/${consumerUsername}/key-auth/${apikey}`)
-                    .then(response => {
-                    if (response.status === 204) {
-                        debug(`Key revoked for consumer: ${consumerUsername}`);
-                        callback(null, { apikey, apiId, applicationId });
-                    }
-                    else {
-                        callback(new Error('Failed to generate new key.'));
-                    }
-                })
-                    .catch(err => {
+          if (error) {
+            return callback(error);
+          }
+          if (consumer) {
+            debug(`Consumer ${consumerUsername} exists, fetching keys.`);
+            axios.get(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`)
+              .then(response => {
+                const keys = response.data.data;
+                const rotateKey = keys.find(key => key.tags && key.tags.includes("rotate-key"));
+                if (rotateKey) {
+                  debug(`Removing rotate-key tag from key: ${rotateKey.key}`);
+                  axios.patch(`${kongAdminUrl}consumers/${consumerUsername}/key-auth/${rotateKey.id}`, {
+                    tags: rotateKey.tags.filter(tag => tag !== "rotate-key")
+                  })
+                  .then(() => {
+                    debug(`rotate-key tag removed from key: ${rotateKey.key}`);
+                    proceedWithKeyRevocation();
+                  })
+                  .catch(err => {
                     callback(err);
+                  });
+                } else {
+                  proceedWithKeyRevocation();
+                }
+              })
+              .catch(err => {
+                callback(err);
+              });
+  
+            function proceedWithKeyRevocation() {
+              debug(`Deleting key: ${apikey}`);
+              axios.delete(`${kongAdminUrl}consumers/${consumerUsername}/key-auth/${apikey}`)
+                .then(response => {
+                  if (response.status === 204) {
+                    debug(`Key revoked for consumer: ${consumerUsername}`);
+                    callback(null, { apikey, apiId, applicationId });
+                  } else {
+                    callback(new Error('Failed to revoke key.'));
+                  }
+                })
+                .catch(err => {
+                  callback(err);
                 });
             }
-            else {
-                callback(new Error("Consumer does not exist"));
-            }
+          } else {
+            callback(new Error("Consumer does not exist"));
+          }
         });
-    }
-};    
+      }
+    };
 
 function syncAppConsumers(portalConsumers: ConsumerInfo[], callback: ErrorCallback): void {
     if (portalConsumers.length === 0) {

@@ -8,7 +8,6 @@ export interface SyncStatistics {
     err?: any
 }
 export interface ConsumerPlugin {
-    key?:string,
     consumer?: { id: string },
     created_at?: number,
     id?: string,
