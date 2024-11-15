@@ -154,6 +154,10 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
                 route.name = item.name
             }
 
+            if (item.headers) {
+                route.headers = item.headers;
+            }
+
             routes.push(route);
         }
     }
@@ -161,6 +165,7 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
     else {
       const route: KongRoute = {
           hosts: null,
+          headers: null,
           protocols: [ProtocolType.http, ProtocolType.https],
           paths: api.uris,
           methods: null,
@@ -208,6 +213,7 @@ export function kongApiToServiceRoute(api: KongApi): { service: KongService, rou
     }
     const route: KongRoute = {
         hosts: null,
+        headers: null,
         protocols: [ProtocolType.http, ProtocolType.https],
         paths: api.uris,
         methods: null,

@@ -62,6 +62,9 @@ export interface KongRoute {
     preserve_host: boolean,
     service: {
         id: string
+    },
+    headers?: {
+        [key: string]: string[]
     }
     name? :string
     plugins? : KongPlugin[]
