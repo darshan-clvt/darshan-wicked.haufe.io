@@ -751,9 +751,7 @@ export function kongPatchApi(apiId: string, apiConfig: KongApi, callback: Callba
                     // so we completly replace content of the route(s) and delete whatever else left
                     for (let i = 0; i < routes.length; i += 1) {
                         routes[i].service = { id: service.id };
-                        if(existingRoutes && existingRoutes.length > i){
-                            routes[i].id = existingRoutes[i].id;
-                        }
+                        routes[i].id = existingRoutes && existingRoutes.length > i ? existingRoutes[i].id : null;
                     }
                 }
 
