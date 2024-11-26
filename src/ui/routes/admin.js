@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const async = require('async');
+const axios = require('axios');
 const mustache = require('mustache');
 const { debug, info, warn, error } = require('portal-env').Logger('portal:admin');
 const tmp = require('tmp');
@@ -67,10 +68,8 @@ router.post('/approvals/approve', function (req, res, next) {
     }
 
     utils.get(req, `/approvals/${approvalId}`, (err, apiRes, apiBody) => {
-        if (err)
-            return next(err);
+        if (err) return next(err);
         const approvalInfo = utils.getJson(apiBody);
-        debug(approvalInfo);
 
         if (approvalInfo.application.id !== appId)
             return next(utils.makeError(400, 'Bad request. Application ID does not match approval request.'));
@@ -82,20 +81,45 @@ router.post('/approvals/approve', function (req, res, next) {
             trusted: isTrusted
         };
 
-        // Hit the API
         utils.patch(req, `/applications/${appId}/subscriptions/${apiId}`, patchBody, (err, apiResponse, apiBody) => {
-            if (err)
-                return next(err);
-            if (200 != apiResponse.statusCode)
-                return utils.handleError(res, apiResponse, apiBody, next);
-            // Woohoo
-            if (!utils.acceptJson(req))
-                res.redirect('/admin/approvals');
-            else
-                res.json(utils.getJson(apiBody));
+            if (err) return next(err);
+            if (200 != apiResponse.statusCode) return utils.handleError(res, apiResponse, apiBody, next);
+            if (!utils.acceptJson(req)) res.redirect('/admin/approvals');
+            else res.json(utils.getJson(apiBody));
+
+
+            // If the API has wos custom headers, then we need to send a request to the Clarivate component to create custom headers for the user
+            if (apiBody.woscontractedHeadervalues) {
+                const useremail = approvalInfo.user.email;
+                const subscribeResponse = { statusCode: apiResponse.statusCode, data: apiBody.woscontractedHeadervalues };
+
+
+                if (subscribeResponse.statusCode === 200) {
+                    setTimeout(() => {
+                        // Second call to http://localhost:3008/clarivate/api/customheaderss
+                        const requestData = {
+                            consumerId: appId + '$' + apiId,
+                            wosCustomHeader: subscribeResponse.data,
+                            'user-email': useremail,
+                            type: 'userLogin'
+                        };
+
+                        axios.post(`http://localhost:3008/clarivate/api/customheaders/${apiId}`, {}, {
+                            headers: requestData
+                        }).then(customHeaderResponse => {
+                            debug(`Custom Header Response ar: + approver custom header response`);
+                        }).catch(error => {
+                            debug(`Error fetching custom header: ${error.message}`);
+                        });
+                    }, 3); // 3 milliseconds delay
+                }
+            }
+            // End of custom header creation
         });
     });
 });
+
+
 
 router.post('/approvals/decline', function (req, res, next) {
     debug("post('/approvals/decline')");
