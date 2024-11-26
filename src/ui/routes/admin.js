@@ -95,8 +95,6 @@ router.post('/approvals/approve', function (req, res, next) {
 
 
                 if (subscribeResponse.statusCode === 200) {
-                    // Delay of 3 milliseconds before making the second request
-                    debug("mockbin request");
                     setTimeout(() => {
                         // Second call to http://localhost:3008/clarivate/api/customheaderss
                         const requestData = {
@@ -106,8 +104,6 @@ router.post('/approvals/approve', function (req, res, next) {
                             type: 'userLogin'
                         };
 
-                        debug("APPROVER CUSTOM HEADER");
-                        debug(JSON.stringify(requestData) + "approver custom header request data");
                         axios.post(`http://localhost:3008/clarivate/api/customheaders/${apiId}`, {}, {
                             headers: requestData
                         }).then(customHeaderResponse => {
