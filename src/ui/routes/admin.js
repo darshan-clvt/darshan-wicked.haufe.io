@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const async = require('async');
+const axios = require('axios');
 const mustache = require('mustache');
 const { debug, info, warn, error } = require('portal-env').Logger('portal:admin');
 const tmp = require('tmp');
