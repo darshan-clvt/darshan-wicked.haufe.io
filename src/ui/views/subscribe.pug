@@ -16,6 +16,20 @@ block scripts
         // Called from utils.js
         function localInit() {
             $('#trusted').on('change', checkTrust);
+
+            // Capture the selected use case values
+            $('input[name="useCase"]').on('change', function() {
+                var selectedUseCases = $('input[name="useCase"]:checked').map(function() {
+                    return $(this).val().replace(/\s+/g, '');
+                }).get();
+                $('#selectedUseCase').val(JSON.stringify(selectedUseCases));
+            });
+
+            // Ensure the selected plan is set before form submission
+            $('form').on('submit', function() {
+                var selectedPlan = $('input[name="plan"]:checked').val();
+                $('#selectedPlan').val(selectedPlan);
+            });
         }
 
 block content
@@ -28,7 +42,16 @@ block content
     .container.wicked-container
     
         h3 Application '#{application.name}'
-    
+        if isWosContractApi && apiPlans && apiPlans.length > 0
+            p Please specify the application for which you will be using this API key
+            .container-fluid.bkgrdf5f5f5
+                h4 Official Partners
+                each option, index in glob.wosApp.useCaseOptions
+                    div
+                        input(type='radio' name='useCase' id=`useCase_${index}` value=option.replace(/\s+/g, ''))
+                        span(style='margin-left: 5px;')
+                        label(for=`useCase_${index}` style='font-weight: normal;')= option 
+            br
         p.
             Specify which plan you want to subscribe to for the selected application.
        
@@ -41,12 +64,13 @@ block content
         if subscribeWarning
             .panel.panel-warning
                 .panel-heading
-                    h4.panel-title Warning
+                    h4.panel-title Warning  
                 .panel-body
                     p= subscribeWarning
 
         if allowSubscribe
-            form(role='form' action=`/applications/${application.id}/subscribe/${apiInfo.id}` method='post')
+            form(role='form' action=`/applications/${application.id}/globalSubscription/${apiInfo.id}` method='post')
+                input(type='hidden' id='selectedUseCase' name='selectedUseCase' value='')
                 if apiPlans && apiPlans.length > 0
 
                     if apiInfo.auth == 'oauth2'
@@ -63,7 +87,7 @@ block content
                                     label(for="trusted").form-check-label &nbsp;Trust this application
                     else
                         input(type='hidden' name='trusted' id='trusted' value='')
-
+                    
                     table(class='table table-striped')
                         thead
                             tr
@@ -75,8 +99,10 @@ block content
                         tbody
                             each plan, index in apiPlans
                                 tr
-                                    td
-                                        if index == 0
+                                    td 
+                                        if isWosContractApi
+                                            input(type='radio' name='plan' value=plan.id required)
+                                        else if index == 0
                                             input(type='radio' name='plan' value=plan.id checked='checked')
                                         else
                                             input(type='radio' name='plan' value=plan.id)

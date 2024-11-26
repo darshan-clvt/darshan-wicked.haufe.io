@@ -440,6 +440,10 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                 if (subsCreateInfo.api === "cortellis-api-collection" || subsCreateInfo.api === "cortelleis-api-collection"  ){
                     newSubscription.customId = userInfo.customId;
                 }
+                // If wos contracted header values are present, include in subscription
+                if(subsCreateInfo.woscontractedHeadervalues){
+                    newSubscription.woscontractedHeadervalues = subsCreateInfo.woscontractedHeadervalues;
+                }
                 dao.subscriptions.create(newSubscription, loggedInUserId, (err, persistedSubscription) => {
                     if (err) {
                         return utils.fail(res, 500, 'addSubscription: DAO create subscription failed', err);
@@ -496,6 +500,12 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                                 name: apiPlan.name
                             }
                         };
+
+                        // If wos contracted header values are present, include in approval
+                        if(persistedSubscription.woscontractedHeadervalues){
+                            approvalInfo.user.woscontractedHeadervalues = persistedSubscription.woscontractedHeadervalues;
+                        }
+                
 
                         dao.approvals.create(approvalInfo, (err) => {
                             if (err) {

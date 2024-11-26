@@ -3,9 +3,16 @@
 const express = require('express');
 const router = express.Router();
 const async = require('async');
+const axios = require('axios');
 const { debug, info, warn, error } = require('portal-env').Logger('portal:applications');
 const utils = require('./utils');
 const wicked = require('wicked-sdk');
+
+const isWosApiInContractedList = (apiId, wosContractedSubscriptions) => {
+    return wosContractedSubscriptions.includes(apiId);
+};
+let isWosContractApi = false;
+
 
 router.get('/:appId', function (req, res, next) {
     debug("get('/:appId')");
@@ -558,6 +565,10 @@ router.get('/:appId/subscribe/:apiId', function (req, res, next) {
                 delete application._links.addSubscription;
         }
 
+        const wosContractedSubscriptions = req.app.portalGlobals.wosApp.wosApiCotractedSubscription; //wos contract apis
+        if (apiInfo.auth === 'key-auth') {
+            isWosContractApi = isWosApiInContractedList(apiInfo.id, wosContractedSubscriptions);
+        }
         if (!utils.acceptJson(req)) {
             res.render('subscribe',
                 {
@@ -567,6 +578,7 @@ router.get('/:appId/subscribe/:apiId', function (req, res, next) {
                     apiInfo: apiInfo,
                     apiPlans: apiPlans,
                     application: application,
+                    isWosContractApi: isWosContractApi,///wos contract apis Check///
                     allowSubscribe: allowSubscribe,
                     subscribeError: subscribeError,
                     subscribeWarning: subscribeWarning
@@ -582,13 +594,43 @@ router.get('/:appId/subscribe/:apiId', function (req, res, next) {
     });
 });
 
-router.post('/:appId/subscribe/:apiId', function (req, res, next) {
+//--Function to check if the All wos api is in contracted subscription-- part  WOS Requirement //
+const checkWosApiInContractedSubscription = (req, res, next) => {
+    const wosContractedSubscriptions = req.app.portalGlobals.wosApp.wosApiCotractedSubscription; //wos contract apis
+    const apiId = req.params.apiId;
+
+    if (isWosApiInContractedList(apiId, wosContractedSubscriptions)) {
+        req.iswosApiSubscribed = true;
+        debug(`API ${apiId} belongs to WOS contracted subscriptions.`);
+    } else {
+        req.iswosApiSubscribed = false;
+        debug(`API ${apiId} does NOT belong to WOS contracted subscriptions.`);
+    }
+    next();
+};
+
+
+router.post('/:appId/subscribe/:apiId', checkWosApiInContractedSubscription, function (req, res, next) {
     const appId = req.params.appId;
     const apiId = req.params.apiId;
-    debug(`post('/${appId}/subscribe/${apiId})`);
     const apiPlan = req.body.plan;
     const trusted = utils.getChecked(req, 'trusted');
-    debug(`apiPlan: ${apiPlan}, trusted: ${trusted}`);
+
+    let woscontractedHeadervalues = [];
+
+    // Request body for subscription
+    let requestBodyForSubscription = {
+        application: appId,
+        api: apiId,
+        plan: apiPlan,
+        trusted: trusted
+    };
+
+    // WOS Requirement
+    if (req.iswosApiSubscribed) { 
+        woscontractedHeadervalues = req.body.selectedUseCase;
+        requestBodyForSubscription.woscontractedHeadervalues = woscontractedHeadervalues;
+    }
 
     if (!apiPlan) {
         const err = new Error('Bad request. Plan was not specified.');
@@ -596,20 +638,43 @@ router.post('/:appId/subscribe/:apiId', function (req, res, next) {
         return next(err);
     }
 
-    utils.post(req, `/applications/${appId}/subscriptions`, {
-        application: appId,
-        api: apiId,
-        plan: apiPlan,
-        trusted: trusted
-    }, function (err, apiResponse, apiBody) {
-        if (err)
+    // First call to /:appId/subscribe/:apiId
+    utils.post(req, `/applications/${appId}/subscriptions`, requestBodyForSubscription, function (err, apiResponse, apiBody) {
+        if (err) {
             return next(err);
-        if (201 != apiResponse.statusCode)
+        }
+        if (201 != apiResponse.statusCode) {
             return utils.handleError(res, apiResponse, apiBody, next);
-        if (!utils.acceptJson(req)) 
+        }
+        if (!utils.acceptJson(req)) {
             res.redirect('/apis/' + apiId);
-        else
+        } else {
             res.status(201).json(utils.getJson(apiBody));
+        }
+
+        if (req.iswosApiSubscribed) {
+            const subscribeResponse = { statusCode: apiResponse.statusCode, data: apiBody.woscontractedHeadervalues };
+
+            if (req.iswosApiSubscribed && subscribeResponse.statusCode === 201 && req.user.admin) {
+                // Delay of 3 milliseconds before making the second request
+                setTimeout(() => {
+                    // Second call to http://localhost:3008/clarivate/api/customheaderss
+                    const requestData = {
+                        consumerId: appId + '$' + apiId,
+                        wosCustomHeader: subscribeResponse.data,
+                        'user-email': req.user.email,
+                        type: 'userLogin'
+                    };
+                    axios.post(`http://localhost:3008/clarivate/api/customheaders/${apiId}`, {}, {
+                        headers: requestData
+                    }).then(customHeaderResponse => {
+                        debug(`Wos Custom Header Response:`);
+                    }).catch(error => {
+                        debug(`Error fetching custom header: ${error.message}`);
+                    });
+                }, 3); // 3 milliseconds delay
+            }
+        }
     });
 });
 
