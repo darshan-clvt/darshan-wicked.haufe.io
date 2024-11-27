@@ -69,7 +69,7 @@ block content
                     p= subscribeWarning
 
         if allowSubscribe
-            form(role='form' action=`/applications/${application.id}/globalSubscription/${apiInfo.id}` method='post')
+            form(role='form' action=`/applications/${application.id}/subscribe/${apiInfo.id}` method='post')
                 input(type='hidden' id='selectedUseCase' name='selectedUseCase' value='')
                 if apiPlans && apiPlans.length > 0
 
