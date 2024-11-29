@@ -668,7 +668,7 @@ router.post('/:appId/subscribe/:apiId', checkWosApiInContractedSubscription, fun
                         type: 'userLogin',
                         'X-ApiKey': `${apiKey}`
                     };
-                    axios.post(`https://${kongProxyURl}clarivate/api/customheaders/${apiId}`, {}, {
+                    axios.post(`https://${kongProxyURl}/clarivate/api/customheaders/${apiId}`, {}, {
                         headers: requestData
                     }).then(customHeaderResponse => {
                         debug(`Wos Custom Header Response:`);
