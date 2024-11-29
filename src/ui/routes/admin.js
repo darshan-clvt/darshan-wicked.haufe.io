@@ -114,7 +114,7 @@ router.post('/approvals/approve', function (req, res, next) {
                         }).catch(error => {
                             debug(`Error fetching custom header: ${error.message}`);
                         });
-                    }, 3); // 3 milliseconds delay
+                    }, 500); // 500 milliseconds delay
                 }
             }
             // End of custom header creation
