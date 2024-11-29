@@ -599,7 +599,7 @@ const checkWosApiInContractedSubscription = (req, res, next) => {
     const wosContractedSubscriptions = req.app.portalGlobals.wosApp.wosApiCotractedSubscription; //wos contract apis
     const apiId = req.params.apiId;
 
-    if (isWosApiInContractedList(apiId, wosContractedSubscriptions)) {
+    if (isWosApiInContractedList(apiId, wosContractedSubscwoscustomheaderriptions)) {
         req.iswosApiSubscribed = true;
         debug(`API ${apiId} belongs to WOS contracted subscriptions.`);
     } else {
@@ -659,13 +659,16 @@ router.post('/:appId/subscribe/:apiId', checkWosApiInContractedSubscription, fun
                 // Delay of 3 milliseconds before making the second request
                 setTimeout(() => {
                     // Second call to http://localhost:3008/clarivate/api/customheaderss
+                    const apiKey = req.app.portalGlobals.network.clarivateapikey;
+                    const kongProxyURl = req.app.portalGlobals.network.apiHost;
                     const requestData = {
                         consumerId: appId + '$' + apiId,
                         wosCustomHeader: subscribeResponse.data,
                         'user-email': req.user.email,
-                        type: 'userLogin'
+                        type: 'userLogin',
+                        'X-ApiKey': `${apiKey}`
                     };
-                    axios.post(`http://localhost:3008/clarivate/api/customheaders/${apiId}`, {}, {
+                    axios.post(`https://${kongProxyURl}clarivate/api/customheaders/${apiId}`, {}, {
                         headers: requestData
                     }).then(customHeaderResponse => {
                         debug(`Wos Custom Header Response:`);
