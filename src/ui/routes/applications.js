@@ -599,7 +599,7 @@ const checkWosApiInContractedSubscription = (req, res, next) => {
     const wosContractedSubscriptions = req.app.portalGlobals.wosApp.wosApiCotractedSubscription; //wos contract apis
     const apiId = req.params.apiId;
 
-    if (isWosApiInContractedList(apiId, wosContractedSubscwoscustomheaderriptions)) {
+    if (isWosApiInContractedList(apiId, wosContractedSubscriptions)) {
         req.iswosApiSubscribed = true;
         debug(`API ${apiId} belongs to WOS contracted subscriptions.`);
     } else {
@@ -675,7 +675,7 @@ router.post('/:appId/subscribe/:apiId', checkWosApiInContractedSubscription, fun
                     }).catch(error => {
                         debug(`Error fetching custom header: ${error.message}`);
                     });
-                }, 500); // 50 milliseconds delay
+                }, 500); // 500 milliseconds delay
             }
         }
     });
