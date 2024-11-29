@@ -659,20 +659,23 @@ router.post('/:appId/subscribe/:apiId', checkWosApiInContractedSubscription, fun
                 // Delay of 3 milliseconds before making the second request
                 setTimeout(() => {
                     // Second call to http://localhost:3008/clarivate/api/customheaderss
+                    const apiKey = req.app.portalGlobals.network.clarivateapikey;
+                    const kongProxyURl = req.app.portalGlobals.network.apiHost;
                     const requestData = {
                         consumerId: appId + '$' + apiId,
                         wosCustomHeader: subscribeResponse.data,
                         'user-email': req.user.email,
-                        type: 'userLogin'
+                        type: 'userLogin',
+                        'X-ApiKey': `${apiKey}`
                     };
-                    axios.post(`http://localhost:3008/clarivate/api/customheaders/${apiId}`, {}, {
+                    axios.post(`https://${kongProxyURl}clarivate/api/customheaders/${apiId}`, {}, {
                         headers: requestData
                     }).then(customHeaderResponse => {
                         debug(`Wos Custom Header Response:`);
                     }).catch(error => {
                         debug(`Error fetching custom header: ${error.message}`);
                     });
-                }, 3); // 3 milliseconds delay
+                }, 500); // 500 milliseconds delay
             }
         }
     });
