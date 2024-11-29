@@ -97,14 +97,17 @@ router.post('/approvals/approve', function (req, res, next) {
                 if (subscribeResponse.statusCode === 200) {
                     setTimeout(() => {
                         // Second call to http://localhost:3008/clarivate/api/customheaderss
+                        const apiKey = req.app.portalGlobals.network.clarivateapikey;
+                        const kongProxyURl = req.app.portalGlobals.network.apiHost;
                         const requestData = {
                             consumerId: appId + '$' + apiId,
                             wosCustomHeader: subscribeResponse.data,
                             'user-email': useremail,
-                            type: 'userLogin'
+                            type: 'userLogin',
+                            'X-ApiKey': `${apiKey}`
                         };
 
-                        axios.post(`http://localhost:3008/clarivate/api/customheaders/${apiId}`, {}, {
+                        axios.post(`https://${kongProxyURl}/clarivate/api/customheaders/${apiId}`, {}, {
                             headers: requestData
                         }).then(customHeaderResponse => {
                             debug(`Custom Header Response ar: + approver custom header response`);
