@@ -156,35 +156,46 @@ subscriptions.getSubscriptions = function (app, res, applications, loggedInUserI
  * @param {*} appId - The application ID
  * @param {*} apiId - The API ID
  */
-subscriptions.rotatekey = function (app, res, appId, apiId) {
+subscriptions.rotatekey = function (app, res, appId, apiId, loggedInUserId) {
     debug('Rotating key for appId: ' + appId + ', apiId: ' + apiId);
-    dao.subscriptions.getByAppId(appId, (err, appSubs) => {
+    users.loadUser(app, loggedInUserId, (err, userInfo) => {
       if (err) {
-          return utils.fail(res, 500, 'Failed to load subscriptions');
+        return utils.fail(res, 500, 'rotatekey: loadUser failed', err);
       }
-      const subsIndex = findSubsIndex(appSubs, apiId);
-      if (subsIndex < 0) {
-          return utils.fail(res, 404, `Subscription to API "${apiId}" not found.`);
+      if (!userInfo) {
+        return utils.fail(res, 403, 'Not allowed. User invalid.');
       }
   
-      const thisSubs = appSubs[subsIndex];
-      if (thisSubs.newApiKey) {
+      dao.subscriptions.getByAppId(appId, (err, appSubs) => {
+        if (err) {
+          return utils.fail(res, 500, 'Failed to load subscriptions');
+        }
+        const subsIndex = findSubsIndex(appSubs, apiId);
+        if (subsIndex < 0) {
+          return utils.fail(res, 404, `Subscription to API "${apiId}" not found.`);
+        }
+  
+        const thisSubs = appSubs[subsIndex];
+        if (thisSubs.newApiKey) {
           // New API key already exists, skip rotation
           return res.status(400).json({ message: 'API key rotation has already occurred.' });
-      }
-      webhooks.logEvent(app, {
+        }
+  
+        webhooks.logEvent(app, {
           action: webhooks.KEY_ROTATION,
           entity: webhooks.ENTITY_SUBSCRIPTION,
           data: {
             applicationId: appId,
-            apiId: apiId
+            apiId: apiId,
+            userId: loggedInUserId
           }
-      });
+        });
   
-      // Send a success status code
-      res.sendStatus(200);
+        // Send a success status code
+        res.sendStatus(200);
+      });
     });
-};
+  };
 
 /**
  * This function is for updating the new key in the database from Kong.
@@ -969,9 +980,17 @@ function checkScopeSettings(appSub) {
  * @param {*} appId -- application id 
  * @param {*} apiId -- api id
  */
-subscriptions.revokeOldKey = function (app, res, appId, apiId) {
+subscriptions.revokeOldKey = function (app, res, appId, apiId, loggedInUserId) {
     debug('revokeOldKey(): ' + appId + ', apiId: ' + apiId);
-    dao.subscriptions.getByAppId(appId, (err, appSubs) => {
+    users.loadUser(app, loggedInUserId, (err, userInfo) => {
+      if (err) {
+        return utils.fail(res, 500, 'revokeOldKey: loadUser failed', err);
+      }
+      if (!userInfo) {
+        return utils.fail(res, 403, 'Not allowed. User invalid.');
+      }
+  
+      dao.subscriptions.getByAppId(appId, (err, appSubs) => {
         if (err) {
           return utils.fail(res, 500, 'Failed to load subscriptions');
         }
@@ -979,33 +998,35 @@ subscriptions.revokeOldKey = function (app, res, appId, apiId) {
         if (subsIndex < 0) {
           return utils.fail(res, 404, `Subscription to API "${apiId}" not found.`);
         }
-    const thisSubs = appSubs[subsIndex];
-    if (!thisSubs.newApiKey) {
-        debug('revokeOldKey(): API key rotation is not allowed.');
-        return res.status(400).json({ message: 'API key rotation is not allowed' });
-    }
-    const keyToRevoke=thisSubs.apikey;
-    thisSubs.apikey = thisSubs.newApiKey;
-    delete thisSubs.newApiKey;
-    dao.subscriptions.patch(appId, thisSubs,null, (err) => {
-        if (err) {
-          debug('error while updating apikey'+err);
-            return utils.fail(res, 500, 'patchSubscription: DAO patch subscription failed', err);
+        const thisSubs = appSubs[subsIndex];
+        if (!thisSubs.newApiKey) {
+          debug('revokeOldKey(): API key rotation is not allowed.');
+          return res.status(400).json({ message: 'API key rotation is not allowed' });
         }
-        debug('apikey revoked successfully,initiating sync with adapter');
+        const keyToRevoke = thisSubs.apikey;
+        thisSubs.apikey = thisSubs.newApiKey;
+        delete thisSubs.newApiKey;
+        dao.subscriptions.patch(appId, thisSubs, null, (err) => {
+          if (err) {
+            debug('error while updating apikey' + err);
+            return utils.fail(res, 500, 'patchSubscription: DAO patch subscription failed', err);
+          }
+          debug('apikey revoked successfully, initiating sync with adapter');
+        });
+        webhooks.logEvent(app, {
+          action: webhooks.REVOKE_OLD_KEY,
+          entity: webhooks.ENTITY_SUBSCRIPTION,
+          data: {
+            applicationId: appId,
+            apiId: apiId,
+            apiKey: keyToRevoke,
+            userId: loggedInUserId
+          }
+        });
+        res.sendStatus(200);
+      });
     });
-    webhooks.logEvent(app, {
-      action: webhooks.REVOKE_OLD_KEY,
-      entity: webhooks.ENTITY_SUBSCRIPTION,
-      data: {
-        applicationId: appId,
-        apiId: apiId,
-        apiKey:keyToRevoke
-      }
-    });
-    res.sendStatus(200);
-  });
-};
+  };
 
 
 module.exports = subscriptions;

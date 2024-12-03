@@ -201,110 +201,138 @@ export const sync = {
         });
     },
     //function to generate new api key in kong -only for key rotation enabled apis
-    handleKeyRotation: function (applicationId, apiId, callback) {
-        const consumerUsername = utils.makeUserName(applicationId, apiId);
-        const kongAdminUrl = utils.getKongUrl();    
-        function postKeyDetails(newApiKey, apiId, applicationId) {
-            const apiUrl=wicked.getInternalApiUrl();
-            const apiEndpoint = `${apiUrl}applications/update-key`;
-            axios.post(apiEndpoint, {
-                newApiKey,
-                apiId,
-                applicationId
-            })
-            .then(response => {
-                if (response.status === 200) {
-                    console.log('API details posted successfully:', response.data);
-                } else {
-                    console.error('Failed to post API details:', response.statusText);
-                }
-            })
-            .catch(err => {
-                console.error('Error posting API details:', err);
-            });
-        }
-    
-        utils.kongGetConsumerByName(consumerUsername, function (error, consumer) {
-            if (error) {
-                return callback(error); // Handle error
-            }
-    
-            if (consumer) {
-                // If the consumer exists, generate a new key
-                axios.post(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`, {
-                    tags: ["rotate-key"]
-                  })
-                    .then(response => {
-                        if (response.status === 201) {
-                            const newApiKey = response.data.key;
-                            console.log(`New key generated for consumer: ${consumerUsername}`);
-    
-                            // Call the REST API function with newApiKey, apiId, and applicationId
-                            postKeyDetails(newApiKey, apiId, applicationId);
-    
-                            // Return these details via the callback
-                            callback(null, { newApiKey, apiId, applicationId });
-                        } else {
-                            callback(new Error('Failed to generate new key.'));
-                        }
-                    })
-                    .catch(err => {
-                        callback(err);
-                    });
-            } else {
-                // If the consumer does not exist, handle appropriately
-                callback(new Error("Consumer does not exist"));
-            }
-        });
-    },
-    handleKeyRevoke: function (applicationId, apiId, apikey, callback) {
+    handleKeyRotation: async function (applicationId, apiId, callback) {
         const consumerUsername = utils.makeUserName(applicationId, apiId);
         const kongAdminUrl = utils.getKongUrl();
+  
+        async function postKeyDetails(newApiKey, apiId, applicationId, retryCount = 0) {
+          const apiUrl = wicked.getInternalApiUrl();
+          const apiEndpoint = `${apiUrl}applications/update-key`;
+          try {
+            const response = await axios.post(apiEndpoint, { newApiKey, apiId, applicationId });
+            if (response.status === 200) {
+              debug('API details posted successfully:', response.data);
+              callback(null, { newApiKey, apiId, applicationId });
+            } else if (retryCount < 3) {
+              debug(`Retrying posting API details, attempt ${retryCount + 1}`);
+              await postKeyDetails(newApiKey, apiId, applicationId, retryCount + 1);
+            } else {
+              callback(new Error(`Failed to post API details: ${response.statusText}, Status Code: ${response.status}`));
+            }
+          } catch (err) {
+            if (retryCount < 3) {
+              debug(`Retrying posting API details, attempt ${retryCount + 1}`);
+              await postKeyDetails(newApiKey, apiId, applicationId, retryCount + 1);
+            } else {
+              callback(err);
+            }
+          }
+        }
+        async function generateNewKey(retryCount = 0) {
+          try {
+            const consumer = await new Promise((resolve, reject) => {
+              utils.kongGetConsumerByName(consumerUsername, (err, consumer) => {
+                if (err) return reject(err);
+                resolve(consumer);
+              });
+            });
+            if (consumer) {
+              try {
+                const response = await axios.post(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`, { tags: ["rotate-key"] });
+                if (response.status === 201) {
+                  const newApiKey = response.data.key;
+                  debug(`New key generated for consumer: ${consumerUsername}`);
+                  await postKeyDetails(newApiKey, apiId, applicationId);
+                } else if (retryCount < 3) {
+                  debug(`Retrying key generation for consumer: ${consumerUsername}, attempt ${retryCount + 1}`);
+                  await generateNewKey(retryCount + 1);
+                } else {
+                  callback(new Error('Failed to generate new key after multiple attempts.'));
+                }
+              } catch (err) {
+                if (retryCount < 3) {
+                  debug(`Retrying key generation for consumer: ${consumerUsername}, attempt ${retryCount + 1}`);
+                  await generateNewKey(retryCount + 1);
+                } else {
+                  callback(err);
+                }
+              }
+            } else {
+              callback(new Error("Consumer does not exist"));
+            }
+          } catch (error) {
+            callback(error);
+          }
+        }
+  
+        await generateNewKey();
+      },
+      handleKeyRevoke: async function (applicationId, apiId, apikey, callback) {
+        const consumerUsername = utils.makeUserName(applicationId, apiId);
+        const kongAdminUrl = utils.getKongUrl();
+  
+        async function removeRotateKeyTag(retryCount = 0) {
+          try {
+            const response = await axios.get(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`);
+            const keys = response.data.data;
+            const rotateKey = keys.find(key => key.tags && key.tags.includes("rotate-key"));
+            if (rotateKey) {
+              try {
+                await axios.patch(`${kongAdminUrl}consumers/${consumerUsername}/key-auth/${rotateKey.id}`, {
+                  tags: rotateKey.tags.filter(tag => tag !== "rotate-key")
+                });
+                debug(`rotate-key tag removed from key: ${rotateKey.key}`);
+                proceedWithKeyRevocation();
+              } catch (err) {
+                if (retryCount < 3) {
+                  debug(`Retrying removing rotate-key tag, attempt ${retryCount + 1}`);
+                  await removeRotateKeyTag(retryCount + 1);
+                } else {
+                  callback(err);
+                }
+              }
+            } else {
+              proceedWithKeyRevocation();
+            }
+          } catch (err) {
+            if (retryCount < 3) {
+              debug(`Retrying fetching keys, attempt ${retryCount + 1}`);
+              await removeRotateKeyTag(retryCount + 1);
+            } else {
+              callback(err);
+            }
+          }
+        }
+  
+        async function proceedWithKeyRevocation(retryCount = 0) {
+          try {
+            const response = await axios.delete(`${kongAdminUrl}consumers/${consumerUsername}/key-auth/${apikey}`);
+            if (response.status === 204) {
+              debug(`Key revoked for consumer: ${consumerUsername}`);
+              callback(null, { apikey, apiId, applicationId });
+            } else if (retryCount < 3) {
+              debug(`Retrying key revocation, attempt ${retryCount + 1}`);
+              await proceedWithKeyRevocation(retryCount + 1);
+            } else {
+              callback(new Error('Failed to revoke key.'));
+            }
+          } catch (err) {
+            if (retryCount < 3) {
+              debug(`Retrying key revocation, attempt ${retryCount + 1}`);
+              await proceedWithKeyRevocation(retryCount + 1);
+            } else {
+              callback(err);
+            }
+          }
+        }
+  
         utils.kongGetConsumerByName(consumerUsername, function (error, consumer) {
           if (error) {
             return callback(error);
           }
           if (consumer) {
             debug(`Consumer ${consumerUsername} exists, fetching keys.`);
-            axios.get(`${kongAdminUrl}consumers/${consumerUsername}/key-auth`)
-              .then(response => {
-                const keys = response.data.data;
-                const rotateKey = keys.find(key => key.tags && key.tags.includes("rotate-key"));
-                if (rotateKey) {
-                  debug(`Removing rotate-key tag from key: ${rotateKey.key}`);
-                  axios.patch(`${kongAdminUrl}consumers/${consumerUsername}/key-auth/${rotateKey.id}`, {
-                    tags: rotateKey.tags.filter(tag => tag !== "rotate-key")
-                  })
-                  .then(() => {
-                    debug(`rotate-key tag removed from key: ${rotateKey.key}`);
-                    proceedWithKeyRevocation();
-                  })
-                  .catch(err => {
-                    callback(err);
-                  });
-                } else {
-                  proceedWithKeyRevocation();
-                }
-              })
-              .catch(err => {
-                callback(err);
-              });
-  
-            function proceedWithKeyRevocation() {
-              debug(`Deleting key: ${apikey}`);
-              axios.delete(`${kongAdminUrl}consumers/${consumerUsername}/key-auth/${apikey}`)
-                .then(response => {
-                  if (response.status === 204) {
-                    debug(`Key revoked for consumer: ${consumerUsername}`);
-                    callback(null, { apikey, apiId, applicationId });
-                  } else {
-                    callback(new Error('Failed to revoke key.'));
-                  }
-                })
-                .catch(err => {
-                  callback(err);
-                });
-            }
+            removeRotateKeyTag();
           } else {
             callback(new Error("Consumer does not exist"));
           }

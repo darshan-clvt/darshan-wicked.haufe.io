@@ -37,6 +37,7 @@ router.get('/:appId', function (req, res, next) {
         const application = results.getApplication;
         const roles = results.getRoles;
         const appSubs = results.getSubscriptions;
+        debug('appsubs_of api_nagashree'+utils.getText(appSubs));
         let apiList = results.getApis.apis;
         const keyRotationEnabledApis = [];
         for (let i = 0; i < apiList.length; ++i) {
@@ -46,7 +47,10 @@ router.get('/:appId', function (req, res, next) {
           }
           debug('key_rotation enabled_applica' + JSON.stringify(keyRotationEnabledApis, null, 2));
             }
-          debug('key_rotation enabled_applica' + JSON.stringify(keyRotationEnabledApis, null, 2));
+        const filteredKeyRotationEnabledApis = keyRotationEnabledApis.filter(api => {
+              return appSubs.some(sub => sub.api === api.id);
+          });
+          debug('filtered key_rotation enabled_applica' + JSON.stringify(keyRotationEnabledApis, null, 2));
 
         debug(appSubs);
 
@@ -59,7 +63,7 @@ router.get('/:appId', function (req, res, next) {
                 application: application,
                 roles: roles,
                 subscriptions: appSubs,
-                keyRotationEnabledApis: keyRotationEnabledApis
+                keyRotationEnabledApis: filteredKeyRotationEnabledApis
             });
         } else {
             res.json({
@@ -253,7 +257,7 @@ router.post('/:appId/subscriptions/:apiId/rotatekey', function (req, res, next) 
           } else {
             // If max retries reached, send an error response
             debug('Max retries reached. newApiKey not found.');
-            return res.status(504).json({
+            return res.status(408).json({
               error: 'newApiKey not available. Please try again later.'
             });
           }
