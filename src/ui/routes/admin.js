@@ -16,7 +16,10 @@ const activityMap = {
     "subscription approved": "update subscription",
     "subscription requested": "add subscription",
     "approval sought": "add approval",
-    "subscription deleted": "delete subscription"
+    "subscription deleted": "delete subscription",
+    "api key rotated":"key_rotation subscription",
+    "api key revoked":"revoke_old_key subscription"
+
     };
     
 const ADD_SUBSCRIPTION_ACTIVITY = 'add subscription';

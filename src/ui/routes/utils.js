@@ -23,6 +23,10 @@ const SUBSCRIPTION_APPROVED = 'subscription approved'
 const DELETE_SUBSCRIPTION = 'delete subscription'
 const SUBSCRIPTION_DELETED = 'subscription deleted'
 const ROLE_ADMIN ='Admin'
+const KEY_ROTATION_SUBSCRIPTION = 'key_rotation subscription'
+const REVOKE_OLD_KEY_SUBSCRIPTION = 'revoke_old_key subscription'
+const API_KEY_ROTATION="Api key rotated"
+const API_REVOKE_OLD_KEY="Api key revoked"
 
 utils.setOAuth2Credentials = function (clientId, clientSecret, callbackUrl) {
     utils.CLIENT_ID = clientId;
@@ -769,17 +773,23 @@ function processSubscriptionEntity(auditLog) {
     if (auditLog.activity) {
       switch (auditLog.activity) {
         case ADD_SUBSCRIPTION:
-          auditLog.activity =  auditLog.role == ROLE_ADMIN ? SUBSCRIPTION_APPROVED : SUBSCRIPTION_REQUESTED;
+          auditLog.activity = auditLog.role == ROLE_ADMIN ? SUBSCRIPTION_APPROVED : SUBSCRIPTION_REQUESTED;
           break;
         case UPDATE_SUBSCRIPTION:
           auditLog.activity = SUBSCRIPTION_APPROVED;
           break;
         case DELETE_SUBSCRIPTION:
-          auditLog.activity = SUBSCRIPTION_DELETED
+          auditLog.activity = SUBSCRIPTION_DELETED;
+          break;
+        case KEY_ROTATION_SUBSCRIPTION:
+          auditLog.activity = API_KEY_ROTATION;
+          break;
+        case REVOKE_OLD_KEY_SUBSCRIPTION:
+          auditLog.activity = API_REVOKE_OLD_KEY;
           break;
       }
     }
-}
+  }
 
 /**
  * 

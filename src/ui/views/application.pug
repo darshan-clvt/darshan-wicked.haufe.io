@@ -187,9 +187,9 @@ block content
                                                 if keyRotationEnabledApis && keyRotationEnabledApis.some(api => api.id === sub.api)
                                                     if sub.newApiKey
                                                         form.expire-key-form(id=`expire-key-form-${i}`, action=`/applications/${sub.application}/subscriptions/${sub.api}/revoke`, method='post', style='display: inline;')
-                                                            button.btn.btn-danger(type='button', onclick=`showExpireKeyModal(${i})`) Expire Key
+                                                          button.btn.btn-danger(type='button', onclick=`showExpireKeyModal(${i})`, style='background-color: #337AB7; border-color: #337AB7; color: white;') Expire Key
                                                     else
-                                                        button.btn.btn-warning(type='button' data-toggle='modal' data-target=`#Popup1Modal-${i}`,style='background-color: #00573F; color: white;') Rotate Key
+                                                        button.btn.btn-warning(type='button' data-toggle='modal' data-target=`#Popup1Modal-${i}`,style='background-color: #5cB85c;border-color: #4cae4c;  color: white;') Rotate Key
                                                     // Modal for each subscription
                                                     .modal.fade(id=`Popup1Modal-${i}`, tabindex='-1', role='dialog')
                                                         .modal-dialog(role='document')
@@ -205,7 +205,7 @@ block content
                                                                         p Please wait...
                                                                 .modal-footer
                                                                     form.rotate-key-form(action=`/applications/${sub.application}/subscriptions/${sub.api}/rotatekey`, method='post', style='display: inline;' data-index=i)
-                                                                        button.btn(type='submit', id=sub.id, style='background-color: #00573F; color: white;') Rotate
+                                                                        button.btn(type='submit', id=sub.id, style='background-color: #5cB85c;border-color: #4cae4c;  color: white;') Rotate
                                                                         button.btn(role="button" data-bs-toggle="button" aria-pressed="true" data-dismiss='modal' aria-label='Close' style='background-color: #C80815; color: white; transition: none;') Cancel
                                                     // Second Modal for each subscription
                                                     .modal.fade(id=`Popup2Modal-${i}`, tabindex='-1', role='dialog' aria-labelledby='exampleModalLabel' aria-hidden='true')
@@ -237,7 +237,7 @@ block content
                                                                         strong
                                                                             | This action will replace the old key with a new key. Are you sure you want to proceed?
                                                                 .modal-footer
-                                                                    button.btn.btn-danger(role="button" onclick=`confirmExpireKey(${i})`) Expire
+                                                                    button.btn.btn-success(role="button" onclick=`confirmExpireKey(${i})`, style='background-color: #337AB7; border-color: #337AB7; color: white;') Expire
                                                                     button.btn(role="button" data-bs-toggle="button" aria-pressed="true" data-dismiss='modal' aria-label='Close' style='background-color: #C80815; color: white; transition: none;') Cancel
 
                                     else
