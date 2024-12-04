@@ -104,9 +104,7 @@ applications.post('/:appId/subscriptions/:apiId/rotatekey', verifySubscriptionsW
     // Call the rotatekey function with the extracted appId and apiId
     subscriptions.rotatekey(req.app, res, appId, apiId, req.apiUserId);
 });
-/**
- * This endpoint is for updating the new key from Kong to the database.
- */
+
 applications.post('/update-key', (req, res) => {
     const { applicationId, apiId, newApiKey } = req.body;
     debug('newkey_update'+utils.getText(req.body));
@@ -115,7 +113,11 @@ applications.post('/update-key', (req, res) => {
     debug('key_rotaion newkey'+utils.getText(newApiKey));
     subscriptions.updateKey(applicationId, apiId, newApiKey, res);
   });
-
+  
+  /** 
+ * This endpoint is used to revoke the old key of the application.
+ * Only valid for apis subscriptions which have key rotation enabled
+*/
   applications.post('/:appId/subscriptions/:apiId/revoke', verifySubscriptionsWriteScope,function (req, res, next) {
     debug('apiKeyRevoke invoked')
     const appId = req.params.appId;

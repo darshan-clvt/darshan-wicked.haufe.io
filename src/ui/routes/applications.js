@@ -37,7 +37,6 @@ router.get('/:appId', function (req, res, next) {
         const application = results.getApplication;
         const roles = results.getRoles;
         const appSubs = results.getSubscriptions;
-        debug('appsubs_of api_nagashree'+utils.getText(appSubs));
         let apiList = results.getApis.apis;
         const keyRotationEnabledApis = [];
         for (let i = 0; i < apiList.length; ++i) {
@@ -45,12 +44,12 @@ router.get('/:appId', function (req, res, next) {
             debug(`API ${apiList[i].id} has keyRotationEnabled set to true`);
             keyRotationEnabledApis.push(apiList[i]);
           }
-          debug('key_rotation enabled_applica' + JSON.stringify(keyRotationEnabledApis, null, 2));
+          debug('key_rotation enabled_app' + JSON.stringify(keyRotationEnabledApis, null, 2));
             }
         const filteredKeyRotationEnabledApis = keyRotationEnabledApis.filter(api => {
               return appSubs.some(sub => sub.api === api.id);
           });
-          debug('filtered key_rotation enabled_applica' + JSON.stringify(keyRotationEnabledApis, null, 2));
+          debug('filtered key_rotation enabled_app' + JSON.stringify(keyRotationEnabledApis, null, 2));
 
         debug(appSubs);
 
