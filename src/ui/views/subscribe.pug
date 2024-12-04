@@ -26,8 +26,16 @@ block scripts
             });
 
             // Ensure the selected plan is set before form submission
-            $('form').on('submit', function() {
+            $('form').on('submit', function(event) {
                 var selectedPlan = $('input[name="plan"]:checked').val();
+                var selectedUseCase = $('input[name="useCase"]:checked').val();
+
+                if (!selectedUseCase) {
+                    alert('Please select an official partner.');
+                    event.preventDefault();
+                    return false;
+                }
+
                 $('#selectedPlan').val(selectedPlan);
             });
         }
@@ -45,12 +53,21 @@ block content
         if isWosContractApi && apiPlans && apiPlans.length > 0
             p Please specify the application for which you will be using this API key
             .container-fluid.bkgrdf5f5f5
-                h4 Official Partners
-                each option, index in glob.wosApp.useCaseOptions
-                    div
-                        input(type='radio' name='useCase' id=`useCase_${index}` value=option.replace(/\s+/g, ''))
-                        span(style='margin-left: 5px;')
-                        label(for=`useCase_${index}` style='font-weight: normal;')= option 
+                .row
+                    .col-md-6
+                        h4(style='font-weight: bold;  margin-top: 20px;') Official Partners
+                        each option, index in glob.wosApp.useCaseOptions
+                            div
+                                input(type='radio' name='useCase' id=`useCase_${index}` value=option.replace(/\s+/g, '') required)
+                                span(style='margin-left: 5px;')
+                                label(for=`useCase_${index}` style='font-weight: normal;')= option 
+                    .col-md-6
+                        h4(style='font-weight: bold; margin-top: 20px;') Other
+                        each option, index in glob.wosApp.other
+                            div
+                                input(type='radio' name='useCase' id=`otherUseCase_${index}` value=option.replace(/\s+/g, '') required)
+                                span(style='margin-left: 5px;')
+                                label(for=`otherUseCase_${index}` style='font-weight: normal;')= option 
             br
         p.
             Specify which plan you want to subscribe to for the selected application.
