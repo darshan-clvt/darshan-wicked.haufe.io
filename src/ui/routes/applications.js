@@ -675,7 +675,7 @@ router.post('/:appId/subscribe/:apiId', checkWosApiInContractedSubscription, fun
                     }).catch(error => {
                         debug(`Error fetching custom header: ${error.message}`);
                     });
-                }, 500); // 500 milliseconds delay
+                }, 3000); // 3000 milliseconds delay
             }
         }
     });
