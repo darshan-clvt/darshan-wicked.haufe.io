@@ -30,7 +30,7 @@ block scripts
                 var selectedPlan = $('input[name="plan"]:checked').val();
                 var selectedUseCase = $('input[name="useCase"]:checked').val();
 
-                if (!selectedUseCase) {
+                if ($('input[name="useCase"]').is(':visible') && !selectedUseCase) {
                     alert('Please select an official partner.');
                     event.preventDefault();
                     return false;
