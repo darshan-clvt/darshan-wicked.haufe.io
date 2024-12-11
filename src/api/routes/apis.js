@@ -63,9 +63,21 @@ apis.get('/:apiId/subscriptions', verifyScope, verifyReadSubsScope, function (re
     const { offset, limit } = utils.getOffsetLimit(req);
     apis.getSubscriptions(req.app, res, req.apiUserId, req.params.apiId, offset, limit);
 });
+apis.get('/plans/:plansId', function (req, res) {
+    const plansId = req.params.plansId;
+    apis.getPlansId(req.app, res, plansId);
+  });
 
 // ===== IMPLEMENTATION =====
-
+apis.getPlansId = function (app, res, plansId) {
+    debug('getPlansId(): ' + plansId);
+    const allPlans = utils.loadPlans(app);
+    const plan = allPlans.plans.find(p => p.id === plansId);
+    if (!plan) {
+      return res.status(404).jsonp({ message: 'Plan not found: ' + plansId });
+    }
+    res.json(plan);
+  };
 apis.getApis = function (app, res, loggedInUserId) {
     debug('getApis()');
     const apiList = utils.loadApis(app);
