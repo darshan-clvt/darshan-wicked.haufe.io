@@ -58,6 +58,11 @@ apis.get('/:apiId/swagger', verifyScope, function (req, res, next) {
     apis.getSwagger(req.app, res, req.apiUserId, req.params.apiId);
 });
 
+apis.get('/plans/:plansId', function (req, res) {
+    const plansId = req.params.plansId;
+    apis.getPlansId(req.app, res, plansId);
+  });
+
 // Requires both read_apis and read_subscriptions scopes.
 apis.get('/:apiId/subscriptions', verifyScope, verifyReadSubsScope, function (req, res, next) {
     const { offset, limit } = utils.getOffsetLimit(req);
@@ -65,6 +70,15 @@ apis.get('/:apiId/subscriptions', verifyScope, verifyReadSubsScope, function (re
 });
 
 // ===== IMPLEMENTATION =====
+apis.getPlansId = function (app, res, plansId) {
+    debug('getPlansId(): ' + plansId);
+    const allPlans = utils.loadPlans(app);
+    const plan = allPlans.plans.find(p => p.id === plansId);
+    if (!plan) {
+      return res.status(404).jsonp({ message: 'Plan not found: ' + plansId });
+    }
+    res.json(plan);
+  };
 
 apis.getApis = function (app, res, loggedInUserId) {
     debug('getApis()');
