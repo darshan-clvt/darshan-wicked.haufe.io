@@ -149,8 +149,17 @@ swaggerUtils.injectSwaggerAuth = function (swaggerJson, globalSettings, apiInfo,
         deleteEmptySecurityProperties(swaggerJson);
         debug('Injecting OAuth2');
     }
+
+
+     //basePath will be "/" for vega apis and to avoid the duplicate path and 404 error
+    if (apiConfig && apiConfig.api && apiConfig.api.name === globalSettings.vegaSwaggerapi.apiName) {
+        swaggerJson.basePath = '/';
+    } else {
+        swaggerJson.basePath = requestPath;
+    }
+    
     swaggerJson.host = apiConfig && apiConfig.api && apiConfig.api.host ? apiConfig.api.host : globalSettings.network.apiHost;
-    swaggerJson.basePath = requestPath;
+   
     swaggerJson.schemes = [globalSettings.network.schema];
     return swaggerJson;
 };
