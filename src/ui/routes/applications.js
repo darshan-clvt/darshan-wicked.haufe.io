@@ -53,7 +53,8 @@ function userCanTrialRevokeSubscription(req, userInfo, apiInfo) {
     if (!revokerGroupId || !userInfo.groups.includes(revokerGroupId)) {
         return false;
     }
-    return !apiInfo.requiredGroup || apiInfo.partner || userInfo.groups.includes(apiInfo.requiredGroup);
+    return Boolean(userInfo.superadmin) ||
+        (Boolean(apiInfo.requiredGroup) && userInfo.groups.includes(apiInfo.requiredGroup));
 }
 
 
