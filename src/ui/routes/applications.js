@@ -46,8 +46,11 @@ function getApiMap(apiList) {
 }
 
 function userCanTrialRevokeSubscription(req, userInfo, apiInfo) {
-    if (!req.user || !req.user.admin || !userInfo || !Array.isArray(userInfo.groups) || !apiInfo) {
+    if (!req.user || (!req.user.admin && !userInfo?.superadmin) || !userInfo || !Array.isArray(userInfo.groups) || !apiInfo) {
         return false;
+    }
+    if (userInfo.superadmin) {
+        return true;
     }
     const revokerGroupId = getRevokerGroupId(req);
     if (!revokerGroupId || !userInfo.groups.includes(revokerGroupId)) {

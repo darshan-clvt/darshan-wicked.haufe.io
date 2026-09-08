@@ -25,15 +25,20 @@ function getRevokerGroupId(app) {
 }
 
 function userCanTrialRevoke(app, userInfo, apiInfo) {
-    if (!userInfo || !userInfo.admin || !Array.isArray(userInfo.groups) || !apiInfo) {
+    if (!userInfo || (!userInfo.admin && !userInfo.superadmin) || !Array.isArray(userInfo.groups) || !apiInfo) {
+        return false;
+    }
+    if (userInfo.superadmin) {
+        return true;
+    }
+    if (!apiInfo.requiredGroup) {
         return false;
     }
     const revokerGroupId = getRevokerGroupId(app);
     if (!revokerGroupId || !userInfo.groups.includes(revokerGroupId)) {
         return false;
     }
-    return Boolean(userInfo.superadmin) ||
-        (Boolean(apiInfo.requiredGroup) && userInfo.groups.includes(apiInfo.requiredGroup));
+    return userInfo.groups.includes(apiInfo.requiredGroup);
 }
 
 // ===== ENDPOINTS =====
